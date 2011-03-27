@@ -398,26 +398,6 @@
 
 (require 'clojure-test-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up swank-clojure
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path "~/.emacs.d/custom/swank-clojure")
-
-
-;;(setq swank-clojure-jar-path "C:/bin/clojure/clojure/1109/clojure.jar")
-;;(setq swank-clojure-jar-path "C:/bin/clojure/clojure/HEAD/clojure.jar")
-;; (setq swank-clojure-extra-classpaths '("C:/data/.clojure/" "C:/bin/clojure/clojure-contrib/src/"))
-;; (setq swank-clojure-extra-vm-args '("-Xdebug" "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=50525"))
-;; (setq swank-clojure-java-path "C:/program files/java/jre6/bin/java.exe")
-
-(if (functionp 'swank-clojure-local-setup)
-    (swank-clojure-local-setup))
-
-(require 'swank-clojure)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; elein-mode
@@ -467,11 +447,11 @@
 ;; slime-redirect-inferior-output causes problems with slime-connect
 ;; workaround available here:
 ;; http://github.com/technomancy/swank-clojure/issues/issue/18
-;				  (slime-redirect-inferior-output) 
-				  (define-key slime-mode-map (kbd "C-c d") 'slime-java-describe) 
-				  (define-key slime-repl-mode-map (kbd "C-c d") 'slime-java-describe) 
-				  (define-key slime-mode-map (kbd "C-c D") 'slime-javadoc) 
-				  (define-key slime-repl-mode-map (kbd "C-c D") 'slime-javadoc))) 
+;(slime-redirect-inferior-output) 
+(define-key slime-mode-map (kbd "C-c d") 'slime-java-describe) 
+(define-key slime-repl-mode-map (kbd "C-c d") 'slime-java-describe) 
+(define-key slime-mode-map (kbd "C-c D") 'slime-javadoc) 
+(define-key slime-repl-mode-map (kbd "C-c D") 'slime-javadoc))) 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
