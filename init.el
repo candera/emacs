@@ -555,18 +555,6 @@
 
 (setq shell-mode-hook 'my-shell-setup)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Excellent package for better scrolling in emacs
-; should be default package. But now it can be downloaded
-; from: http://user.it.uu.se/~mic/pager.el
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/custom/pager"))
-(require 'pager)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; This sets CVS to use plink, which SourceForge requires
