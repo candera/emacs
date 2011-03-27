@@ -1,0 +1,24 @@
+[submodule "auto-complete"]
+	path = auto-complete
+	url = https://github.com/m2ym/auto-complete.git
+[submodule "clojure-mode"]
+	path = clojure-mode
+	url = https://github.com/technomancy/clojure-mode.git
+[submodule "elein"]
+	path = elein
+	url = https://github.com/remvee/elein.git
+[submodule "gist.el"]
+	path = gist.el
+	url = git://github.com/defunkt/gist.el.git
+[submodule "io-mode"]
+	path = io-mode
+	url = https://github.com/superbobry/io-mode.git
+[submodule "magit"]
+	path = magit
+	url = https://github.com/philjackson/magit.git
+[submodule "slime-2010-05-19"]
+	path = slime-2010-05-19
+	url = git://git.boinkor.net/slime.git
+[submodule "swank-clojure"]
+	path = swank-clojure
+	url = https://github.com/technomancy/swank-clojure.git
