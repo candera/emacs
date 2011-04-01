@@ -191,7 +191,22 @@
 (setq display-time-day-and-date 'true)
 (display-time)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
-(add-hook 'text-mode-hook '(lambda () (flyspell-mode 1)))
+;; text-mode-hook runs even in modes derived from text-mode, like
+;; javascript-mode, where having flyspell turned on is not exactly
+;; handy. Turn it off in modes where we don't want it. 
+(defun turn-on-flyspell ()
+  "Turns on flyspell-mode"
+  (interactive)
+  (flyspell-mode 1))
+
+(defun turn-off-flyspell ()
+  "Turns off flyspell-mode"
+  (interactive)
+  (flyspell-mode 0))
+
+(add-hook 'text-mode-hook 'turn-on-flyspell)
+(add-hook 'javascript-mode-hook 'turn-off-flyspell)
+(add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
 
 ;; Work around a bug in Ubuntu 10.10
 (setq flyspell-issue-welcome-flag nil)
