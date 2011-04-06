@@ -207,6 +207,7 @@
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 (add-hook 'javascript-mode-hook 'turn-off-flyspell)
 (add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
+(add-hook 'ruby-mode-hook 'turn-off-flyspell)
 
 ;; Work around a bug in Ubuntu 10.10
 (setq flyspell-issue-welcome-flag nil)
