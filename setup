@@ -11,6 +11,8 @@ cd $THIS_DIR
 git submodule init
 git submodule update
 
+mkdir -p ~/.emacs.d
+
 ln -fs $THIS_DIR ~/.emacs.d/custom
 
 if [ -f ~/.emacs ]; then
