@@ -326,8 +326,10 @@
 
 ;; (load "paredit.el")
 
-;; (define-key paredit-mode-map (kbd ")")
-;;   'paredit-close-parenthesis)
+;; Not all terminals can transmit the standard key sequencences for
+;; paredit-forward-slurp-sexp, which is super-useful
+(define-key paredit-mode-map (kbd "C-c )")
+   'paredit-forward-slurp-sexp)
 ;; (define-key paredit-mode-map (kbd "M-)")
 ;;   'paredit-close-parenthesis-and-newline)
 
