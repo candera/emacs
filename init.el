@@ -326,10 +326,6 @@
 
 ;; (load "paredit.el")
 
-;; Not all terminals can transmit the standard key sequencences for
-;; paredit-forward-slurp-sexp, which is super-useful
-(define-key paredit-mode-map (kbd "C-c )")
-   'paredit-forward-slurp-sexp)
 ;; (define-key paredit-mode-map (kbd "M-)")
 ;;   'paredit-close-parenthesis-and-newline)
 
@@ -412,7 +408,10 @@
 	     (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
 	     (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
 	     (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
-	     (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)))
+	     (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
+	     ;; Not all terminals can transmit the standard key sequencences for
+	     ;; paredit-forward-slurp-sexp, which is super-useful
+	     (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)))
 
 (require 'clojure-test-mode)
 
