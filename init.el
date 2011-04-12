@@ -632,6 +632,10 @@
 (add-to-list 'load-path "~/.emacs.d/custom/magit")
 (require 'magit)
 
+;; C-x m is normally compose-mail, but I never do mail inside of
+;; emacs, whereas I run magit-status all the time
+(global-set-key (kbd "C-x m") 'magit-status)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Set up gist.el
