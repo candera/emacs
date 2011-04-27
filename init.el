@@ -204,7 +204,7 @@
   (interactive)
   (flyspell-mode 0))
 
-(add-hook 'text-mode-hook 'turn-on-flyspell)
+(add-hook 'org-mode-hook 'turn-on-flyspell)
 (add-hook 'javascript-mode-hook 'turn-off-flyspell)
 (add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
 (add-hook 'ruby-mode-hook 'turn-off-flyspell)
