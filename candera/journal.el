@@ -18,17 +18,21 @@
 	 (concat new-logfile-directory "/%Y%m%d.txt") logfile-date)))
     (progn 
       (make-directory new-logfile-directory 't)
-      (find-file new-logfile-filename)
-      (unless (file-exists-p new-logfile-filename)
-	(insert (concat (format-time-string "%A, %B " logfile-date)
-			(day-of-month-ordinal (string-to-number (format-time-string "%e" logfile-date)))
-			(format-time-string ", %Y." logfile-date)))
-	(newline)
-	(newline)
-	(newline)
-	(previous-line))
-      (flyspell-mode 1)
-      (message (concat "Opened " new-logfile-filename)))))
+      (let ((buffer-is-new? 
+	     (null (find-buffer-visiting new-logfile-filename))))
+	(find-file new-logfile-filename)
+	(when buffer-is-new?
+	  (insert (concat (format-time-string "%A, %B " logfile-date)
+			  (day-of-month-ordinal 
+			   (string-to-number 
+			    (format-time-string "%e" logfile-date)))
+			  (format-time-string ", %Y." logfile-date)))
+	  (newline)
+	  (newline)
+	  (newline)
+	  (previous-line)
+	  (flyspell-mode 1)
+	  (message (concat "Opened " new-logfile-filename)))))))
   
 ;; (defun days-ago (n)
 ;;   "Returns a value similar to current-time, but for n days ago"
