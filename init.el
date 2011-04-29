@@ -149,7 +149,11 @@
 
 ;; Turn off the menu bar and the tool bar, since I never use them.
 (menu-bar-mode -1)
-(tool-bar-mode -1)
+
+;; On some machines, tool-bar-mode is not bound, and it causes
+;; initialization to bomb. 
+(if (fboundp 'tool-bar-mode)
+    (tool-bar-mode -1))
 
 ;; Set up some keybindings that I like
 (global-set-key (quote [C-M-down]) 'scroll-other-window-down-one)
