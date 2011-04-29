@@ -229,9 +229,7 @@
     (move-to-column 0)
     (newline)
     (previous-line 1)
-    (indent-according-to-mode)
-    )
-  )
+    (indent-according-to-mode)))
 
 (global-set-key [\C-return] 'insert-new-line-above)
 
