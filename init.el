@@ -42,6 +42,17 @@
 (require 'font-lock)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; Change the way emacs handles buffer
+;; names for files with the same name.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq 
+ uniquify-buffer-name-style 'post-forward
+  uniquify-separator ":")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; io-mode
 ;;
