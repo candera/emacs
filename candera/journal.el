@@ -18,10 +18,11 @@
 	 (concat new-logfile-directory "/%Y%m%d.txt") logfile-date)))
     (progn 
       (make-directory new-logfile-directory 't)
-      (let ((buffer-is-new? 
-	     (null (find-buffer-visiting new-logfile-filename))))
+      (let ((existing? 
+	     (or (find-buffer-visiting new-logfile-filename)
+		 (file-exists-p new-logfile-filename))))
 	(find-file new-logfile-filename)
-	(when buffer-is-new?
+	(unless existing?
 	  (insert (concat (format-time-string "%A, %B " logfile-date)
 			  (day-of-month-ordinal 
 			   (string-to-number 
