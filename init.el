@@ -50,7 +50,7 @@
 
 (setq 
  uniquify-buffer-name-style 'post-forward
-  uniquify-separator ":")
+ uniquify-separator ":")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
