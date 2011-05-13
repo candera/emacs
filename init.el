@@ -715,7 +715,7 @@
 ;; http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
 ;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(load "~/.emacs.d/custom/nxhtml/autostart.el")
+;;(load "~/.emacs.d/custom/nxhtml/autostart.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
