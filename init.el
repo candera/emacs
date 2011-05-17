@@ -98,6 +98,8 @@
 
 ;; Enable line numbering globally
 (global-linum-mode 1)
+;; And add a space after the line number in text-only terminals
+(unless window-system (setq linum-format "%d "))
 
 ;; Enable line highlighting
 (global-hl-line-mode 1)
