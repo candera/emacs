@@ -779,6 +779,9 @@
  '(nxml-namespace-attribute-prefix-face ((t (:inherit nxml-name-face :foreground "red"))))
  '(nxml-namespace-attribute-xmlns-face ((t (:inherit nxml-name-face :foreground "red")))))
 
+(unless window-system
+ (custom-set-faces 
+  '(isearch-face ((t (:foreground "black" :background "yellow"))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
