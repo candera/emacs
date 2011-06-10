@@ -8,32 +8,36 @@
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
   (interactive "p")
-  (let*
-      ((n-days-ago (if (null days-ago) 1 days-ago))
-       (logfile-date (time-n-days-ago n-days-ago))
-       (logfile-directory (available-logfile-directory *journal-roots*))
-       (new-logfile-directory (format-time-string (concat logfile-directory "%Y/%m-%b") logfile-date))
-       (new-logfile-filename 
-	(format-time-string 
-	 (concat new-logfile-directory "/%Y%m%d.txt") logfile-date)))
-    (progn 
-      (make-directory new-logfile-directory 't)
-      (let ((existing? 
-	     (or (find-buffer-visiting new-logfile-filename)
-		 (file-exists-p new-logfile-filename))))
-	(find-file new-logfile-filename)
-	(unless existing?
-	  (insert (concat (format-time-string "%A, %B " logfile-date)
-			  (day-of-month-ordinal 
-			   (string-to-number 
-			    (format-time-string "%e" logfile-date)))
-			  (format-time-string ", %Y." logfile-date)))
-	  (newline)
-	  (newline)
-	  (newline)
-	  (previous-line)
-	  (flyspell-mode 1)
-	  (message (concat "Opened " new-logfile-filename)))))))
+  (let ((*journal-roots*
+	 (if (null *journal-roots*)
+	     (read-directory-name "Base directory: ")
+	   *journal-roots*)))
+    (let*
+	((n-days-ago (if (null days-ago) 1 days-ago))
+	 (logfile-date (time-n-days-ago n-days-ago))
+	 (logfile-directory (available-logfile-directory *journal-roots*))
+	 (new-logfile-directory (format-time-string (concat logfile-directory "%Y/%m-%b") logfile-date))
+	 (new-logfile-filename 
+	  (format-time-string 
+	   (concat new-logfile-directory "/%Y%m%d.txt") logfile-date)))
+      (progn 
+	(make-directory new-logfile-directory 't)
+	(let ((existing? 
+	       (or (find-buffer-visiting new-logfile-filename)
+		   (file-exists-p new-logfile-filename))))
+	  (find-file new-logfile-filename)
+	  (unless existing?
+	    (insert (concat (format-time-string "%A, %B " logfile-date)
+			    (day-of-month-ordinal 
+			     (string-to-number 
+			      (format-time-string "%e" logfile-date)))
+			    (format-time-string ", %Y." logfile-date)))
+	    (newline)
+	    (newline)
+	    (newline)
+	    (previous-line)
+	    (flyspell-mode 1)
+	    (message (concat "Opened " new-logfile-filename))))))))
   
 ;; (defun days-ago (n)
 ;;   "Returns a value similar to current-time, but for n days ago"
