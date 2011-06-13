@@ -722,6 +722,21 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Set up coffee-mode
+;; 
+;; http://ozmm.org/posts/coffee_mode.html
+;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/coffee-mode")
+(require 'coffee-mode)
+
+;; Uncomment if necessary
+;; (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
+;; (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Change zap-to-char not to kill the char
 ;; it zaps to. Taken from
 ;; http://www.emacswiki.org/emacs/ZapUpToChar

@@ -22,3 +22,6 @@
 [submodule "swank-clojure"]
 	path = swank-clojure
 	url = https://github.com/technomancy/swank-clojure.git
+[submodule "coffee-mode"]
+	path = coffee-mode
+	url = git://github.com/defunkt/coffee-mode.git
