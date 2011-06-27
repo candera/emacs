@@ -768,6 +768,39 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Interactively evaluate SPARQL
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; URL encoding for parameters
+(defun http-url-encode (str)
+  "URL encode STR."
+  (apply 'concat
+          (mapcar (lambda (c)
+                       (if (or (and (>= c ?a) (<= c ?z))
+                                  (and (>= c ?A) (<= c ?Z))
+                                     (and (>= c ?0) (<= c ?9)))
+                                  (string c)
+                              (format "%%%02x" c)))
+                   (encode-coding-string str 'utf-8))))
+
+(defun sparql-query-region ()
+  "Submit the active region as a query to a SPARQL HTTP endpoint.
+If the region is not active, use the whole buffer."
+  (interactive)
+  (let* ((beg (if (region-active-p) (region-beginning) (point-min)))
+         (end (if (region-active-p) (region-end) (point-max)))
+         (text (buffer-substring beg end))
+         (escaped-text (http-url-encode text))
+         ;; TODO: Stop hardcoding this at some point
+         (url (format "http://localhost:2020/metamodl_test?format=csv&query=%s" escaped-text))
+         (b (url-retrieve url 
+                          #'(lambda (status &rest cbargs)))))
+    (switch-to-buffer-other-window b)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Miscellaneous customizations
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
