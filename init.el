@@ -227,6 +227,23 @@
 (add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
 (add-hook 'ruby-mode-hook 'turn-off-flyspell)
 
+;; Friends don't let friends save source code with tabs in it
+(defun detabify-buffer ()
+  "Calls untabify on the current buffer"
+  (interactive)
+  (untabify (point-min) (point-max)))
+
+(defvar detabify-modes '(javascript-mode emacs-lisp-mode ruby-mode clojure-mode)
+  "A list of the modes that will have tabs converted to spaces before saving.")
+
+(defun mode-aware-detabify ()
+  "Calls untabify on the current buffer if the major mode is one of 'detabify-modes'"
+  (interactive)
+  (when (member major-mode detabify-modes)
+    (detabify-buffer)))
+
+(add-hook 'before-save-hook 'mode-aware-detabify)
+
 ;; Work around a bug in Ubuntu 10.10
 (setq flyspell-issue-welcome-flag nil)
 
