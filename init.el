@@ -69,8 +69,8 @@
 ;;     (save-excursion
 ;;       (beginning-of-line)
 ;;       (let ((start (point)))
-;; 	(end-of-line)
-;; 	(io-repl-sregion start (point))))
+;;      (end-of-line)
+;;      (io-repl-sregion start (point))))
 ;;     (pop-to-buffer source-buffer)))
 
 ;; (define-key io-mode-map (kbd "C-M-X") 'io-repl-line)
@@ -294,22 +294,22 @@
 
 ;; Turn on parathesis highlighting in .el files
 ;(add-hook 'emacs-lisp-mode-hook 
-;	  (lambda () (highlight-parentheses-mode 1)))
+;         (lambda () (highlight-parentheses-mode 1)))
 
 ;; Make ido-mode list things vertically
 ;; (setq ido-decorations 
 ;;       (quote 
 ;;        ("\n-> "           ; Opening bracket around prospect list
-;; 	""                ; Closing bracket around prospect list
-;; 	"\n   "           ; separator between prospects
-;; 	"\n   ..."        ; appears at end of truncated list of prospects
-;; 	"["               ; opening bracket around common match string
-;; 	"]"               ; closing bracket around common match string
-;; 	" [No match]"     ; displayed when there is no match
-;; 	" [Matched]"      ; displayed if there is a single match
-;; 	" [Not readable]" ; current diretory is not readable
-;; 	" [Too big]"      ; directory too big
-;; 	" [Confirm]")))   ; confirm creation of new file or buffer
+;;      ""                ; Closing bracket around prospect list
+;;      "\n   "           ; separator between prospects
+;;      "\n   ..."        ; appears at end of truncated list of prospects
+;;      "["               ; opening bracket around common match string
+;;      "]"               ; closing bracket around common match string
+;;      " [No match]"     ; displayed when there is no match
+;;      " [Matched]"      ; displayed if there is a single match
+;;      " [Not readable]" ; current diretory is not readable
+;;      " [Too big]"      ; directory too big
+;;      " [Confirm]")))   ; confirm creation of new file or buffer
 
 ;; Tell emacs to wrap lines in vertically split windows
 (setq truncate-partial-width-windows nil)
@@ -428,23 +428,23 @@
 ;; Ctrl-c Ctrl-e is also there, because I kept typoing it.
 (add-hook 'clojure-mode-hook
           '(lambda ()
-;	     (highlight-parentheses-mode 1)
-	     (linum-mode 1)
-	     (paredit-mode 1)
-	     (flyspell-mode 0)
+;            (highlight-parentheses-mode 1)
+             (linum-mode 1)
+             (paredit-mode 1)
+             (flyspell-mode 0)
              (define-key clojure-mode-map "\C-c\C-e" 'lisp-eval-last-sexp)
              (define-key clojure-mode-map "\C-x\C-e" 'lisp-eval-last-sexp)
-	     ;; Fix the keys that paredit screws up
-	     (define-key paredit-mode-map (kbd "<C-left>") nil)
-	     (define-key paredit-mode-map (kbd "<C-right>") nil)
-	     ;; And define some new bindings since the OS eats some of the useful ones
-	     (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
-	     (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
-	     (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
-	     (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
-	     ;; Not all terminals can transmit the standard key sequencences for
-	     ;; paredit-forward-slurp-sexp, which is super-useful
-	     (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)))
+             ;; Fix the keys that paredit screws up
+             (define-key paredit-mode-map (kbd "<C-left>") nil)
+             (define-key paredit-mode-map (kbd "<C-right>") nil)
+             ;; And define some new bindings since the OS eats some of the useful ones
+             (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
+             (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
+             ;; Not all terminals can transmit the standard key sequencences for
+             ;; paredit-forward-slurp-sexp, which is super-useful
+             (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)))
 
 (require 'clojure-test-mode)
 
@@ -493,7 +493,7 @@
     (other-window 1)))
  
 (add-hook 'slime-connected-hook (lambda () 
-				  (interactive) 
+                                  (interactive) 
 ;; slime-redirect-inferior-output causes problems with slime-connect
 ;; workaround available here:
 ;; http://github.com/technomancy/swank-clojure/issues/issue/18
@@ -518,7 +518,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (load "~/.emacs.d/custom/candera/typing-speed.el")
 (add-hook 'text-mode-hook (lambda ()
-			    (turn-on-typing-speed)))
+                            (turn-on-typing-speed)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -560,13 +560,13 @@
 ;; (autoload 'xml-lite-mode "xml-lite" "Major mode to edit XML files" t)
 ;; (setq auto-mode-alist
 ;;       (append '(
-;; 		("\\.xml$" . sgml-mode)
-;; 		("\\.build$" . sgml-mode)
-;; 		("\\.config$" . sgml-mode)
-;; 		("\\.xslt$" . sgml-mode)
-;; 		("\\.xsl$" . sgml-mode)
-;; 		("\\.xsd$" . sgml-mode)
-;; 		) auto-mode-alist ))
+;;              ("\\.xml$" . sgml-mode)
+;;              ("\\.build$" . sgml-mode)
+;;              ("\\.config$" . sgml-mode)
+;;              ("\\.xslt$" . sgml-mode)
+;;              ("\\.xsl$" . sgml-mode)
+;;              ("\\.xsd$" . sgml-mode)
+;;              ) auto-mode-alist ))
 ;; (add-hook 'sgml-mode-hook 'xml-lite-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -693,8 +693,8 @@
 
 ;; Turn on longlines mode whenever we're in an edit server buffer
 (add-hook 'edit-server-text-mode-hook 
-	  '(lambda ()
-	     (longlines-mode 1)))
+          '(lambda ()
+             (longlines-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -776,10 +776,10 @@
 (setq confirm-nonexistent-file-or-buffer nil)
 
 ;; '(default ((t (:stipple
-;; 	       nil :background "grey10" :foreground "white" :inverse-video
-;; 	       nil :box nil :strike-through nil :overline nil :underline
-;; 	       nil :slant normal :weight normal :height 140 :width
-;; 	       normal :foundry "outline" :family "Courier New"))))
+;;             nil :background "grey10" :foreground "white" :inverse-video
+;;             nil :box nil :strike-through nil :overline nil :underline
+;;             nil :slant normal :weight normal :height 140 :width
+;;             normal :foundry "outline" :family "Courier New"))))
 
  ;; '(default ((t (:stipple nil :background "grey10" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 50 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
 
@@ -789,13 +789,13 @@
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
  `(default ((t ,(append '(:background "black" :foreground "white")
-			(if (eq system-type 'windows-nt)
-			    '(:foundry "outline" 
-			      :family "Courier New"
-			      :weight bold
-			      :height 160
-			      :width normal)
-			  '(:family "DejaVu Sans Mono" :foundry "unknown" :height 140)
+                        (if (eq system-type 'windows-nt)
+                            '(:foundry "outline" 
+                              :family "Courier New"
+                              :weight bold
+                              :height 160
+                              :width normal)
+                          '(:family "DejaVu Sans Mono" :foundry "unknown" :height 140)
 )))))
  '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
  '(cursor ((t (:background "red"))))
