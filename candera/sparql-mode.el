@@ -21,7 +21,8 @@
 
 (defun sparql-set-base-url (url)
   "Sets the base URL for queries"
-  (interactive "s\nNew base URL for queries: ")
+  ;; TODO: This isn't displaying the prompt for some reason
+  (interactive "sNew base URL for queries: ")
   (setq sparql-base-url url))
 
 (make-variable-buffer-local 'sparql-base-url)
