@@ -774,6 +774,8 @@
 
 (require 'sparql-mode)
 
+(add-to-list 'auto-mode-alist '("\\.sparql$" . sparql-mode))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Miscellaneous customizations
