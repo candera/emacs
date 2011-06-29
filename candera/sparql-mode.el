@@ -61,7 +61,7 @@ If the region is not active, use the whole buffer."
     ("'[^']*'" . font-lock-string-face)))
 
 (define-derived-mode sparql-mode text-mode
-  "Convenience mode for working with SPARQL queries"
+  "SPARQL"
   :group 'sparql-mode
   (setq font-lock-defaults '(sparql-keywords))
   (define-key sparql-mode-map (kbd "C-c x") 'sparql-query-region))
