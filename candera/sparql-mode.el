@@ -54,7 +54,8 @@ If the region is not active, use the whole buffer."
     (switch-to-buffer-other-window b)))
 
 (defconst sparql-keywords 
-  '(("SELECT\\|ASK\\|WHERE\\|IN\\|COALESCE\\|PREFIX\\|ORDER\\|GROUP\\|BY\\|LET\\|OPTIONAL" . font-lock-keyword-face)
+  '(("#.*$" . font-lock-comment-face)
+    ("SELECT\\|ASK\\|WHERE\\|IN\\|COALESCE\\|PREFIX\\|ORDER\\|GROUP\\|BY\\|LET\\|OPTIONAL" . font-lock-keyword-face)
     ("\\?\\w+" . font-lock-variable-name-face)
     ("\"[^\"]*\"" . font-lock-string-face)
     ("'[^']*'" . font-lock-string-face)))
