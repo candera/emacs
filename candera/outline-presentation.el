@@ -1,6 +1,3 @@
-;; Enable narrowing, which is disabled by default
-(put 'narrow-to-region 'disabled nil)
-
 (defvar outline-presentation-mode nil
   "Outline presentation minor mode.")
 
@@ -20,21 +17,24 @@
   on. With a negative argument, turns outline-presentation minor
   mode off."
   (interactive "P")
-  (setq outline-presentation-mode 
-	(if (null enable)
-	    (not outline-presentation-mode)
-	    (> (prefix-numeric-value enable) 0)))
+  ;; Enable narrowing, which is disabled by default
+  (put 'narrow-to-region 'disabled nil)
+
+  (setq outline-presentation-mode
+        (if (null enable)
+            (not outline-presentation-mode)
+            (> (prefix-numeric-value enable) 0)))
   (if outline-presentation-mode
       (progn 
-	(outline-presentation-start)
-	(if (not (assq 'outline-presentation-mode minor-mode-alist))
-	    (setq minor-mode-alist
-		  (cons '(outline-presentation-mode " Presentation")
-			minor-mode-alist)))
-	(use-local-map outline-presentation-mode-map))
+        (outline-presentation-start)
+        (if (not (assq 'outline-presentation-mode minor-mode-alist))
+            (setq minor-mode-alist
+                  (cons '(outline-presentation-mode " Presentation")
+                        minor-mode-alist)))
+        (use-local-map outline-presentation-mode-map))
       (progn
-	(use-local-map nil)
-	(outline-presentation-end))))
+        (use-local-map nil)
+        (outline-presentation-end))))
 
 
 (defun outline-presentation-mode-on ()
@@ -81,7 +81,4 @@
   (let ((start (point)))
     (outline-previous-heading)
     (narrow-to-region start (point)))
-  (outline-back-to-heading t))
-
-
-  
+  (outline-back-to-heading t)) 
