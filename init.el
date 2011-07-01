@@ -785,53 +785,7 @@
 
 (setq confirm-nonexistent-file-or-buffer nil)
 
-;; '(default ((t (:stipple
-;;             nil :background "grey10" :foreground "white" :inverse-video
-;;             nil :box nil :strike-through nil :overline nil :underline
-;;             nil :slant normal :weight normal :height 140 :width
-;;             normal :foundry "outline" :family "Courier New"))))
-
- ;; '(default ((t (:stipple nil :background "grey10" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 50 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
-
-;; Oddly, setting the background to black under a terminal turns it
-;; grey. But the default in a windowed system is black on white. Sigh.
-(when window-system
-  (set-face-background 'default "black")
-  (set-face-foreground 'default "white"))
-
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- `(default ((t ,(if (eq system-type 'windows-nt)
-                    '(:foundry "outline" 
-                      :family "Courier New"
-                      :weight bold
-                      :height 160
-                      :width normal)
-                  '(:family "DejaVu Sans Mono" :foundry "unknown" :height 140)
-))))
- '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
- '(cursor ((t (:background "red"))))
- '(highline-face ((t (:background "grey20"))))
- '(hl-line ((t (:inherit highlight :background "grey20"))))
- '(magit-diff-add ((((class color) (background dark)) (:foreground "lightgreen"))))
- '(diff-added ((t (:inherit diff-changed :foreground "green"))))
- '(diff-removed ((t (:inherit diff-changed :foreground "red"))))
- '(magit-item-highlight ((((class color) (background dark)) (:background "grey20"))))
- '(nxml-attribute-colon-face ((t (:inherit nxml-name-face :foreground "blue"))))
- '(nxml-attribute-local-name-face ((t (:inherit nxml-name-face :foreground "blue"))))
- '(nxml-attribute-prefix-face ((t (:inherit nxml-name-face :foreground "blue"))))
- '(nxml-namespace-attribute-colon-face ((t (:inherit nxml-name-face :foreground "red"))))
- '(nxml-namespace-attribute-prefix-face ((t (:inherit nxml-name-face :foreground "red"))))
- '(nxml-namespace-attribute-xmlns-face ((t (:inherit nxml-name-face :foreground "red"))))
- )
-
-(unless window-system
- (custom-set-faces 
-  '(isearch-face ((t (:foreground "black" :background "yellow"))))))
-
+(load "~/.emacs.d/custom/colors.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
