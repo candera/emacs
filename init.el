@@ -5,7 +5,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Load nxhtml-mode (with MuMaMo)
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;(load "~/.emacs.d/custom/nxhtml/autostart.el")
 
@@ -23,7 +23,7 @@
 ;; Do any initialization that's specific to this machine
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(load-file-if-exists "~/local-init.el") 
+(load-file-if-exists "~/local-init.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -42,14 +42,14 @@
 (require 'font-lock)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;; Change the way emacs handles buffer
 ;; names for files with the same name.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'uniquify)
-(setq 
+(setq
  uniquify-buffer-name-style 'post-forward
  uniquify-separator ":")
 
@@ -132,8 +132,8 @@
 (defun set-cursor-type (cursor)
   "Modify the cursor to the specified type"
   (interactive "sCursor type (bar, box, etc.): ")
-  (modify-frame-parameters 
-   (selected-frame) 
+  (modify-frame-parameters
+   (selected-frame)
    (list (cons 'cursor-type (intern cursor)))))
 
 (defun set-bar-cursor ()
@@ -165,7 +165,7 @@
 (menu-bar-mode -1)
 
 ;; On some machines, tool-bar-mode is not bound, and it causes
-;; initialization to bomb. 
+;; initialization to bomb.
 (if (fboundp 'tool-bar-mode)
     (tool-bar-mode -1))
 
@@ -211,7 +211,7 @@
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 ;; text-mode-hook runs even in modes derived from text-mode, like
 ;; javascript-mode, where having flyspell turned on is not exactly
-;; handy. Turn it off in modes where we don't want it. 
+;; handy. Turn it off in modes where we don't want it.
 (defun turn-on-flyspell ()
   "Turns on flyspell-mode"
   (interactive)
@@ -277,14 +277,14 @@
 (defun set-big-font ()
   "sets the font to something readable from more than 3 inches away"
   (interactive)
-  (modify-frame-parameters 
+  (modify-frame-parameters
    nil
    '( (font . "-outline-Courier New-bold-r-normal-normal-19-142-96-96-c-110-iso10646-1"))))
 
 (defun set-small-font ()
   "sets the font to something readable from more than 3 inches away"
   (interactive)
-  (modify-frame-parameters 
+  (modify-frame-parameters
    nil
    '( (font . "-outline-Courier New-bold-r-normal-normal-12-142-96-96-c-110-iso10646-1"))))
 
@@ -303,12 +303,12 @@
 (global-set-key "\C-c\C-t" 'insert-current-time)
 
 ;; Turn on parathesis highlighting in .el files
-;(add-hook 'emacs-lisp-mode-hook 
+;(add-hook 'emacs-lisp-mode-hook
 ;         (lambda () (highlight-parentheses-mode 1)))
 
 ;; Make ido-mode list things vertically
-;; (setq ido-decorations 
-;;       (quote 
+;; (setq ido-decorations
+;;       (quote
 ;;        ("\n-> "           ; Opening bracket around prospect list
 ;;      ""                ; Closing bracket around prospect list
 ;;      "\n   "           ; separator between prospects
@@ -362,7 +362,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Support paredit for better paren 
+;;; Support paredit for better paren
 ;;; editing in Lisp mode
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -396,7 +396,7 @@
 ;;   ;inferior-lisp-program "C:/bin/sbcl-1.0.14.22/sbcl --core C:/bin/sbcl-1.0.14.22/sbcl.core"  ; your Lisp system
 ;;   slime-complete-symbol-function 'slime-fuzzy-complete-symbol  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
 ;;   ;slime-complete-symbol-function 'slime-complete-symbol  ; standard symbol completion
-;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent? 
+;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
 ;;  )
 
 (require 'slime)
@@ -427,7 +427,7 @@
 ;; This section sets up clojure-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 ;; Require clojure-mode to load and associate it to all .clj files.
 (add-to-list 'load-path "~/.emacs.d/custom/clojure-mode/")
 
@@ -439,8 +439,8 @@
 ;(require 'clojure-paredit)
 (setq clojure-enable-paredit t)
 
-;; These are extra key defines because I kept typing them.  
-;; Within clojure-mode, have Ctrl-x Ctrl-e evaluate the last 
+;; These are extra key defines because I kept typing them.
+;; Within clojure-mode, have Ctrl-x Ctrl-e evaluate the last
 ;; expression.
 ;; Ctrl-c Ctrl-e is also there, because I kept typoing it.
 (add-hook 'clojure-mode-hook
@@ -480,45 +480,45 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun slime-java-describe (symbol-name) 
-  "Get details on Java class/instance at point." 
-  (interactive (list (slime-read-symbol-name "Java Class/instance: "))) 
-  (when (not symbol-name) 
-    (error "No symbol given")) 
-  (save-excursion 
-    (set-buffer (slime-output-buffer)) 
-    (unless (eq (current-buffer) (window-buffer)) 
-      (pop-to-buffer (current-buffer) t)) 
-    (goto-char (point-max)) 
-    (insert (concat "(show " symbol-name ")")) 
-    (when symbol-name 
-      (slime-repl-return) 
+(defun slime-java-describe (symbol-name)
+  "Get details on Java class/instance at point."
+  (interactive (list (slime-read-symbol-name "Java Class/instance: ")))
+  (when (not symbol-name)
+    (error "No symbol given"))
+  (save-excursion
+    (set-buffer (slime-output-buffer))
+    (unless (eq (current-buffer) (window-buffer))
+      (pop-to-buffer (current-buffer) t))
+    (goto-char (point-max))
+    (insert (concat "(show " symbol-name ")"))
+    (when symbol-name
+      (slime-repl-return)
       (other-window 1))))
- 
-(defun slime-javadoc (symbol-name) 
-  "Get JavaDoc documentation on Java class at point." 
-  (interactive (list (slime-read-symbol-name "JavaDoc info for: "))) 
-  (when (not symbol-name) 
-    (error "No symbol given")) 
-  (set-buffer (slime-output-buffer)) 
-  (unless (eq (current-buffer) (window-buffer)) 
-    (pop-to-buffer (current-buffer) t)) 
-  (goto-char (point-max)) 
-  (insert (concat "(javadoc " symbol-name ")")) 
-  (when symbol-name 
-    (slime-repl-return) 
+
+(defun slime-javadoc (symbol-name)
+  "Get JavaDoc documentation on Java class at point."
+  (interactive (list (slime-read-symbol-name "JavaDoc info for: ")))
+  (when (not symbol-name)
+    (error "No symbol given"))
+  (set-buffer (slime-output-buffer))
+  (unless (eq (current-buffer) (window-buffer))
+    (pop-to-buffer (current-buffer) t))
+  (goto-char (point-max))
+  (insert (concat "(javadoc " symbol-name ")"))
+  (when symbol-name
+    (slime-repl-return)
     (other-window 1)))
- 
-(add-hook 'slime-connected-hook (lambda () 
-                                  (interactive) 
+
+(add-hook 'slime-connected-hook (lambda ()
+                                  (interactive)
 ;; slime-redirect-inferior-output causes problems with slime-connect
 ;; workaround available here:
 ;; http://github.com/technomancy/swank-clojure/issues/issue/18
-;(slime-redirect-inferior-output) 
-(define-key slime-mode-map (kbd "C-c d") 'slime-java-describe) 
-(define-key slime-repl-mode-map (kbd "C-c d") 'slime-java-describe) 
-(define-key slime-mode-map (kbd "C-c D") 'slime-javadoc) 
-(define-key slime-repl-mode-map (kbd "C-c D") 'slime-javadoc))) 
+;(slime-redirect-inferior-output)
+(define-key slime-mode-map (kbd "C-c d") 'slime-java-describe)
+(define-key slime-repl-mode-map (kbd "C-c d") 'slime-java-describe)
+(define-key slime-mode-map (kbd "C-c D") 'slime-javadoc)
+(define-key slime-repl-mode-map (kbd "C-c D") 'slime-javadoc)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -550,7 +550,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Turn on Craig's outline-presentation hacks. 
+;; Turn on Craig's outline-presentation hacks.
 (load "~/.emacs.d/custom/candera/outline-presentation.el")
 
 (global-set-key (quote [f5]) 'outline-presentation-mode-on)
@@ -568,7 +568,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 
+;
 ; Enable xml-lite for editing XML
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -587,7 +587,7 @@
 ;; (add-hook 'sgml-mode-hook 'xml-lite-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 
+;
 ; Set bash as the preferred shell
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -610,9 +610,9 @@
 ;; (setq shell-mode-hook 'my-shell-setup)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 
+;
 ; Set up the command shell
-; 
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun my-shell-setup ()
@@ -690,7 +690,7 @@
 ;;
 ;; Set up gist.el
 ;;
-;; http://github.com/defunkt/gist.el 
+;; http://github.com/defunkt/gist.el
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -700,23 +700,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Start an edit server for the Chrome extension that lets you edit
-;; rich text areas using emacs: 
+;; rich text areas using emacs:
 ;; http://github.com/stsquad/emacs_chrome
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'edit-server)
 (edit-server-start)
 
 ;; Turn on longlines mode whenever we're in an edit server buffer
-(add-hook 'edit-server-text-mode-hook 
+(add-hook 'edit-server-text-mode-hook
           '(lambda ()
              (longlines-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Support mo-git-blame
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (add-to-list 'load-path "~/.emacs.d/custom/mo-git-blame")
@@ -748,18 +748,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Set up nXhtml mode
-;; 
+;;
 ;; http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;(load "~/.emacs.d/custom/nxhtml/autostart.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Set up coffee-mode
-;; 
+;;
 ;; http://ozmm.org/posts/coffee_mode.html
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (add-to-list 'load-path "~/.emacs.d/custom/coffee-mode")
@@ -807,7 +807,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
-; 
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (if (functionp 'custom-set-variables-local)
