@@ -242,7 +242,17 @@
   (when (member major-mode detabify-modes)
     (detabify-buffer)))
 
+(defvar delete-trailing-whitespace-modes detabify-modes
+  "A list of the modes that will have trailing whitespace before saving.")
+
+(defun mode-aware-trailing-whitespace-cleanup ()
+  "Calls delete-trailing-whitespace-modes on the current buffer if the major mode is one of 'delete-trailing-whitespace-modes'"
+  (interactive)
+  (when (member major-mode delete-trailing-whitespace-modes)
+    (delete-trailing-whitespace)))
+
 (add-hook 'before-save-hook 'mode-aware-detabify)
+(add-hook 'before-save-hook 'mode-aware-trailing-whitespace-cleanup)
 
 ;; Work around a bug in Ubuntu 10.10
 (setq flyspell-issue-welcome-flag nil)
