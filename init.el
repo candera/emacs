@@ -323,6 +323,13 @@
 (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 (autoload 'javascript-mode "javascript" nil t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Associate ruby mode with ruby files
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("Rakefile\\|Gemfile$\\|.rake\\|Capfile" . ruby-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
