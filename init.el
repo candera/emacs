@@ -339,7 +339,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'auto-mode-alist '("Rakefile\\|Gemfile$\\|.rake\\|Capfile" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile\\|Gemfile$\\|.rake\\|Capfile\\|.watchr\\|Guardfile$\\|.ru" . ruby-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
