@@ -2,6 +2,17 @@
 
 set -e
 
+# TODO: Use this on Mac to get the absolute path of the dir containing
+# the script since we can't use readlink -f
+
+# # Get absolute path of the script
+# dir=`dirname $0`            # The directory where the script is 
+# pushd "$dir" > /dev/null    # Go there
+# CALLERPATH=$PWD             # Record the absolute path
+# popd > /dev/null            # Return to previous dir
+
+# echo $CALLERPATH
+
 THIS_SCRIPT=`readlink -f $0`
 THIS_DIR=`dirname $THIS_SCRIPT`
 
