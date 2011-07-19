@@ -789,6 +789,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(add-to-list 'load-path "~/.emacs.d/custom/sparql-mode")
 (require 'sparql-mode)
 
 (add-to-list 'auto-mode-alist '("\\.sparql$" . sparql-mode))
