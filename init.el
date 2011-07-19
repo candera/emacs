@@ -342,6 +342,7 @@
 (add-to-list 'auto-mode-alist '("Rakefile\\|Gemfile$\\|.rake\\|Capfile\\|.watchr\\|Guardfile$\\|.ru\\|.gemspec" . ruby-mode))
 
 ;; Define M-. to be something useful in ruby-mode
+(require 'ruby-mode)
 (define-key ruby-mode-map (kbd "M-.") 'imenu)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
