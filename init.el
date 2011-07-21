@@ -566,9 +566,8 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;(defvar *journal-roots* '("Z:/daily/" "C:/data/daily/"))
 (load-file "~/.emacs.d/custom/candera/journal.el")
-(global-set-key "\C-x\C-y" 'find-yesterday-log-file)
+(global-set-key (kbd "C-x y") 'find-yesterday-log-file)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
