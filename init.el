@@ -798,6 +798,8 @@
      "Major mode for editing SPARQL files" t)
 (add-to-list 'auto-mode-alist '("\\.sparql$" . sparql-mode))
 
+(setq sparql-default-base-url "http://localhost:2020/metamodl_test/")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Miscellaneous customizations
