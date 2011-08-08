@@ -810,6 +810,8 @@
 
 (load "~/.emacs.d/custom/colors.el")
 
+(add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
