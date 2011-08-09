@@ -811,6 +811,8 @@
 (load "~/.emacs.d/custom/colors.el")
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
+(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
