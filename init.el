@@ -566,9 +566,8 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;(defvar *journal-roots* '("Z:/daily/" "C:/data/daily/"))
 (load-file "~/.emacs.d/custom/candera/journal.el")
-(global-set-key "\C-x\C-y" 'find-yesterday-log-file)
+(global-set-key (kbd "C-x y") 'find-yesterday-log-file)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -810,6 +809,10 @@
 (setq confirm-nonexistent-file-or-buffer nil)
 
 (load "~/.emacs.d/custom/colors.el")
+
+(add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
+(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
