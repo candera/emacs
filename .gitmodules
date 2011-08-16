@@ -15,7 +15,7 @@
 	url = https://github.com/superbobry/io-mode.git
 [submodule "magit"]
 	path = magit
-	url = https://github.com/philjackson/magit.git
+	url = git@github.com:candera/magit.el 
 [submodule "slime-2010-05-19"]
 	path = slime-2010-05-19
 	url = git://git.boinkor.net/slime.git
