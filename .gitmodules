@@ -25,3 +25,6 @@
 [submodule "coffee-mode"]
 	path = coffee-mode
 	url = git://github.com/defunkt/coffee-mode.git
+[submodule "sparql-mode"]
+	path = sparql-mode
+	url = https://github.com/candera/sparql-mode.git
