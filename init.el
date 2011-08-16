@@ -689,6 +689,8 @@
 ;; emacs, whereas I run magit-status all the time
 (global-set-key (kbd "C-x m") 'magit-status)
 
+(setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Set up gist.el
