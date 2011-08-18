@@ -2,18 +2,20 @@
 
 set -e
 
-# TODO: Use this on Mac to get the absolute path of the dir containing
-# the script since we can't use readlink -f
+# Use this on Mac to get the absolute path of the dir containing the
+# script since we can't use readlink -f
 
-# # Get absolute path of the script
-# dir=`dirname $0`            # The directory where the script is 
-# pushd "$dir" > /dev/null    # Go there
-# CALLERPATH=$PWD             # Record the absolute path
-# popd > /dev/null            # Return to previous dir
+if [ "$(uname)" == "Darwin" ]; then
+# Get absolute path of the script by changing to that directory and
+# using $PWD, which is always an absolute path
+    dir=`dirname $0`		
+    pushd "$dir" > /dev/null    
+    THIS_SCRIPT=$PWD/$(basename $0)            
+    popd > /dev/null           
+else
+    THIS_SCRIPT=`readlink -f $0`
+fi
 
-# echo $CALLERPATH
-
-THIS_SCRIPT=`readlink -f $0`
 THIS_DIR=`dirname $THIS_SCRIPT`
 
 echo "Setting up candera's custom emacs setup to point to $THIS_DIR"

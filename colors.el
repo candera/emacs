@@ -17,14 +17,19 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
- `(default ((t ,(if (eq system-type 'windows-nt)
-                    '(:foundry "outline" 
-                      :family "Courier New"
-                      :weight bold
-                      :height 160
-                      :width normal)
-                  '(:family "DejaVu Sans Mono" :foundry "unknown" :height 140)
-))))
+ `(default ((t ,(cond
+                 ((eq system-type 'windows-nt)
+                  '(:foundry "outline"
+                    :family "Courier New"
+                    :weight bold
+                    :height 160
+                    :width normal))
+                 ((eq system-type 'darwin)
+                  '(:weight normal
+                    :height 140
+                    :width normal
+                    :foundry "apple"
+                    :family "Bitstream_Vera_Sans_Mono"))))))
  ;; '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
  ;; '(cursor ((t (:background "red"))))
  ;; '(highline-face ((t (:background "grey20"))))
@@ -252,7 +257,7 @@
  '(widget-single-line-field ((t (:background "dim gray")))))
 
 ;; (unless window-system
-;;  (custom-set-faces 
+;;  (custom-set-faces
 ;;   '(isearch-face ((t (:foreground "black" :background "yellow"))))))
 
 

@@ -814,6 +814,17 @@
 (add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Mac customizations
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (eq system-type 'darwin)
+ (setq ns-command-modifier 'meta)       ; Command key is meta
+)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
