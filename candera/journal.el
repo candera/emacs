@@ -54,10 +54,9 @@
   "Returns the first available directory from the list journal-roots"
   (interactive)
   (if journal-roots
-      (if (or (file-directory-p (car journal-roots))
-	      (tramp-handle-file-directory-p (car journal-roots)))
-	  (car journal-roots)
-	(available-logfile-directory (cdr journal-roots)))
+      (if (or (file-directory-p (car journal-roots)))
+          (car journal-roots)
+        (available-logfile-directory (cdr journal-roots)))
     nil))
 
 (defun day-of-month-ordinal (n)
