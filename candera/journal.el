@@ -9,9 +9,9 @@
   "Open a file that has the default settings for yesterday's entry"
   (interactive "p")
   (let ((*journal-roots*
-	 (if (null *journal-roots*)
-	     (read-directory-name "Base directory: ")
-	   *journal-roots*)))
+         (if (null *journal-roots*)
+             (list (read-directory-name "Base directory: "))
+           *journal-roots*)))
     (let*
 	((n-days-ago (if (null days-ago) 1 days-ago))
 	 (logfile-date (time-n-days-ago n-days-ago))
