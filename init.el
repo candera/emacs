@@ -239,7 +239,7 @@
   (interactive)
   (untabify (point-min) (point-max)))
 
-(defvar detabify-modes '(javascript-mode emacs-lisp-mode ruby-mode clojure-mode)
+(defvar detabify-modes '(javascript-mode emacs-lisp-mode ruby-mode clojure-mode java-mode)
   "A list of the modes that will have tabs converted to spaces before saving.")
 
 (defun mode-aware-detabify ()
