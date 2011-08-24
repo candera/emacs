@@ -227,6 +227,12 @@
 (add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
 (add-hook 'ruby-mode-hook 'turn-off-flyspell)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Whitespace cleanup
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Friends don't let friends save source code with tabs in it
 (defun detabify-buffer ()
   "Calls untabify on the current buffer"
@@ -253,6 +259,16 @@
 
 (add-hook 'before-save-hook 'mode-aware-detabify)
 (add-hook 'before-save-hook 'mode-aware-trailing-whitespace-cleanup)
+
+(defun clean-up-whitespace ()
+  "Calls untabify and delete-trailing-whitespace on the current buffer."
+  (interactive)
+  (detabify-buffer)
+  (delete-trailing-whitespace))
+
+(global-set-key (kbd "C-x t") 'clean-up-whitespace)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Work around a bug in Ubuntu 10.10
 (setq flyspell-issue-welcome-flag nil)
