@@ -12,10 +12,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Start an emacs server except on Windows,
-;; where it would open a TCP socket
+;; where it would open a TCP socket. But don't
+;; start one if one is already running
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(unless (eq system-type 'windows-nt)
+(require 'server)
+(unless (or (eq system-type 'windows-nt)
+            (server-running-p))
   (server-start))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
