@@ -23,6 +23,12 @@
                     :family "Courier New"
                     :weight normal
                     :height 160
+                    :width normal))
+                 ((eq system-type 'gnu/linux)
+                  '(:foundry "unknown"
+                    :family "DejaVu Sans Mono"
+                    :weight normal
+                    :height 120
                     :width normal))))))
  ;; '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
  ;; '(cursor ((t (:background "red"))))
