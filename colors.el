@@ -18,18 +18,12 @@
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
  `(default ((t ,(cond
-                 ((eq system-type 'windows-nt)
+                 ((or (eq system-type 'darwin) (eq system-type 'windows-nt))
                   '(:foundry "outline"
                     :family "Courier New"
-                    :weight bold
+                    :weight normal
                     :height 160
-                    :width normal))
-                 ((eq system-type 'darwin)
-                  '(:weight normal
-                    :height 140
-                    :width normal
-                    :foundry "apple"
-                    :family "Bitstream_Vera_Sans_Mono"))))))
+                    :width normal))))))
  ;; '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
  ;; '(cursor ((t (:background "red"))))
  ;; '(highline-face ((t (:background "grey20"))))
@@ -65,7 +59,6 @@
  '(comint-highlight-input ((t (:bold t :weight bold))))
  '(comint-highlight-prompt ((t (:foreground "cyan1"))))
  '(completions-annotations ((t (:italic t :slant italic))))
- '(completions-common-part ((t (:family "DejaVu Sans Mono" :foundry "unknown" :width normal :weight normal :slant normal :underline nil :overline nil :strike-through nil :box nil :inverse-video nil :foreground "white" :background "black" :stipple nil :height 143))))
  '(completions-first-difference ((t (:bold t :weight bold))))
  '(cursor ((t (:background "red"))))
  '(diff-added ((t (:foreground "green"))))
