@@ -162,7 +162,8 @@
 (mouse-avoidance-mode 'cat-and-mouse)
 
 ;; Turn off the menu bar and the tool bar, since I never use them.
-(menu-bar-mode -1)
+;; Except under OS X, where they don't take up space
+(unless (eq system-type 'darwin) (menu-bar-mode -1))
 
 ;; On some machines, tool-bar-mode is not bound, and it causes
 ;; initialization to bomb.
