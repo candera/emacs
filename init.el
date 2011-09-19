@@ -472,6 +472,19 @@
 ;(require 'clojure-paredit)
 (setq clojure-enable-paredit t)
 
+;; This gives us a way to turn off slime-mode via .dir-locals.el. Just
+;; execute add-dir-local-variable to set clojure-mode-no-slime to t,
+;; and after that slime-mode will be turned off in any clojure-mode
+;; buffer that gets opened in that directory structure.
+(defvar clojure-mode-no-slime nil)
+
+;; We have to use hack-local-variables-hook, because apparently
+;; clojure-mode-hook runs before the local variables are set.
+(add-hook 'hack-local-variables-hook
+          '(lambda () (when clojure-mode-no-slime
+                        (message "Disabling slime-mode because clojure-mode-no-slime is set")
+                        (slime-mode -1))))
+
 ;; These are extra key defines because I kept typing them.
 ;; Within clojure-mode, have Ctrl-x Ctrl-e evaluate the last
 ;; expression.
