@@ -212,7 +212,7 @@
 (setq default-major-mode 'text-mode)
 (setq display-time-day-and-date 'true)
 (display-time)
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
 ;; text-mode-hook runs even in modes derived from text-mode, like
 ;; javascript-mode, where having flyspell turned on is not exactly
 ;; handy. Turn it off in modes where we don't want it.
