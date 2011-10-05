@@ -432,7 +432,7 @@
 ;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
 ;;  )
 
-(require 'slime)
+(require 'slime-autoloads)
 (slime-setup '(slime-repl slime-editing-commands slime-fuzzy slime-presentations slime-scratch))
 ;(slime-setup '(slime-fancy))
 
