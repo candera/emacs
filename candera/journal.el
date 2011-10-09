@@ -37,6 +37,7 @@
             (newline)
             (previous-line)
             (flyspell-mode 1)
+            (auto-fill-mode 1)
             (message (concat "Opened " new-logfile-filename))))))))
 
 ;; (defun days-ago (n)
