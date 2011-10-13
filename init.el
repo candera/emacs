@@ -212,7 +212,7 @@
 (setq default-major-mode 'text-mode)
 (setq display-time-day-and-date 'true)
 (display-time)
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
 ;; text-mode-hook runs even in modes derived from text-mode, like
 ;; javascript-mode, where having flyspell turned on is not exactly
 ;; handy. Turn it off in modes where we don't want it.
@@ -432,7 +432,7 @@
 ;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
 ;;  )
 
-(require 'slime)
+(require 'slime-autoloads)
 (slime-setup '(slime-repl slime-editing-commands slime-fuzzy slime-presentations slime-scratch))
 ;(slime-setup '(slime-fancy))
 
