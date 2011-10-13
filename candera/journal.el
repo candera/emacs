@@ -36,9 +36,9 @@
             (newline)
             (newline)
             (previous-line)
-            (flyspell-mode 1)
-            (auto-fill-mode 1)
-            (message (concat "Opened " new-logfile-filename))))))))
+            (message (concat "Opened " new-logfile-filename)))
+          (flyspell-mode 1)
+          (auto-fill-mode 1))))))
 
 ;; (defun days-ago (n)
 ;;   "Returns a value similar to current-time, but for n days ago"
