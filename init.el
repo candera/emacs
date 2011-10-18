@@ -327,19 +327,19 @@
 ;         (lambda () (highlight-parentheses-mode 1)))
 
 ;; Make ido-mode list things vertically
-;; (setq ido-decorations
-;;       (quote
-;;        ("\n-> "           ; Opening bracket around prospect list
-;;      ""                ; Closing bracket around prospect list
-;;      "\n   "           ; separator between prospects
-;;      "\n   ..."        ; appears at end of truncated list of prospects
-;;      "["               ; opening bracket around common match string
-;;      "]"               ; closing bracket around common match string
-;;      " [No match]"     ; displayed when there is no match
-;;      " [Matched]"      ; displayed if there is a single match
-;;      " [Not readable]" ; current diretory is not readable
-;;      " [Too big]"      ; directory too big
-;;      " [Confirm]")))   ; confirm creation of new file or buffer
+(setq ido-decorations
+      (quote
+       ("\n-> "           ; Opening bracket around prospect list
+        ""                ; Closing bracket around prospect list
+        "\n   "           ; separator between prospects
+        "\n   ..."        ; appears at end of truncated list of prospects
+        "["               ; opening bracket around common match string
+        "]"               ; closing bracket around common match string
+        " [No match]"     ; displayed when there is no match
+        " [Matched]"      ; displayed if there is a single match
+        " [Not readable]" ; current diretory is not readable
+        " [Too big]"      ; directory too big
+        " [Confirm]")))   ; confirm creation of new file or buffer
 
 ;; Tell emacs to wrap lines in vertically split windows
 (setq truncate-partial-width-windows nil)
