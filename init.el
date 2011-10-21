@@ -341,6 +341,14 @@
         " [Too big]"      ; directory too big
         " [Confirm]")))   ; confirm creation of new file or buffer
 
+;; And let us use standard navagation keys that make sense vertically
+(add-hook 'ido-setup-hook
+ '(lambda ()
+    (define-key ido-completion-map [down] 'ido-next-match)
+    (define-key ido-completion-map [up] 'ido-prev-match)
+    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+    (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
+
 ;; Tell emacs to wrap lines in vertically split windows
 (setq truncate-partial-width-windows nil)
 
