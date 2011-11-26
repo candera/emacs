@@ -38,7 +38,8 @@
             (previous-line)
             (message (concat "Opened " new-logfile-filename)))
           (flyspell-mode 1)
-          (auto-fill-mode 1))))))
+          (auto-fill-mode 1)
+          (setq show-trailing-whitespace t))))))
 
 ;; (defun days-ago (n)
 ;;   "Returns a value similar to current-time, but for n days ago"
