@@ -233,7 +233,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Whitespace cleanup
+;; Whitespace cleanup and display
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -261,8 +261,9 @@
   (when (member major-mode delete-trailing-whitespace-modes)
     (delete-trailing-whitespace)))
 
-(add-hook 'before-save-hook 'mode-aware-detabify)
-(add-hook 'before-save-hook 'mode-aware-trailing-whitespace-cleanup)
+;; Removing these in favor of doing it manually
+; (add-hook 'before-save-hook 'mode-aware-detabify)
+; (add-hook 'before-save-hook 'mode-aware-trailing-whitespace-cleanup)
 
 (defun clean-up-whitespace ()
   "Calls untabify and delete-trailing-whitespace on the current buffer."
@@ -271,6 +272,22 @@
   (delete-trailing-whitespace))
 
 (global-set-key (kbd "C-x t") 'clean-up-whitespace)
+
+(defface extra-whitespace-face
+   '((t (:background "pale green")))
+   "Used for tabs and such.")
+
+(defvar extra-whitespace-keywords
+  '(("\t" . 'extra-whitespace-face)))
+
+(defun setup-highlight-whitespace ()
+  (font-lock-add-keywords nil extra-whitespace-keywords)
+  (setq show-trailing-whitespace t))
+
+(add-hook 'emacs-lisp-mode-hook 'setup-highlight-whitespace)
+(add-hook 'text-mode-hook 'setup-highlight-whitespace)
+(add-hook 'lisp-mode-hook 'setup-highlight-whitespace)
+(add-hook 'ruby-mode 'setup-highlight-whitespace)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
