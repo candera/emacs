@@ -288,6 +288,7 @@
 (add-hook 'text-mode-hook 'setup-highlight-whitespace)
 (add-hook 'lisp-mode-hook 'setup-highlight-whitespace)
 (add-hook 'ruby-mode 'setup-highlight-whitespace)
+(add-hook 'text-mode 'setup-highlight-whitespace)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
