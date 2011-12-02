@@ -307,6 +307,14 @@
 (global-set-key (kbd "M-'") 'completion-at-point)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set up emacs-lisp-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Work around a bug in Ubuntu 10.10
 (setq flyspell-issue-welcome-flag nil)
