@@ -289,6 +289,31 @@
 (add-hook 'lisp-mode-hook 'setup-highlight-whitespace)
 (add-hook 'ruby-mode 'setup-highlight-whitespace)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set M-. to do imenu rather than find-tag
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(global-set-key (kbd "M-.") 'imenu)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set M-' to do completion-at-point
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(global-set-key (kbd "M-'") 'completion-at-point)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set up emacs-lisp-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Work around a bug in Ubuntu 10.10
@@ -560,53 +585,6 @@
 
 (add-to-list 'load-path "~/.emacs.d/custom/elein")
 (require 'elein)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Set up java doc browser for clojure
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun slime-java-describe (symbol-name)
-  "Get details on Java class/instance at point."
-  (interactive (list (slime-read-symbol-name "Java Class/instance: ")))
-  (when (not symbol-name)
-    (error "No symbol given"))
-  (save-excursion
-    (set-buffer (slime-output-buffer))
-    (unless (eq (current-buffer) (window-buffer))
-      (pop-to-buffer (current-buffer) t))
-    (goto-char (point-max))
-    (insert (concat "(show " symbol-name ")"))
-    (when symbol-name
-      (slime-repl-return)
-      (other-window 1))))
-
-(defun slime-javadoc (symbol-name)
-  "Get JavaDoc documentation on Java class at point."
-  (interactive (list (slime-read-symbol-name "JavaDoc info for: ")))
-  (when (not symbol-name)
-    (error "No symbol given"))
-  (set-buffer (slime-output-buffer))
-  (unless (eq (current-buffer) (window-buffer))
-    (pop-to-buffer (current-buffer) t))
-  (goto-char (point-max))
-  (insert (concat "(javadoc " symbol-name ")"))
-  (when symbol-name
-    (slime-repl-return)
-    (other-window 1)))
-
-(add-hook 'slime-connected-hook (lambda ()
-                                  (interactive)
-;; slime-redirect-inferior-output causes problems with slime-connect
-;; workaround available here:
-;; http://github.com/technomancy/swank-clojure/issues/issue/18
-;(slime-redirect-inferior-output)
-(define-key slime-mode-map (kbd "C-c d") 'slime-java-describe)
-(define-key slime-repl-mode-map (kbd "C-c d") 'slime-java-describe)
-(define-key slime-mode-map (kbd "C-c D") 'slime-javadoc)
-(define-key slime-repl-mode-map (kbd "C-c D") 'slime-javadoc)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
