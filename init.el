@@ -300,11 +300,19 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Set M-' to do completion-at-point
+;; Set M-' to do completion
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (global-set-key (kbd "M-'") 'completion-at-point)
+
+(add-hook 'slime-mode-hook
+          (lambda ()
+            (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)))
+
+(add-hook 'slime-repl-mode-hook
+          (lambda ()
+            (define-key slime-repl-mode-map (kbd "M-'") 'slime-complete-symbol)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
