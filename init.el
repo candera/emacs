@@ -585,6 +585,7 @@
 
 (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.cljs$" . clojure-mode))
 
 (add-hook 'clojure-mode-hook
           '(lambda ()
@@ -633,6 +634,7 @@
              (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)))
 
 (require 'clojure-test-mode)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
