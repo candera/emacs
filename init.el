@@ -538,7 +538,7 @@
 ;; This is a total hack: we're hardcoding the name of the shell buffer
 (defun shell-send-input (input)
   "Send INPUT into the *shell* buffer and leave it visible."
-  (save-excursion
+  (save-selected-window
     (switch-to-buffer-other-window "*shell*")
     (goto-char (point-max))
     (insert input)
