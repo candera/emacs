@@ -490,19 +490,22 @@ If the point is in a string or a comment, fill the paragraph instead,
   (interactive "P")
   (unless (paredit-in-string-p)
     (error "Must be inside a string"))
-  (save-restriction
-    (save-excursion
-      (let ((string-region (paredit-string-start+end-points)))
-        (narrow-to-region (car string-region) (cdr string-region))
-        (goto-char (point-min))
-        (next-line)
-        (beginning-of-line)
-        (save-excursion (replace-regexp "^\\s-+" "" nil (point) (point-max)))
-        (replace-regexp "^.+$" "  \\&" nil (point) (point-max))
-        (set-mark (point-min))
-        (goto-char (point-max))
-        (let ((fill-prefix "  "))
-          (fill-paragraph argument t))))))
+  (let ((current-vscroll (window-vscroll)))
+    (unwind-protect
+        (save-restriction
+          (save-excursion
+            (let ((string-region (paredit-string-start+end-points)))
+              (narrow-to-region (car string-region) (cdr string-region))
+              (goto-char (point-min))
+              (next-line)
+              (beginning-of-line)
+              (save-excursion (replace-regexp "^\\s-+" "" nil (point) (point-max)))
+              (replace-regexp "^.+$" "  \\&" nil (point) (point-max))
+              (set-mark (point-min))
+              (goto-char (point-max))
+              (let ((fill-prefix "  "))
+                (fill-paragraph argument t)))))
+      (set-window-vscroll (selected-window) current-vscroll))))
 
 (define-key paredit-mode-map (kbd "C-c q")
   'better-paredit-reindent-string)
