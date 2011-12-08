@@ -481,6 +481,32 @@
 
 (show-paren-mode t)
 
+(require 'paredit)
+
+(defun better-paredit-reindent-string (&optional argument)
+  "Reindent the definition that the point is on.
+If the point is in a string or a comment, fill the paragraph instead,
+  and with a prefix argument, justify as well."
+  (interactive "P")
+  (unless (paredit-in-string-p)
+    (error "Must be inside a string"))
+  (save-restriction
+    (save-excursion
+      (let ((string-region (paredit-string-start+end-points)))
+        (narrow-to-region (car string-region) (cdr string-region))
+        (goto-char (point-min))
+        (next-line)
+        (beginning-of-line)
+        (save-excursion (replace-regexp "^\\s-+" "" nil (point) (point-max)))
+        (replace-regexp "^.+$" "  \\&" nil (point) (point-max))
+        (set-mark (point-min))
+        (goto-char (point-max))
+        (let ((fill-prefix "  "))
+          (fill-paragraph argument t))))))
+
+(define-key paredit-mode-map (kbd "C-c q")
+  'better-paredit-reindent-string)
+
 ;; (load "paredit.el")
 
 ;; (define-key paredit-mode-map (kbd "M-)")
