@@ -501,12 +501,12 @@ If the point is in a string or a comment, fill the paragraph instead,
         (insert
          (with-temp-buffer
            (insert string)
-           (replace-regexp "^ +" "" nil (point-min) (point-max))
-           (replace-regexp "^" "  " nil (point-min) (point-max))
-           (delete-trailing-whitespace)
-           (mark-whole-buffer)
-           (fill-paragraph nil t)
-           (buffer-substring-no-properties (+ 2 (point-min)) (point-max))))))))
+           ;(replace-regexp "^ +" "" nil (point-min) (point-max))
+           (let ((left-margin 2))
+             (delete-trailing-whitespace)
+             (mark-whole-buffer)
+             (fill-paragraph nil t)
+             (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))))
 
 (define-key paredit-mode-map (kbd "C-c q")
   'better-paredit-reindent-string)
