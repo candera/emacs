@@ -492,17 +492,21 @@ If the point is in a string or a comment, fill the paragraph instead,
     (error "Must be inside a string"))
   (save-restriction
     (save-excursion
-      (let ((string-region (paredit-string-start+end-points)))
-        (narrow-to-region (car string-region) (cdr string-region))
-        (goto-char (point-min))
-        (next-line)
-        (beginning-of-line)
-        (save-excursion (replace-regexp "^\\s-+" "" nil (point) (point-max)))
-        (replace-regexp "^.+$" "  \\&" nil (point) (point-max))
-        (set-mark (point-min))
-        (goto-char (point-max))
-        (let ((fill-prefix "  "))
-          (fill-paragraph argument t))))))
+      (let* ((string-region (paredit-string-start+end-points))
+             (string-start (1+ (car string-region)))
+             (string-end (1- (cdr string-region)))
+             (string (buffer-substring-no-properties (1+ (car string-region))
+                                                     (1- (cdr string-region)))))
+        (delete-region string-start string-end)
+        (insert
+         (with-temp-buffer
+           (insert string)
+           (replace-regexp "^ +" "" nil (point-min) (point-max))
+           (replace-regexp "^" "  " nil (point-min) (point-max))
+           (delete-trailing-whitespace)
+           (mark-whole-buffer)
+           (fill-paragraph nil t)
+           (buffer-substring-no-properties (+ 2 (point-min)) (point-max))))))))
 
 (define-key paredit-mode-map (kbd "C-c q")
   'better-paredit-reindent-string)
