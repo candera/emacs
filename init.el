@@ -92,7 +92,7 @@
 (setq x-select-enable-clipboard t)
 
 ;; And don't allow tabs to be inserted
-(setq-default insert-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
 
 ;; Enable iswitchb-mode
 ;;(iswitchb-mode 1)
