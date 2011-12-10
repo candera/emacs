@@ -501,7 +501,6 @@ If the point is in a string or a comment, fill the paragraph instead,
         (insert
          (with-temp-buffer
            (insert string)
-           ;(replace-regexp "^ +" "" nil (point-min) (point-max))
            (let ((left-margin 2))
              (delete-trailing-whitespace)
              (mark-whole-buffer)
