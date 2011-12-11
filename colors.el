@@ -31,7 +31,7 @@
                     ;; We want to use a different font if we're doing remote
                     ;; display back to Windows, so we look to see if DISPLAY
                     ;; is something like :0.0
-                    :height ,(if (string= (substring (getenv "DISPLAY") 0 1) ":") 120 140)
+                    :height ,(if (string= (substring (or (getenv "DISPLAY") ":") 0 1) ":") 120 140)
                     :width normal))))))
  ;; '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
  ;; '(cursor ((t (:background "red"))))
