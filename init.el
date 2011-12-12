@@ -724,7 +724,9 @@ returned."
              (fill-paragraph nil t)
              (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))))
 
-(define-key paredit-mode-map (kbd "C-c M-q") 'clojure-fill-docstring)
+(add-hook 'clojure-mode-hook
+          (lambda ()
+            (define-key clojure-mode-map (kbd "C-c M-q") 'clojure-fill-docstring)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
