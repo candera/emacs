@@ -705,24 +705,28 @@ returned."
   remain indented by four spaces after refilling."
   (interactive "P")
   (if (and (fboundp 'paredit-in-string-p) paredit-mode)
-   (unless (paredit-in-string-p)
-     (error "Must be inside a string")))
-  (save-restriction
-    (save-excursion
-      (let* ((string-region (clojure-docstring-start+end-points))
-             (string-start (1+ (car string-region)))
-             (string-end (cdr string-region))
-             (string (buffer-substring-no-properties (1+ (car string-region))
-                                                     (cdr string-region))))
-        (delete-region string-start string-end)
-        (insert
-         (with-temp-buffer
-           (insert string)
-           (let ((left-margin 2))
-             (delete-trailing-whitespace)
-             (mark-whole-buffer)
-             (fill-paragraph nil t)
-             (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))))
+      (unless (paredit-in-string-p)
+        (error "Must be inside a string")))
+  ;; Oddly, save-excursion doesn't do a good job of preserving point.
+  ;; It's probably because we delete the string and then re-insert it.
+  (let ((old-point (point)))
+    (save-restriction
+      (save-excursion
+        (let* ((string-region (clojure-docstring-start+end-points))
+               (string-start (1+ (car string-region)))
+               (string-end (cdr string-region))
+               (string (buffer-substring-no-properties (1+ (car string-region))
+                                                       (cdr string-region))))
+          (delete-region string-start string-end)
+          (insert
+           (with-temp-buffer
+             (insert string)
+             (let ((left-margin 2))
+               (delete-trailing-whitespace)
+               (mark-whole-buffer)
+               (fill-paragraph nil t)
+               (buffer-substring-no-properties (+ 2 (point-min)) (point-max))))))))
+    (goto-char old-point)))
 
 (add-hook 'clojure-mode-hook
           (lambda ()
