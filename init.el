@@ -131,6 +131,29 @@
   (interactive)
   (scroll-down -1))
 
+;;; I like this function because I run emacs maximized on a wide
+;;; monitor, and it always looks weird to me to edit text way off to
+;;; the left edge of the monitor. So I can use this to get something
+;;; more visually balanced.
+;;;
+;;; This function needs a little work to a) ensure that the other
+;;; windows contain interesting stuff, too, like maybe the windows
+;;; that were already on the screen, and b) gives the user a way to
+;;; switch back to the window layout they had previously. Looks like
+;;; window layouts can be stored in registers, so that might be a good
+;;; way to do it.
+(defun center-window-horizontally (width)
+  "Arrange windows three as side-by-side, with the center one
+having width WIDTH.
+Accepts WIDTH as a numeric prefix, but defaults to 85."
+  (interactive "P")
+  (let ((width (if width width 85)))
+    (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
+      (delete-other-windows)
+      (split-window-horizontally side-window-width)
+      (other-window 1)
+      (split-window-horizontally (- side-window-width)))))
+
 ;; Cursor-style setting functions
 (defun set-cursor-type (cursor)
   "Modify the cursor to the specified type"
