@@ -56,28 +56,6 @@
  uniquify-buffer-name-style 'post-forward
  uniquify-separator ":")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; io-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (add-to-list 'load-path "~/.emacs.d/custom/io-mode")
-;; (require 'io-mode)
-
-;; (defun io-repl-line ()
-;;   (interactive)
-;;   (let ((source-buffer (current-buffer)))
-;;     (message (buffer-name source-buffer))
-;;     (save-excursion
-;;       (beginning-of-line)
-;;       (let ((start (point)))
-;;      (end-of-line)
-;;      (io-repl-sregion start (point))))
-;;     (pop-to-buffer source-buffer)))
-
-;; (define-key io-mode-map (kbd "C-M-X") 'io-repl-line)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; This section sets various miscellaneous settings
@@ -94,10 +72,7 @@
 ;; And don't allow tabs to be inserted
 (setq-default indent-tabs-mode nil)
 
-;; Enable iswitchb-mode
-;;(iswitchb-mode 1)
-
-;; Or enable ido-mode
+;; Enable ido-mode
 (ido-mode 1)
 
 ;; Enable line numbering globally
@@ -107,9 +82,6 @@
 
 ;; Enable line highlighting
 (global-hl-line-mode 1)
-
-;; Enable rainbow parens
-;(highlight-parentheses-mode 1)
 
 (defun scroll-other-window-up-one ()
   "Scrolls other window towards top of buffer by one line"
@@ -203,28 +175,6 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (global-set-key (quote [C-down]) 'scroll-window-down-one)
 (global-set-key (kbd "C-;") 'flyspell-auto-correct-previous-word)
 
-;; And define shift-bindings for modes (like shell) that override the control ones
-;; (global-set-key (quote [M-S-down]) 'scroll-other-window-down-one)
-;; (global-set-key (quote [M-S-up])   'scroll-other-window-up-one)
-;; (global-set-key (quote [S-up]) 'scroll-window-up-one)
-;; (global-set-key (quote [S-down]) 'scroll-window-down-one)
-
-;; (global-set-key (quote [C-tab]) 'iswitchb-buffer)
-
-;; (global-unset-key [home])
-;; (global-unset-key [end])
-
-;; (global-set-key [home] 'beginning-of-line)
-;; (global-set-key [end] 'end-of-line)
-;; (global-set-key (quote [C-home]) (quote beginning-of-buffer))
-;; (global-set-key (quote [C-end]) (quote end-of-buffer))
-(global-set-key "\C-z" 'undo)
-
-;; (defun switch-to-default-buffer ()
-;;   "Switches to whatever buffer is the default switch-to"
-;;   (interactive)
-;;   (switch-to-buffer nil))
-
 (global-set-key (quote [C-tab]) 'other-window)
 
 (global-set-key [f12] 'shell)
@@ -279,7 +229,8 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
   "A list of the modes that will have trailing whitespace before saving.")
 
 (defun mode-aware-trailing-whitespace-cleanup ()
-  "Calls delete-trailing-whitespace-modes on the current buffer if the major mode is one of 'delete-trailing-whitespace-modes'"
+  "Calls delete-trailing-whitespace-modes on the current buffer
+if the major mode is one of 'delete-trailing-whitespace-modes'"
   (interactive)
   (when (member major-mode delete-trailing-whitespace-modes)
     (delete-trailing-whitespace)))
@@ -470,16 +421,6 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;(require 'refactor)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Autocomplete
-;; http://cx4a.org/software/auto-complete/
-;; https://github.com/m2ym/auto-complete.git
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;(add-to-list 'load-path "~/.emacs.d/custom/auto-complete")
-;(require 'auto-complete)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -734,29 +675,6 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; Set bash as the preferred shell
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; For the interactive shell
-; (setq explicit-shell-file-name "bash.exe")
-
-;; For subprocesses invoked via the shell (e.g., "shell -c command")
-; (setq shell-file-name explicit-shell-file-name)
-
-;; (defun my-shell-setup ()
-;;   "For Cygwin bash under Emacs 20"
-;;   (setq comint-scroll-show-maximum-output 'this)
-;;   (setq comint-completion-addsuffix t)
-;;   ;; (setq comint-process-echoes t) ;; reported that this is no longer needed
-;;   (setq comint-eol-on-send t)
-;;   (setq w32-quote-process-args ?\")
-;;   (make-variable-buffer-local 'comint-completion-addsuffix))
-
-;; (setq shell-mode-hook 'my-shell-setup)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; Set up the command shell
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -845,31 +763,10 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (add-to-list 'load-path "~/.emacs.d/custom/gist.el")
 (require 'gist)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Start an edit server for the Chrome extension that lets you edit
-;; rich text areas using emacs:
-;; http://github.com/stsquad/emacs_chrome
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'edit-server)
-(edit-server-start)
-
 ;; Turn on longlines mode whenever we're in an edit server buffer
 (add-hook 'edit-server-text-mode-hook
           '(lambda ()
              (longlines-mode 1)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Support mo-git-blame
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path "~/.emacs.d/custom/mo-git-blame")
-(autoload 'mo-git-blame-file "mo-git-blame" nil t)
-(autoload 'mo-git-blame-current "mo-git-blame" nil t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
