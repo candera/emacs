@@ -538,6 +538,13 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   (interactive)
   (shell-send-input (defun-at-point)))
 
+(defun shell-eval-region ()
+  "Send the contents of the region to the *shell* buffer."
+  (interactive)
+  (shell-send-input (buffer-substring-no-properties
+                     (region-beginning)
+                     (region-end))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; This section sets up clojure-mode
