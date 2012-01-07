@@ -108,23 +108,33 @@
 ;;; the left edge of the monitor. So I can use this to get something
 ;;; more visually balanced.
 ;;;
-;;; This function needs a little work to a) ensure that the other
-;;; windows contain interesting stuff, too, like maybe the windows
-;;; that were already on the screen, and b) gives the user a way to
-;;; switch back to the window layout they had previously. Looks like
-;;; window layouts can be stored in registers, so that might be a good
-;;; way to do it.
+;;; This function needs a little work to ensure that the other windows
+;;; contain interesting stuff, too, like maybe the windows that were
+;;; already on the screen.
+(defvar former-window-configuration nil
+  "Stores the window that was in effect when center-window-horizontally was called.")
+
 (defun center-window-horizontally (width)
   "Arrange windows three as side-by-side, with the center one
 having width WIDTH.
 Accepts WIDTH as a numeric prefix, but defaults to 85."
   (interactive "P")
+  (setq former-window-configuration (current-window-configuration))
   (let ((width (if width width 85)))
     (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
       (delete-other-windows)
       (split-window-horizontally side-window-width)
       (other-window 1)
       (split-window-horizontally (- side-window-width)))))
+
+(defun restore-former-window-configuration ()
+  "Restore the window configuration that was in effect before
+  `center-window-horizontally' was called."
+  (interactive)
+  (set-window-configuration former-window-configuration))
+
+(global-set-key (kbd "C-x 4 C-c") 'center-window-horizontally)
+(global-set-key (kbd "C-x 4 C-r") 'restore-former-window-configuration)
 
 ;; Cursor-style setting functions
 (defun set-cursor-type (cursor)
