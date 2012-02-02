@@ -626,6 +626,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'load-path "~/.emacs.d/custom/elein")
 (require 'elein)
 
+(defun lein-repl ()
+  "Run 'lein repl' in an inferior-lisp."
+  (interactive)
+  (inferior-lisp "lein repl"))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; This section sets up Craig's web-lookup utilities
