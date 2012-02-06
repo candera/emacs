@@ -386,6 +386,21 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Tell emacs to wrap lines in vertically split windows
 (setq truncate-partial-width-windows nil)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set up dired-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun dired-insert-this-directory-recursively ()
+  "Recursively insert the subdirectories of the current dired directory."
+  (interactive)
+  (dired-insert-subdir dired-directory "-alR"))
+
+(add-hook 'dired-mode-hook
+          '(lambda ()
+             (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Associate javascript mode with .js files
