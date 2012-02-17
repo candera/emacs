@@ -811,14 +811,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq load-path (cons "~/.emacs.d/custom/org-7.4/lisp" load-path))
-(setq load-path (cons "~/.emacs.d/custom/org-7.4/contrib/lisp" load-path))
+(setq load-path (cons "~/.emacs.d/custom/org-mode/lisp" load-path))
+(setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
 (require 'org-install)
-
-(setq org-directory "~/Dropbox/")
-(setq org-mobile-directory "~/Dropbox/MobileOrg/")
-(setq org-agenda-files '("~/Dropbox/notes.txt"))
-(setq org-mobile-inbox-for-pull "~/Dropbox/inbox.org")
 
 (setq org-todo-keywords (quote ((sequence "TODO" "INPROGRESS" "DONE"))))
 

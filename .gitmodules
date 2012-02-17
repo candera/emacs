@@ -28,3 +28,6 @@
 [submodule "sparql-mode"]
 	path = sparql-mode
 	url = https://github.com/candera/sparql-mode.git
+[submodule "org-mode"]
+	path = org-mode
+	url = git://orgmode.org/org-mode.git

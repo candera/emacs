@@ -39,3 +39,7 @@ if [ -f ~/.emacs.d/init.el ]; then
 fi
 
 echo '(load "~/.emacs.d/custom/init.el")' > ~/.emacs.d/init.el
+
+pushd org-mode
+make
+popd
