@@ -268,6 +268,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   (font-lock-add-keywords nil extra-whitespace-keywords)
   (setq show-trailing-whitespace t))
 
+(defun stop-highlighting-whitespace ()
+  (interactive)
+  (font-lock-remove-keywords nil extra-whitespace-keywords)
+  (setq show-trailing-whitespace nil))
+
 (add-hook 'emacs-lisp-mode-hook 'setup-highlight-whitespace)
 (add-hook 'text-mode-hook 'setup-highlight-whitespace)
 (add-hook 'lisp-mode-hook 'setup-highlight-whitespace)
