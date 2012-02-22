@@ -888,6 +888,15 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; find-file-in-git-repo
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'find-file-in-git-repo)
+(global-set-key (kbd "C-x M-f") 'find-file-in-git-repo)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Miscellaneous customizations
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
