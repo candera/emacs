@@ -24,14 +24,15 @@
                     :weight normal
                     :height 160
                     :width normal))
-                 ((eq system-type 'gnu/linux)
+                 ((or (eq system-type 'gnu/linux) (eq system-type 'cygwin))
                   `(:foundry "unknown"
                     :family "Courier 10 Pitch"
                     :weight normal
                     ;; We want to use a different font if we're doing remote
                     ;; display back to Windows, so we look to see if DISPLAY
-                    ;; is something like :0.0
-                    :height ,(if (string= (substring (or (getenv "DISPLAY") ":") 0 1) ":") 120 140)
+                    ;; is something like :0.0. But on Cygwin, we stick with 140
+                    :height ,(if (eq system-type 'cygwin) 140
+                               (if (string= (substring (or (getenv "DISPLAY") ":") 0 1) ":") 120 140))
                     :width normal))))))
  ;; '(mode-line ((((class color) (min-colors 88)) (:background "#8888ff" :foreground "black" :box (:line-width -1 :style released-button)))))
  ;; '(cursor ((t (:background "red"))))
