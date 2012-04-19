@@ -127,6 +127,13 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
       (other-window 1)
       (split-window-horizontally (- side-window-width)))))
 
+(defun temporarily-display-one-window ()
+  "Temporarily go to single-window configuration, saving the old
+  configuration."
+  (interactive)
+  (setq former-window-configuration (current-window-configuration))
+  (delete-other-windows))
+
 (defun restore-former-window-configuration ()
   "Restore the window configuration that was in effect before
   `center-window-horizontally' was called."
@@ -135,6 +142,7 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 
 (global-set-key (kbd "C-x 4 C-c") 'center-window-horizontally)
 (global-set-key (kbd "C-x 4 C-r") 'restore-former-window-configuration)
+(global-set-key (kbd "C-x 4 1") 'temporarily-display-one-window)
 
 ;; Cursor-style setting functions
 (defun set-cursor-type (cursor)
