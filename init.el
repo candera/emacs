@@ -390,14 +390,19 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;; And let us use standard navagation keys that make sense vertically
 (add-hook 'ido-setup-hook
- '(lambda ()
-    (define-key ido-completion-map [down] 'ido-next-match)
-    (define-key ido-completion-map [up] 'ido-prev-match)
-    (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-    (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
+          (lambda ()
+            (define-key ido-completion-map [down] 'ido-next-match)
+            (define-key ido-completion-map [up] 'ido-prev-match)
+            (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+            (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
 
 ;; Tell emacs to wrap lines in vertically split windows
 (setq truncate-partial-width-windows nil)
+
+;; Except in inferior-lisp, where it screws things up
+(add-hook 'inferior-lisp-mode-hook
+          (lambda ()
+             (setq truncate-lines t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -411,8 +416,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   (dired-insert-subdir dired-directory "-alR"))
 
 (add-hook 'dired-mode-hook
-          '(lambda ()
-             (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)))
+          (lambda ()
+            (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
