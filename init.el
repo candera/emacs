@@ -112,14 +112,14 @@
 ;;; contain interesting stuff, too, like maybe the windows that were
 ;;; already on the screen.
 (defvar former-window-configuration nil
-  "Stores the window that was in effect when center-window-horizontally was called.")
+  "Stores previous window configurations, e.g. those that were in effect when center-window-horizontally was called.")
 
 (defun center-window-horizontally (width)
   "Arrange windows three as side-by-side, with the center one
 having width WIDTH.
 Accepts WIDTH as a numeric prefix, but defaults to 85."
   (interactive "P")
-  (setq former-window-configuration (current-window-configuration))
+  (push (current-window-configuration) former-window-configuration)
   (let ((width (if width width 85)))
     (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
       (delete-other-windows)
@@ -131,14 +131,17 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
   "Temporarily go to single-window configuration, saving the old
   configuration."
   (interactive)
-  (setq former-window-configuration (current-window-configuration))
+  (push (current-window-configuration) former-window-configuration)
   (delete-other-windows))
 
 (defun restore-former-window-configuration ()
   "Restore the window configuration that was in effect before
   `center-window-horizontally' was called."
   (interactive)
-  (set-window-configuration former-window-configuration))
+  (let ((former (pop former-window-configuration)))
+    (if former
+        (set-window-configuration former)
+      (message "No previous window configuration"))))
 
 (global-set-key (kbd "C-x 4 C-c") 'center-window-horizontally)
 (global-set-key (kbd "C-x 4 C-r") 'restore-former-window-configuration)
