@@ -908,8 +908,18 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'find-file-in-git-repo)
-(global-set-key (kbd "C-x M-f") 'find-file-in-git-repo)
+;; Deprecating in favor of find-file-in-project
+;; (require 'find-file-in-git-repo)
+;; (global-set-key (kbd "C-x M-f") 'find-file-in-git-repo)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; find-file-in-project
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'find-file-in-project)
+(global-set-key (kbd "C-x M-f") 'find-file-in-project)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
