@@ -56,8 +56,8 @@
   "Returns the first available directory from the list journal-roots"
   (interactive)
   (if journal-roots
-      (if (or (file-directory-p (car journal-roots)))
-          (car journal-roots)
+      (if (or (file-directory-p (expand-file-name (car journal-roots))))
+          (expand-file-name (car journal-roots))
         (available-logfile-directory (cdr journal-roots)))
     nil))
 
