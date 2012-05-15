@@ -21,7 +21,7 @@
           (format-time-string
            (concat new-logfile-directory "/%Y%m%d.txt") logfile-date)))
       (progn
-        (make-directory new-logfile-directory 't)
+        (make-directory new-logfile-directory t)
         (let ((existing?
                (or (find-buffer-visiting new-logfile-filename)
                    (file-exists-p new-logfile-filename))))
