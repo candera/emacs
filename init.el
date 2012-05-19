@@ -120,7 +120,7 @@ having width WIDTH.
 Accepts WIDTH as a numeric prefix, but defaults to 85."
   (interactive "P")
   (push (current-window-configuration) former-window-configuration)
-  (let ((width (if width width 85)))
+  (let ((width (or width 85)))
     (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
       (delete-other-windows)
       (split-window-horizontally side-window-width)
