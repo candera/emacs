@@ -134,6 +134,45 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
   (push (current-window-configuration) former-window-configuration)
   (delete-other-windows))
 
+(defun temporarily-display-two-windows (split-vertically?)
+  "Temporarily go to two side-by-side windows, saving the old
+  configuration. With a prefix argument, the windows are split
+  vertically (i.e. one window above the other). By default they
+  are split horizontally."
+  (interactive "P")
+  (push (current-window-configuration) former-window-configuration)
+  (delete-other-windows)
+  (if split-vertically?
+      (split-window-vertically)
+    (split-window-horizontally)))
+
+(defun temporarily-display-three-windows (large-window-horizontal?)
+  "Temporarily go to a three-window configuration, with one large
+  window and two small ones, saving the old configuration. With a
+  prefix argument, the largest window is fills the frame
+  horizontally. Otherwise it fills the frame vertically."
+  (interactive "P")
+  (push (current-window-configuration) former-window-configuration)
+  (delete-other-windows)
+  (if large-window-horizontal?
+      (split-window-vertically)
+    (split-window-horizontally))
+  (other-window 1)
+  (if large-window-horizontal?
+      (split-window-horizontally)
+    (split-window-vertically)))
+
+(defun temporarily-display-four-windows ()
+  "Temporarily go to four equally-sized windows, saving the old
+  configuration."
+  (interactive)
+  (push (current-window-configuration) former-window-configuration)
+  (delete-other-windows)
+  (split-window-vertically)
+  (split-window-horizontally)
+  (other-window 2)
+  (split-window-horizontally))
+
 (defun restore-former-window-configuration ()
   "Restore the window configuration that was in effect before
   `center-window-horizontally' was called."
@@ -146,6 +185,9 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (global-set-key (kbd "C-x 4 C-c") 'center-window-horizontally)
 (global-set-key (kbd "C-x 4 C-r") 'restore-former-window-configuration)
 (global-set-key (kbd "C-x 4 1") 'temporarily-display-one-window)
+(global-set-key (kbd "C-x 4 2") 'temporarily-display-two-windows)
+(global-set-key (kbd "C-x 4 3") 'temporarily-display-three-windows)
+(global-set-key (kbd "C-x 4 4") 'temporarily-display-four-windows)
 
 ;; Cursor-style setting functions
 (defun set-cursor-type (cursor)
