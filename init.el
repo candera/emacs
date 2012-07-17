@@ -690,7 +690,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
              (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
              ;; Not all terminals can transmit the standard key sequencences for
              ;; paredit-forward-slurp-sexp, which is super-useful
-             (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)))
+             (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
+             (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)))
 
 (require 'clojure-test-mode)
 
