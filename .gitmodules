@@ -31,3 +31,6 @@
 [submodule "org-mode"]
 	path = org-mode
 	url = git://orgmode.org/org-mode.git
+[submodule "align-cljlet"]
+	path = align-cljlet
+	url = https://github.com/gstamp/align-cljlet.git
