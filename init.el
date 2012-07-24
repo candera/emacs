@@ -972,6 +972,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-to-list 'load-path "~/.emacs.d/custom/align-cljlet")
 (require 'align-cljlet)
+(define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
