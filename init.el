@@ -963,7 +963,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (require 'find-file-in-project)
 (global-set-key (kbd "C-x M-f") 'find-file-in-project)
-(add-to-list 'ffip-patterns "*.cljs")
+(setq ffip-patterns (append ffip-patterns '("*.cljs" "*.scss" ".css")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -988,6 +988,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
 (add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
+(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
