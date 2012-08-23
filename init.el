@@ -851,6 +851,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; emacs, whereas I run magit-status all the time
 (global-set-key (kbd "C-x m") 'magit-status)
 
+(define-key magit-mode-map (kbd "^") 'magit-goto-parent-section)
+
 (setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
