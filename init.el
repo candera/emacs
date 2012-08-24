@@ -350,7 +350,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-hook 'slime-mode-hook
           (lambda ()
-            (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)))
+            (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)
+            (define-key slime-mode-map (kbd "C-c M-q") nil)))
 
 (add-hook 'slime-repl-mode-hook
           (lambda ()
