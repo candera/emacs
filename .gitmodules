@@ -34,3 +34,6 @@
 [submodule "align-cljlet"]
 	path = align-cljlet
 	url = https://github.com/gstamp/align-cljlet.git
+[submodule "nrepl.el"]
+	path = nrepl.el
+	url = ./nrepl.el
