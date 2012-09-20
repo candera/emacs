@@ -350,7 +350,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-hook 'slime-mode-hook
           (lambda ()
-            (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)))
+            (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)
+            (define-key slime-mode-map (kbd "C-c M-q") nil)))
 
 (add-hook 'slime-repl-mode-hook
           (lambda ()
@@ -851,6 +852,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; emacs, whereas I run magit-status all the time
 (global-set-key (kbd "C-x m") 'magit-status)
 
+(define-key magit-mode-map (kbd "^") 'magit-goto-parent-section)
+
 (setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -963,6 +966,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (require 'find-file-in-project)
 (global-set-key (kbd "C-x M-f") 'find-file-in-project)
+(setq ffip-patterns (append ffip-patterns '("*.cljs" "*.scss" ".css")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -972,6 +976,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-to-list 'load-path "~/.emacs.d/custom/align-cljlet")
 (require 'align-cljlet)
+(define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -986,6 +991,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
 (add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
+(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
