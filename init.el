@@ -1002,6 +1002,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (when (eq system-type 'darwin)
  (setq ns-command-modifier 'meta)       ; Command key is meta
+ (setq mac-right-option-modifier 'control)
 )
 
 
