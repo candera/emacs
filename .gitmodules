@@ -1,6 +1,6 @@
 [submodule "auto-complete"]
 	path = auto-complete
-	url = https://github.com/m2ym/auto-complete.git
+	url = https://github.com/auto-complete/auto-complete
 [submodule "clojure-mode"]
 	path = clojure-mode
 	url = https://github.com/technomancy/clojure-mode.git
@@ -18,7 +18,7 @@
 	url = https://github.com/magit/magit.git
 [submodule "slime-2010-05-19"]
 	path = slime-2010-05-19
-	url = git://git.boinkor.net/slime.git
+	url = https://github.com/nablaone/slime
 [submodule "swank-clojure"]
 	path = swank-clojure
 	url = https://github.com/technomancy/swank-clojure.git
@@ -34,3 +34,6 @@
 [submodule "align-cljlet"]
 	path = align-cljlet
 	url = https://github.com/gstamp/align-cljlet.git
+[submodule "nrepl.el"]
+	path = nrepl.el
+	url = https://github.com/kingtim/nrepl.el.git
