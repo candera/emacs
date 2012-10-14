@@ -37,3 +37,6 @@
 [submodule "nrepl.el"]
 	path = nrepl.el
 	url = https://github.com/kingtim/nrepl.el.git
+[submodule "smex"]
+	path = smex
+	url = https://github.com/nonsequitur/smex.git
