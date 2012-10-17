@@ -973,7 +973,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (require 'find-file-in-project)
 (global-set-key (kbd "C-x M-f") 'find-file-in-project)
-(setq ffip-patterns (append ffip-patterns '("*.cljs" "*.scss" ".css")))
+(setq ffip-patterns (append ffip-patterns '("*.cljs" "*.scss" ".css" "*.java")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
