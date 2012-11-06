@@ -646,6 +646,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.cljs$" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.edn$" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
 
 (add-hook 'clojure-mode-hook
           '(lambda ()
