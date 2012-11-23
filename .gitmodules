@@ -43,3 +43,6 @@
 [submodule "twittering-mode"]
 	path = twittering-mode
 	url = https://github.com/hayamiz/twittering-mode.git
+[submodule "expand-region"]
+	path = expand-region
+	url = https://github.com/emacsmirror/expand-region.git
