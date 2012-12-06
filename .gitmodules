@@ -46,3 +46,6 @@
 [submodule "expand-region"]
 	path = expand-region
 	url = https://github.com/emacsmirror/expand-region.git
+[submodule "midje-mode"]
+	path = midje-mode
+	url = https://github.com/dnaumov/midje-mode.git
