@@ -49,3 +49,6 @@
 [submodule "midje-mode"]
 	path = midje-mode
 	url = https://github.com/dnaumov/midje-mode.git
+[submodule "popup-el"]
+	path = popup-el
+	url = https://github.com/auto-complete/popup-el.git

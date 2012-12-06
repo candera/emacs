@@ -1036,6 +1036,28 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; popup.el
+;;  https://github.com/auto-complete/popup-el.git
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/popup-el")
+(require 'popup)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; auto-complete-mode
+;;   https://github.com/auto-complete/auto-complete
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/auto-complete")
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories "~/.emacs.d.custom/auto-complete/dict")
+(ac-config-default)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Miscellaneous customizations
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1046,7 +1068,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (load "~/.emacs.d/custom/colors.el")
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
-(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
+(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode)))
 (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
 
