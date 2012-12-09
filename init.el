@@ -1068,7 +1068,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (load "~/.emacs.d/custom/colors.el")
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
-(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode)))
+(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
 (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
 
