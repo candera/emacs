@@ -52,3 +52,6 @@
 [submodule "popup-el"]
 	path = popup-el
 	url = https://github.com/auto-complete/popup-el.git
+[submodule "show-keys.el"]
+	path = show-keys.el
+	url = git@github.com:candera/show-keys.el.git
