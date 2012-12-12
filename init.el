@@ -1056,6 +1056,13 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'ac-dictionary-directories "~/.emacs.d.custom/auto-complete/dict")
 (ac-config-default)
 
+(add-hook 'auto-complete-mode-hook
+          (lambda ()
+            (define-key ac-completing-map (kbd "C-n") 'ac-next)
+            (define-key ac-completing-map (kbd "C-p") 'ac-previous)
+            (define-key ac-completing-map (kbd "C-g") 'ac-stop)
+            (define-key ac-completing-map (kbd "ESC") 'ac-stop)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Miscellaneous customizations
