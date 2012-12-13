@@ -52,3 +52,6 @@
 [submodule "popup-el"]
 	path = popup-el
 	url = https://github.com/auto-complete/popup-el.git
+[submodule "command-log-mode"]
+	path = command-log-mode
+	url = https://github.com/lewang/command-log-mode.git
