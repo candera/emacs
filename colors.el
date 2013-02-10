@@ -12,6 +12,13 @@
   (set-face-background 'default "black")
   (set-face-foreground 'default "white"))
 
+(defun get-display ()
+  (let ((display-env (getenv "DISPLAY")))
+    (cond
+     ((not display-env) nil)
+     ((zerop (length display-env)) nil)
+     (display-env))))
+
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
