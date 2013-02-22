@@ -670,6 +670,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; clojure-mode and nrepl appear to require each other: make one can find the other
+(add-to-list 'load-path "~/.emacs.d/custom/nrepl.el")
+
 ;; Require clojure-mode to load and associate it to all .clj files.
 (add-to-list 'load-path "~/.emacs.d/custom/clojure-mode/")
 
