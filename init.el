@@ -18,7 +18,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'server)
 (unless (or (eq system-type 'windows-nt)
-            (server-running-p))
+            (if (fboundp 'server-running-p)
+		(server-running-p)
+	      server-process))
   (server-start))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
