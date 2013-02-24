@@ -18,7 +18,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'server)
 (unless (or (eq system-type 'windows-nt)
-            (server-running-p))
+            (if (fboundp 'server-running-p)
+		(server-running-p)
+	      server-process))
   (server-start))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -667,6 +669,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; This section sets up clojure-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; clojure-mode and nrepl appear to require each other: make one can find the other
+(add-to-list 'load-path "~/.emacs.d/custom/nrepl.el")
 
 ;; Require clojure-mode to load and associate it to all .clj files.
 (add-to-list 'load-path "~/.emacs.d/custom/clojure-mode/")
