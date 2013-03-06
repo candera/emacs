@@ -19,8 +19,8 @@
 (require 'server)
 (unless (or (eq system-type 'windows-nt)
             (if (fboundp 'server-running-p)
-		(server-running-p)
-	      server-process))
+                (server-running-p)
+              server-process))
   (server-start))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1089,8 +1089,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'ac-dictionary-directories "~/.emacs.d.custom/auto-complete/dict")
 (ac-config-default)
 
+;; Turn off automatic start of auto-complete
+(setq ac-auto-start nil)
+
 (add-hook 'auto-complete-mode-hook
           (lambda ()
+            (local-set-key (kbd "M-/") 'auto-complete)
             (define-key ac-completing-map (kbd "C-n") 'ac-next)
             (define-key ac-completing-map (kbd "C-p") 'ac-previous)
             (define-key ac-completing-map (kbd "C-g") 'ac-stop)
