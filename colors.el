@@ -33,10 +33,10 @@
                     :width normal))
                  ((or (eq system-type 'cygwin))
                   '(:foundry "outline"
-                    :family "Bitstream Vera Sans Mono"
+                    :family "Consolas"
                     :weight normal
                     :width normal
-                    :height 120))
+                    :height 130))
                  ((or (eq system-type 'gnu/linux))
                   '(:foundry "unknown"
                     :family "Courier 10 Pitch"
