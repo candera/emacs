@@ -28,6 +28,7 @@
                  ((or (eq system-type 'darwin) (eq system-type 'windows-nt))
                   '(:foundry "outline"
                     :family "Courier New"
+                    :height 160
                     :weight normal
                     :width normal))
                  ((or (eq system-type 'cygwin))
