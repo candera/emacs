@@ -270,7 +270,8 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 
 (global-set-key (quote [C-tab]) 'other-window)
 
-(global-set-key [f12] 'shell)
+(global-set-key [f12] 'eshell)
+(global-set-key [f11] 'nrepl-switch-to-repl-buffer)
 (global-set-key [f4] 'call-last-kbd-macro)
 (global-set-key [f8] 'next-error)
 (column-number-mode ())
