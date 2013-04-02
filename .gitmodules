@@ -55,3 +55,6 @@
 [submodule "command-log-mode"]
 	path = command-log-mode
 	url = https://github.com/lewang/command-log-mode.git
+[submodule "undo-tree"]
+	path = undo-tree
+	url = http://www.dr-qubit.org/git/undo-tree.git
