@@ -711,11 +711,13 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Ctrl-c Ctrl-e is also there, because I kept typoing it.
 (add-hook 'clojure-mode-hook
           '(lambda ()
-;            (highlight-parentheses-mode 1)
+             ;; (highlight-parentheses-mode 1)
              (linum-mode 1)
              (paredit-mode 1)
              (setq show-trailing-whitespace t)
              (flyspell-mode 0)
+             (when (fboundp 'clojure-enable-nrepl)
+               (clojure-enable-nrepl))
              (define-key clojure-mode-map "\C-c\C-e" 'lisp-eval-last-sexp)
              (define-key clojure-mode-map "\C-x\C-e" 'lisp-eval-last-sexp)
              ;; Fix the keys that paredit screws up
