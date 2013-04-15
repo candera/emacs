@@ -672,7 +672,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; clojure-mode and nrepl appear to require each other: make one can find the other
-(add-to-list 'load-path "~/.emacs.d/custom/nrepl.el")
+(add-to-list 'load-path "~/.emacs.d/custom/nrepl.el/")
 
 ;; Require clojure-mode to load and associate it to all .clj files.
 (add-to-list 'load-path "~/.emacs.d/custom/clojure-mode/")
@@ -686,7 +686,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-hook 'clojure-mode-hook
           '(lambda ()
              (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
-             (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)))
+             (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
+             (clojure-enable-nrepl)))
 
 ;; Turn on paredit for clojure files
 ;(require 'clojure-paredit)
@@ -1124,6 +1125,18 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'load-path "~/.emacs.d/custom/undo-tree")
 (require 'undo-tree)
 (global-undo-tree-mode 1)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; eshell customizations
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun eshell/clear ()
+  "Clear the eshell buffer."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (erase-buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
