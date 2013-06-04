@@ -172,7 +172,7 @@
  '(info-title-4 ((t (:bold t :family "Sans Serif" :weight bold))))
  '(info-xref ((t (:underline t :foreground "cyan1"))))
  '(info-xref-visited ((t (:foreground "violet" :underline t))))
- '(isearch ((t (:background "palevioletred2" :foreground "brown4"))))
+ '(isearch ((t (:background "palevioletred2" :foreground "yellow"))))
  '(isearch-fail ((t (:background "red4"))))
  '(iswitchb-current-match ((t (:foreground "LightSkyBlue"))))
  '(iswitchb-invalid-regexp ((t (:bold t :weight bold :foreground "Pink"))))
