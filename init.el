@@ -381,14 +381,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (global-set-key (kbd "M-'") 'completion-at-point)
 
-(add-hook 'slime-mode-hook
-          (lambda ()
-            (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)
-            (define-key slime-mode-map (kbd "C-c M-q") nil)))
+;; (add-hook 'slime-mode-hook
+;;           (lambda ()
+;;             (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)
+;;             (define-key slime-mode-map (kbd "C-c M-q") nil)))
 
-(add-hook 'slime-repl-mode-hook
-          (lambda ()
-            (define-key slime-repl-mode-map (kbd "M-'") 'slime-complete-symbol)))
+;; (add-hook 'slime-repl-mode-hook
+;;           (lambda ()
+;;             (define-key slime-repl-mode-map (kbd "M-'") 'slime-complete-symbol)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -578,32 +578,32 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/")  ; your SLIME directory
-(add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/contrib")  ; your SLIME contrib directory
+;; (add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/")  ; your SLIME directory
+;; (add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/contrib")  ; your SLIME contrib directory
 
 
-;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/")  ; your SLIME directory
-;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/contrib")  ; your SLIME contrib directory
-;; (setq
-;;   ; inferior-lisp-program "C:/bin/clisp-2.45/clisp -K full"  ; your Lisp system
-;;   ;inferior-lisp-program "C:/bin/sbcl-1.0.14.22/sbcl --core C:/bin/sbcl-1.0.14.22/sbcl.core"  ; your Lisp system
-;;   slime-complete-symbol-function 'slime-fuzzy-complete-symbol  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
-;;   ;slime-complete-symbol-function 'slime-complete-symbol  ; standard symbol completion
-;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
-;;  )
+;; ;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/")  ; your SLIME directory
+;; ;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/contrib")  ; your SLIME contrib directory
+;; ;; (setq
+;; ;;   ; inferior-lisp-program "C:/bin/clisp-2.45/clisp -K full"  ; your Lisp system
+;; ;;   ;inferior-lisp-program "C:/bin/sbcl-1.0.14.22/sbcl --core C:/bin/sbcl-1.0.14.22/sbcl.core"  ; your Lisp system
+;; ;;   slime-complete-symbol-function 'slime-fuzzy-complete-symbol  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
+;; ;;   ;slime-complete-symbol-function 'slime-complete-symbol  ; standard symbol completion
+;; ;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
+;; ;;  )
 
-(require 'slime-autoloads)
-(slime-setup '(slime-repl slime-editing-commands slime-fuzzy slime-presentations slime-scratch))
-;(slime-setup '(slime-fancy))
+;; (require 'slime-autoloads)
+;; (slime-setup '(slime-repl slime-editing-commands slime-fuzzy slime-presentations slime-scratch))
+;; ;(slime-setup '(slime-fancy))
 
-;(setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
+;; ;(setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
 
-(if (functionp 'slime-local-setup)
-    (slime-local-setup))
+;; (if (functionp 'slime-local-setup)
+;;     (slime-local-setup))
 
-;; Turn off the annoying SLIME version mismatch message
+;; ;; Turn off the annoying SLIME version mismatch message
 
-(eval-after-load 'slime '(setq slime-protocol-version 'ignore))
+;; (eval-after-load 'slime '(setq slime-protocol-version 'ignore))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
