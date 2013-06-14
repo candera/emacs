@@ -940,6 +940,47 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Set up org-babel
+;; Stolen from https://github.com/stuartsierra/dotfiles/blob/2ec5ab2a45c091d74c8e73d62683b15ddd8bd9c7/.emacs.d/local/init.el#L295
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (locate-file "ob" load-path load-suffixes)
+  (require 'ob)
+  (require 'ob-tangle)
+  (add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (clojure . t)))
+
+  (defun org-babel-execute:clojure (body params)
+    "Evaluate a block of Clojure code with Babel."
+    (let* ((result (nrepl-send-string-sync body (nrepl-current-ns)))
+           (value (plist-get result :value))
+           (out (plist-get result :stdout))
+           (out (when out
+                  (if (string= "\n" (substring out -1))
+                      (substring out 0 -1)
+                    out)))
+           (stdout (when out
+                     (mapconcat (lambda (line)
+                                  (concat ";; " line))
+                                (split-string out "\n")
+                                "\n"))))
+      (concat stdout
+              (when (and stdout (not (string= "\n" (substring stdout -1))))
+                "\n")
+              ";;=> " value)))
+
+  (provide 'ob-clojure)
+
+  (setq org-src-fontify-natively t)
+  (setq org-confirm-babel-evaluate nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Set up nXhtml mode
 ;;
 ;; http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
