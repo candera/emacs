@@ -748,7 +748,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-hook 'nrepl-interaction-mode-hook
           (lambda ()
-            (define-key nrepl-interaction-mode-map (kbd "M-/") 'completion-at-point)
             (nrepl-turn-on-eldoc-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
