@@ -476,8 +476,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
             (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
 
 ;; Tell emacs to wrap lines in vertically split windows
-;; Much as I would like to leave this unset, it seems to cause all sorts of problems.
+;; Much as I would like to leave this set to nil, it seems to cause all sorts of problems.
 ;;(setq truncate-partial-width-windows nil)
+(setq truncate-lines t)
 
 ;; Except in inferior-lisp, where it screws things up
 (add-hook 'inferior-lisp-mode-hook
