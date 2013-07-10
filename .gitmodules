@@ -27,7 +27,7 @@
 	url = git://github.com/defunkt/coffee-mode.git
 [submodule "sparql-mode"]
 	path = sparql-mode
-	url = https://github.com/candera/sparql-mode.git
+	url = https://github.com/ljos/sparql-mode.git
 [submodule "org-mode"]
 	path = org-mode
 	url = git://orgmode.org/org-mode.git
