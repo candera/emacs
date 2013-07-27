@@ -125,9 +125,11 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
   (let ((width (or width 85)))
     (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
       (delete-other-windows)
-      (split-window-horizontally side-window-width)
+      (set-window-buffer (split-window-horizontally side-window-width)
+                         (other-buffer nil nil))
       (other-window 1)
-      (split-window-horizontally (- side-window-width)))))
+      (set-window-buffer (split-window-horizontally (- side-window-width))
+                         (other-buffer nil nil)))))
 
 (defun temporarily-display-one-window ()
   "Temporarily go to single-window configuration, saving the old
