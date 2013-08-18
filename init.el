@@ -398,7 +398,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+(unless (string= "raspberrypi" system-name)
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -750,9 +751,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'load-path "~/.emacs.d/custom/nrepl.el")
 (require 'nrepl)
 
-(add-hook 'nrepl-interaction-mode-hook
-          (lambda ()
-            (nrepl-turn-on-eldoc-mode)))
+;; Don't use on the Pi, due to excessive CPU
+(unless (string= "raspberrypi" system-name)
+  (add-hook 'nrepl-interaction-mode-hook
+           (lambda ()
+             (nrepl-turn-on-eldoc-mode))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
