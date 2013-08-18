@@ -7,7 +7,18 @@
 ;; Load nxhtml-mode (with MuMaMo)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(load "~/.emacs.d/custom/nxhtml/autostart.el")
+
+;; (load "~/.emacs.d/custom/nxhtml/autostart.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Include cl-lib (needed by at least nrepl and magit)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/cl-lib")
+(require 'cl-lib)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
