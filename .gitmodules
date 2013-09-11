@@ -61,3 +61,9 @@
 [submodule "evil"]
 	path = evil
 	url = git://gitorious.org/evil/evil.git
+[submodule "floobits"]
+	path = floobits
+	url = https://github.com/Floobits/floobits-emacs.git
+[submodule "cl-lib"]
+	path = cl-lib
+	url = https://github.com/emacsmirror/cl-lib.git
