@@ -952,6 +952,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (locate-file "ob" load-path load-suffixes)
+  (require 'org)
   (require 'ob)
   (require 'ob-tangle)
   (add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
