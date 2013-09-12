@@ -61,3 +61,6 @@
 [submodule "evil"]
 	path = evil
 	url = git://gitorious.org/evil/evil.git
+[submodule "mmm-mode"]
+	path = mmm-mode
+	url = https://github.com/purcell/mmm-mode

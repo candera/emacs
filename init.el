@@ -1199,6 +1199,28 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Set up mmm-mode for Clojurey goodness in markdown mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/mmm-mode")
+
+(require 'mmm-auto)
+(mmm-add-classes
+ '((markdown-clojure
+    :submode clojure-mode
+    :face mmm-declaration-submode-face
+    :front "^```clj[\n\r]+"
+    :back "^```$")))
+
+(setq mmm-global-mode 'maybe)
+(mmm-add-mode-ext-class 'markdown-mode nil 'markdown-clojure)
+
+;; TODO: Need to add the code that sets nrepl-interaction-mode when in
+;; the Clojure region
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Miscellaneous customizations
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
