@@ -7,7 +7,18 @@
 ;; Load nxhtml-mode (with MuMaMo)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(load "~/.emacs.d/custom/nxhtml/autostart.el")
+
+;; (load "~/.emacs.d/custom/nxhtml/autostart.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Include cl-lib (needed by at least nrepl and magit)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/cl-lib")
+(require 'cl-lib)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -125,9 +136,11 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
   (let ((width (or width 85)))
     (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
       (delete-other-windows)
-      (split-window-horizontally side-window-width)
+      (set-window-buffer (split-window-horizontally side-window-width)
+                         (other-buffer nil nil))
       (other-window 1)
-      (split-window-horizontally (- side-window-width)))))
+      (set-window-buffer (split-window-horizontally (- side-window-width))
+                         (other-buffer nil nil)))))
 
 (defun temporarily-display-one-window ()
   "Temporarily go to single-window configuration, saving the old
@@ -396,7 +409,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+(unless (string= "raspberrypi" system-name)
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -748,9 +762,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'load-path "~/.emacs.d/custom/nrepl.el")
 (require 'nrepl)
 
-(add-hook 'nrepl-interaction-mode-hook
-          (lambda ()
-            (nrepl-turn-on-eldoc-mode)))
+;; Don't use on the Pi, due to excessive CPU
+(unless (string= "raspberrypi" system-name)
+  (add-hook 'nrepl-interaction-mode-hook
+           (lambda ()
+             (nrepl-turn-on-eldoc-mode))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -952,6 +968,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (locate-file "ob" load-path load-suffixes)
+  (require 'org)
   (require 'ob)
   (require 'ob-tangle)
   (add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
@@ -1184,6 +1201,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'load-path "~/.emacs.d/custom/evil")
 (require 'evil)
 ;; (evil-mode 1)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; floobits plugin
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "~/.emacs.d/custom/floobits/floobits.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
