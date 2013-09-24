@@ -73,3 +73,6 @@
 [submodule "haml-mode"]
 	path = haml-mode
 	url = https://github.com/nex3/haml-mode
+[submodule "git-modes"]
+	path = git-modes
+	url = https://github.com/magit/git-modes

@@ -912,10 +912,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Set up magit
+;; Set up magit and magit-modes
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(add-to-list 'load-path "~/.emacs.d/custom/git-modes")
 (add-to-list 'load-path "~/.emacs.d/custom/magit")
 (require 'magit)
 
