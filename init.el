@@ -489,6 +489,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
             (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
             (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
 
+;; Make ido stop prompting me about whether I want to create a new buffer
+(setq ido-create-new-buffer 'always)
+
 ;; Tell emacs to wrap lines in vertically split windows
 ;; Much as I would like to leave this set to nil, it seems to cause all sorts of problems.
 ;;(setq truncate-partial-width-windows nil)
