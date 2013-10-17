@@ -931,6 +931,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
 
+;; Work around stupid bug where magit launches a second Emacs.
+;; See https://github.com/magit/magit/issues/862
+(when (eq 'darwin system-type)
+  (set-variable 'magit-emacsclient-executable
+                "/Applications/Emacs.app/Contents/MacOS/bin/emacsclient"))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Set up gist.el
