@@ -782,7 +782,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
             ;; straightforwardly. I think global-linum-mode is fubar.
             ;; So we run it after half a second. Which is probably a
             ;; lovely race condition.
-            (run-with-timer 0.5 nil (lambda () (linum-mode 0)))))
+            (run-with-timer 0.5 nil (lambda () (linum-mode 0)))
+            (paredit-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
