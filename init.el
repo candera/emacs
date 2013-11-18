@@ -769,7 +769,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (unless (string= "raspberrypi" system-name)
   (add-hook 'nrepl-interaction-mode-hook
            (lambda ()
-             (nrepl-turn-on-eldoc-mode))))
+             (nrepl-turn-on-eldoc-mode)
+             ;; Linum mode interferes with automatic scrolling in the
+             ;; REPL. The symptom is that scrolling will suddendly
+             ;; stop, leaving point stranded in the middle of text
+             ;; that was just output.
+             (linum-mode -1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
