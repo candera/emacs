@@ -736,6 +736,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
              ;; (highlight-parentheses-mode 1)
              (linum-mode 1)
              (paredit-mode 1)
+             (hs-minor-mode 1)
              (setq show-trailing-whitespace t)
              (flyspell-mode 0)
              (when (fboundp 'clojure-enable-nrepl)
@@ -1284,6 +1285,18 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
           (lambda ()
             (setq indent-tabs-mode nil)
             (define-key haml-mode-map "\C-m" 'newline-and-indent)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; hs-minor-mode keybindings
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'hs-minor-mode-hook
+          (lambda ()
+            (define-key hs-minor-mode-map (kbd "C-c h TAB") 'hs-toggle-hiding)
+            (define-key hs-minor-mode-map (kbd "C-c h a") 'hs-hide-all)
+            (define-key hs-minor-mode-map (kbd "C-c h s") 'hs-show-all)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
