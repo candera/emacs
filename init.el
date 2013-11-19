@@ -286,7 +286,7 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (global-set-key (quote [C-tab]) 'other-window)
 
 (global-set-key [f12] 'eshell)
-(global-set-key [f11] (lambda () (interactive) (switch-to-buffer "*nrepl*")))
+;;(global-set-key [f11] (lambda () (interactive) (switch-to-buffer "*nrepl*")))
 (global-set-key [f4] 'call-last-kbd-macro)
 (global-set-key [f8] 'next-error)
 (column-number-mode ())
@@ -692,8 +692,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; clojure-mode and nrepl appear to require each other: make one can find the other
-(add-to-list 'load-path "~/.emacs.d/custom/nrepl.el/")
+;; clojure-mode and nrepl appear to require each other as well as
+;; other libraries. Make sure everyone can find each other
+
+(add-to-list 'load-path "~/.emacs.d/custom/")
+(add-to-list 'load-path "~/.emacs.d/custom/epl/")
+(add-to-list 'load-path "~/.emacs.d/custom/dash.el/")
+(add-to-list 'load-path "~/.emacs.d/custom/pkg-info.el/")
+(add-to-list 'load-path "~/.emacs.d/custom/cider/")
 
 ;; Require clojure-mode to load and associate it to all .clj files.
 (add-to-list 'load-path "~/.emacs.d/custom/clojure-mode/")
@@ -703,12 +709,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'auto-mode-alist '("\\.cljs$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.edn$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
-
-(add-hook 'clojure-mode-hook
-          '(lambda ()
-             (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
-             (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
-             (clojure-enable-nrepl)))
 
 ;; Turn on paredit for clojure files
 ;(require 'clojure-paredit)
@@ -740,8 +740,10 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
              (flyspell-mode 0)
              (when (fboundp 'clojure-enable-nrepl)
                (clojure-enable-nrepl))
-             (define-key clojure-mode-map "\C-c\C-e" 'lisp-eval-last-sexp)
-             (define-key clojure-mode-map "\C-x\C-e" 'lisp-eval-last-sexp)
+             (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
+             (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
+             (define-key clojure-mode-map (kbd "C-c C-e") 'lisp-eval-last-sexp)
+             (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
              ;; Fix the keys that paredit screws up
              (define-key paredit-mode-map (kbd "<C-left>") nil)
              (define-key paredit-mode-map (kbd "<C-right>") nil)
@@ -759,19 +761,19 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; nrepl.el
+;; cider
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'load-path "~/.emacs.d/custom/nrepl.el")
-(require 'nrepl)
+(add-to-list 'load-path "~/.emacs.d/custom/cider")
+(require 'cider)
 
 ;; Don't use on the Pi, due to excessive CPU
 (unless (string= "raspberrypi" system-name)
-  (add-hook 'nrepl-interaction-mode-hook
+  (add-hook 'cider-mode-hook
            (lambda ()
-             (nrepl-turn-on-eldoc-mode))))
+             (cider-turn-on-eldoc-mode))))
 
-(add-hook 'nrepl-mode-hook
+(add-hook 'cider-repl-mode-hook
           (lambda ()
             ;; Linum mode interferes with automatic scrolling in the
             ;; REPL. The symptom is that scrolling will suddendly
@@ -1004,7 +1006,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
   (defun org-babel-execute:clojure (body params)
     "Evaluate a block of Clojure code with Babel."
-    (let* ((result (nrepl-send-string-sync body (nrepl-current-ns)))
+    (let* ((result (cider-send-string-sync body (cider-current-ns)))
            (value (plist-get result :value))
            (out (plist-get result :stdout))
            (out (when out
@@ -1159,8 +1161,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (add-to-list 'load-path "~/.emacs.d/custom/midje-mode")
-(require 'midje-mode)
-(require 'clojure-jump-to-file)
+;; (require 'midje-mode)
+;; (require 'clojure-jump-to-file)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1265,7 +1267,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq mmm-global-mode 'maybe)
 (mmm-add-mode-ext-class 'markdown-mode nil 'markdown-clojure)
 
-;; TODO: Need to add the code that sets nrepl-interaction-mode when in
+;; TODO: Need to add the code that sets cider-interaction-mode when in
 ;; the Clojure region
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
