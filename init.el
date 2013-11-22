@@ -760,6 +760,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (require 'clojure-test-mode)
 
+;; Some indentation fixups for core.async
+(put-clojure-indent 'go-loop 1)         ; Like 'let'
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; cider
