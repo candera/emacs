@@ -88,3 +88,6 @@
 [submodule "epl"]
 	path = epl
 	url = https://github.com/cask/epl
+[submodule "gherkin-mode"]
+	path = gherkin-mode
+	url = git@github.com:candera/gherkin-mode.git

@@ -1086,7 +1086,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-hook 'erc-insert-post-hook 'ding)
+;;(add-hook 'erc-insert-post-hook 'ding)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1297,6 +1297,16 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
             (define-key hs-minor-mode-map (kbd "C-c h TAB") 'hs-toggle-hiding)
             (define-key hs-minor-mode-map (kbd "C-c h a") 'hs-hide-all)
             (define-key hs-minor-mode-map (kbd "C-c h s") 'hs-show-all)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; gherkin-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/gherkin-mode")
+(add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
+(require 'gherkin-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
