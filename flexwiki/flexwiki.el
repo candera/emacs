@@ -22,7 +22,7 @@
 ;; MA 02111-1307 USA
 
 ;;; Commentary:
-;; 
+;;
 ;; This mode is based on an example used in a tutorial about Emacs
 ;; mode creation. The tutorial can be found here:
 ;; http://two-wugs.net/emacs/mode-tutorial.html
@@ -30,14 +30,14 @@
 ;;; Code:
 
 ;; For the enormously useful word-at-point and thing-at-point-looking-at
-(require 'thingatpt) 
+(require 'thingatpt)
 
 ;; For completions
 (require 'pcomplete)
 
 ;; Set up completion
 (defun flexwiki-setup-pcomplete ()
-  (interactive) 
+  (interactive)
   "Initializes flexwiki to be able to use pcomplete completions"
   (set (make-variable-buffer-local 'pcomplete-default-completion-function)
        'flexwiki-wikiword-completions)
@@ -48,11 +48,11 @@
 
 (defun flexwiki-wikiword-completions ()
   "Return a list of possible completions names for this buffer."
-  (while 
+  (while
       (pcomplete-here
        (mapcar 'flexwiki-extract-wikiword-from-filename
-	       (pcomplete-entries ".*\\.wiki$" nil )
-	       )
+               (pcomplete-entries ".*\\.wiki$" nil )
+               )
        )
     )
   )
@@ -71,8 +71,8 @@
   (let ((end (point)))
     (save-restriction
       (save-excursion
-	(skip-chars-backward "^\\[ \t\n")
-	(narrow-to-region (point) end))
+        (skip-chars-backward "^\\[ \t\n")
+        (narrow-to-region (point) end))
       (pcomplete-parse-buffer-arguments)
       )
     )
@@ -83,7 +83,7 @@
   (let ((map (make-keymap)))
     (define-key map [(control return)] 'flexwiki-follow-link)
     (define-key map [C-S-right] 'pcomplete)
-    (define-key map [?	] 'self-insert-command)
+    (define-key map [?  ] 'self-insert-command)
     map)
   "Keymap for FlexWiki major mode")
 
@@ -136,7 +136,7 @@
 (defface flexwiki-done-face
   `((t (:foreground "dim grey")))
   "The face in which done items (Done: value) text will appear")
-    
+
 ;; Needed to overcome a weird emacs bug
 (defvar flexwiki-wikiword-face 'flexwiki-wikiword-face)
 (defvar flexwiki-heading-1-face 'flexwiki-heading-1-face)
@@ -151,7 +151,7 @@
 (defvar flexwiki-todo-face 'flexwiki-todo-face)
 (defvar flexwiki-done-face 'flexwiki-done-face)
 
-;; (defvar flexwiki-highlight-regexp "\\<_?[A-Z][a-z]+[A-Z][A-Z0-9a-z]*\\>" 
+;; (defvar flexwiki-highlight-regexp "\\<_?[A-Z][a-z]+[A-Z][A-Z0-9a-z]*\\>"
 ;;   "Defines what a WikiWord looks like")
 
 ;; The regexp that defines a WikiWord
@@ -181,23 +181,23 @@
 
 (defvar flexwiki-mode-syntax-table
   (let ((flexwiki-mode-syntax-table (make-syntax-table)))
-	
+
     ; This is added so entity names with underscores can be more easily parsed
     (modify-syntax-entry ?_ "w" flexwiki-mode-syntax-table)
-	
-	flexwiki-mode-syntax-table)
+
+        flexwiki-mode-syntax-table)
   "Syntax table for flexwiki-mode")
 
 (defun flexwiki-font-lock-setup ()
   (interactive)
   "Sets up FlexWiki font locking"
-  (set (make-local-variable 'font-lock-defaults) 
+  (set (make-local-variable 'font-lock-defaults)
        `('flexwiki-font-lock-keywords       ; Variable holding pattern-based highlighting rules
-	 t        ; turn off string/comment highlighting
-	 nil        ; Case-sensitive highlighting
-	 nil        ; SYNTAX-ALIST: reclassify the character syntax of certain things
-	 'beginning-of-line ; Syntactic regions don't cross lines
-	 )
+         t        ; turn off string/comment highlighting
+         nil        ; Case-sensitive highlighting
+         nil        ; SYNTAX-ALIST: reclassify the character syntax of certain things
+         'beginning-of-line ; Syntactic regions don't cross lines
+         )
        )
   )
 
@@ -206,18 +206,18 @@
   "Follows the WikiWord at point if there is one"
   (if (flexwiki-wikiword-at-point-p)
       (let ((filename (concat (word-at-point) ".wiki")))
-	(let ((buffer (find-buffer-visiting filename))
-	      (file-exists (file-exists-p filename)))
-	  (if buffer 
-	      (switch-to-buffer buffer)
-	    (progn (find-file filename)
-		   (if (not file-exists)
-		       (write-file (buffer-file-name))
-		     )
-		   )
-	    )
-	  )
-	)
+        (let ((buffer (find-buffer-visiting filename))
+              (file-exists (file-exists-p filename)))
+          (if buffer
+              (switch-to-buffer buffer)
+            (progn (find-file filename)
+                   (if (not file-exists)
+                       (write-file (buffer-file-name))
+                     )
+                   )
+            )
+          )
+        )
     (message "Point is not on a WikiWord")
     )
   )
@@ -225,11 +225,11 @@
 (defun flexwiki-wikiword-at-point-p ()
   (interactive)
   "True if point is currently positioned on a WikiWord"
-  (save-excursion 
+  (save-excursion
     (save-match-data
       (let ((case-fold-search nil))
-	(string-match flexwiki-wikiword-regexp (word-at-point))
-	)
+        (string-match flexwiki-wikiword-regexp (word-at-point))
+        )
       )
     )
   )
@@ -237,12 +237,12 @@
 (defun flexwiki-wikiword-at-point-print ()
   (interactive)
   "True if point is currently positioned on a WikiWord"
-  (save-excursion 
+  (save-excursion
     (save-match-data
       (if (thing-at-point-looking-at flexwiki-wikiword-regexp)
-	  "yes"
-	"no"
-	)
+          "yes"
+        "no"
+        )
       )
     )
   )
@@ -252,42 +252,42 @@
 ;; (defun flexwiki-generate-tab-list (width)
 ;;   (let ((n 100) (tb 0) flexwiki-tab-stops)
 ;;     (while (> n 0)
-;;       (progn 
-;; 	(setq tb (+ tb width))
-;; 	(setq n (- n 1))
-;; 	(setq flexwiki-tab-stops (append flexwiki-tab-stops `(,tb)))
-;; 	)
+;;       (progn
+;;      (setq tb (+ tb width))
+;;      (setq n (- n 1))
+;;      (setq flexwiki-tab-stops (append flexwiki-tab-stops `(,tb)))
+;;      )
 ;;       )
 ;;     flexwiki-tab-stops
 ;;     )
-;;   )    
+;;   )
 
 ;; (defun flexwiki-set-tab-size (&optional width)
 ;;   (interactive)
 ;;   "Set the width of a tab to be `width' if the argument is present, and flexwiki-tab-width otherwise"
 ;;   (let ((make-variable-buffer-local tab-stop-list))
-;;     (setq tab-stop-list 
-;; 	  (if width
-;; 	      (flexwiki-generate-tab-list width)
-;; 	    (flexwiki-generate-tab-list flexwiki-tab-width)
-;; 	    )
-;; 	  )
+;;     (setq tab-stop-list
+;;        (if width
+;;            (flexwiki-generate-tab-list width)
+;;          (flexwiki-generate-tab-list flexwiki-tab-width)
+;;          )
+;;        )
 ;;     )
 ;;   )
-      
+
 
 ;; (defun flexwiki-font-lock-setup ()
 ;;   (interactive)
 ;;   "Sets up FlexWiki font locking"
-;;   (set (make-local-variable 'font-lock-defaults) 
+;;   (set (make-local-variable 'font-lock-defaults)
 ;;        `('(flexwiki-font-lock-keywords)       ; Variable holding pattern-based highlighting rules
-;; 	 t        ; turn off string/comment highlighting
-;; 	 nil        ; Case-sensitive highlighting
-;; 	 nil        ; SYNTAX-ALIST: reclassify the character syntax of certain things
-;; 	 'beginning-of-line ; Syntactic regions don't cross lines
-;; 	 (font-lock-fontify-region-function . flexwiki-fontify-region) ; I have a function that fontifies
-;; 	 (font-lock-unfontify-region-function. flexwiki-unfontify-region) ; and one that unfontifies
-;; 	 )
+;;       t        ; turn off string/comment highlighting
+;;       nil        ; Case-sensitive highlighting
+;;       nil        ; SYNTAX-ALIST: reclassify the character syntax of certain things
+;;       'beginning-of-line ; Syntactic regions don't cross lines
+;;       (font-lock-fontify-region-function . flexwiki-fontify-region) ; I have a function that fontifies
+;;       (font-lock-unfontify-region-function. flexwiki-unfontify-region) ; and one that unfontifies
+;;       )
 ;;        )
 ;;   )
 
@@ -304,64 +304,64 @@
 ;; Note that this function should NOT change the buffer, nor should any
 ;; of the functions listed in `flexwiki-highlight-markup'."
 ;;   (let ((buffer-undo-list t)
-;; 	(inhibit-read-only t)
-;; 	(inhibit-point-motion-hooks t)
-;; 	(inhibit-modification-hooks t)
-;; 	(modified-p (buffer-modified-p))
-;; 	deactivate-mark)
+;;      (inhibit-read-only t)
+;;      (inhibit-point-motion-hooks t)
+;;      (inhibit-modification-hooks t)
+;;      (modified-p (buffer-modified-p))
+;;      deactivate-mark)
 ;;     (unwind-protect
-;; 	(save-excursion
-;; 	  (save-restriction
-;; 	    (widen)
-;; 	    ;; check to see if we should expand the beg/end area for
-;; 	    ;; proper multiline matches
-;; 	    (when (and font-lock-multiline
-;; 		       (> beg (point-min))
-;; 		       (get-text-property (1- beg) 'font-lock-multiline))
-;; 	      ;; We are just after or in a multiline match.
-;; 	      (setq beg (or (previous-single-property-change
-;; 			     beg 'font-lock-multiline)
-;; 			    (point-min)))
-;; 	      (goto-char beg)
-;; 	      (setq beg (line-beginning-position)))
-;; 	    (when font-lock-multiline
-;; 	      (setq end (or (text-property-any end (point-max)
-;; 					       'font-lock-multiline nil)
-;; 			    (point-max))))
-;; 	    (goto-char end)
-;; 	    (setq end (line-beginning-position 2))
-;; 	    ;; Undo any fontification in the area.
-;; 	    (font-lock-unfontify-region beg end)
-;; 	    ;; And apply fontification based on `flexwiki-highlight-markup'
-;; 	    (let ((len (float (- end beg)))
-;; 		  (case-fold-search nil))
-;; 	      (goto-char beg)
-;; 	      (while
-;; 		  (and (< (point) end)
-;; 		       (re-search-forward flexwiki-highlight-regexp end t))
-;; 		(if verbose
-;; 		    (message "Highlighting buffer...%d%%"
-;; 			     (* (/ (float (- (point) beg)) len) 100)))
-;; 		(funcall (aref flexwiki-highlight-vector
-;; 			       (char-after (match-beginning 0)))))
-;; 	      (run-hook-with-args 'flexwiki-highlight-buffer-hook
-;; 				  beg end verbose)
-;; 	      (if verbose (message "Highlighting buffer...done")))))
+;;      (save-excursion
+;;        (save-restriction
+;;          (widen)
+;;          ;; check to see if we should expand the beg/end area for
+;;          ;; proper multiline matches
+;;          (when (and font-lock-multiline
+;;                     (> beg (point-min))
+;;                     (get-text-property (1- beg) 'font-lock-multiline))
+;;            ;; We are just after or in a multiline match.
+;;            (setq beg (or (previous-single-property-change
+;;                           beg 'font-lock-multiline)
+;;                          (point-min)))
+;;            (goto-char beg)
+;;            (setq beg (line-beginning-position)))
+;;          (when font-lock-multiline
+;;            (setq end (or (text-property-any end (point-max)
+;;                                             'font-lock-multiline nil)
+;;                          (point-max))))
+;;          (goto-char end)
+;;          (setq end (line-beginning-position 2))
+;;          ;; Undo any fontification in the area.
+;;          (font-lock-unfontify-region beg end)
+;;          ;; And apply fontification based on `flexwiki-highlight-markup'
+;;          (let ((len (float (- end beg)))
+;;                (case-fold-search nil))
+;;            (goto-char beg)
+;;            (while
+;;                (and (< (point) end)
+;;                     (re-search-forward flexwiki-highlight-regexp end t))
+;;              (if verbose
+;;                  (message "Highlighting buffer...%d%%"
+;;                           (* (/ (float (- (point) beg)) len) 100)))
+;;              (funcall (aref flexwiki-highlight-vector
+;;                             (char-after (match-beginning 0)))))
+;;            (run-hook-with-args 'flexwiki-highlight-buffer-hook
+;;                                beg end verbose)
+;;            (if verbose (message "Highlighting buffer...done")))))
 ;;       (set-buffer-modified-p modified-p))))
 
 ;; (defun flexwiki-unfontify-region (begin end &optional verbose)
 ;;   "Remove all visual highlights in the buffer (except font-lock)."
 ;;   (let ((buffer-undo-list t)
-;; 	(inhibit-read-only t)
-;; 	(inhibit-point-motion-hooks t)
-;; 	(inhibit-modification-hooks t)
-;; 	(modified-p (buffer-modified-p))
-;; 	deactivate-mark)
+;;      (inhibit-read-only t)
+;;      (inhibit-point-motion-hooks t)
+;;      (inhibit-modification-hooks t)
+;;      (modified-p (buffer-modified-p))
+;;      deactivate-mark)
 ;;     (unwind-protect
-;; 	(remove-text-properties
-;; 	 begin end '(face nil font-lock-multiline nil
-;; 			  invisible nil intangible nil display nil
-;; 			  mouse-face nil keymap nil help-echo nil))
+;;      (remove-text-properties
+;;       begin end '(face nil font-lock-multiline nil
+;;                        invisible nil intangible nil display nil
+;;                        mouse-face nil keymap nil help-echo nil))
 ;;       (set-buffer-modified-p modified-p))))
 
 
@@ -375,7 +375,7 @@
   ;; Set up completion
   (flexwiki-setup-pcomplete)
   ;; Register our indentation function
-  ;;(set (make-local-variable 'indent-line-function) 'flexwiki-indent-line)  
+  ;;(set (make-local-variable 'indent-line-function) 'flexwiki-indent-line)
   (setq major-mode 'flexwiki-mode)
   (setq mode-name "FlexWiki")
 
@@ -392,7 +392,3 @@
 (provide 'flexwiki)
 
 ;;; flexwiki-mode.el ends here
-
-
-
-
