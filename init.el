@@ -763,6 +763,10 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Some indentation fixups for core.async
 (put-clojure-indent 'go-loop 1)         ; Like 'let'
 
+;; Same thing for core.typed
+(put-clojure-indent 'doseq> 1)          ; Like 'let'
+(put-clojure-indent 'for> 1)            ; Like 'let'
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; cider
