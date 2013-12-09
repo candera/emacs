@@ -1014,7 +1014,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
   (defun org-babel-execute:clojure (body params)
     "Evaluate a block of Clojure code with Babel."
-    (let* ((result (cider-send-string-sync body (cider-current-ns)))
+    (let* ((result (cider-eval-sync body (cider-current-ns)))
            (value (plist-get result :value))
            (out (plist-get result :stdout))
            (out (when out
