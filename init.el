@@ -1006,7 +1006,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
-     (clojure . t)))
+     (clojure . t)
+     (sh . t)))
 
   (defun org-babel-execute:clojure (body params)
     "Evaluate a block of Clojure code with Babel."
@@ -1316,7 +1317,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Miscellaneous customizations
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq global-hl-line-mode nil)
 
 (setq confirm-nonexistent-file-or-buffer nil)
 
