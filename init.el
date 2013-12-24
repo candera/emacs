@@ -763,6 +763,10 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Some indentation fixups for core.async
 (put-clojure-indent 'go-loop 1)         ; Like 'let'
 
+;; Same thing for core.typed
+(put-clojure-indent 'doseq> 1)          ; Like 'let'
+(put-clojure-indent 'for> 1)            ; Like 'let'
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; cider
@@ -1011,7 +1015,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
   (defun org-babel-execute:clojure (body params)
     "Evaluate a block of Clojure code with Babel."
-    (let* ((result (cider-send-string-sync body (cider-current-ns)))
+    (let* ((result (cider-eval-sync body (cider-current-ns)))
            (value (plist-get result :value))
            (out (plist-get result :stdout))
            (out (when out
