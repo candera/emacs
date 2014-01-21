@@ -466,31 +466,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;(add-hook 'emacs-lisp-mode-hook
 ;         (lambda () (highlight-parentheses-mode 1)))
 
-;; Make ido-mode list things vertically
-(setq ido-decorations
-      (quote
-       ("\n-> "           ; Opening bracket around prospect list
-        ""                ; Closing bracket around prospect list
-        "\n   "           ; separator between prospects
-        "\n   ..."        ; appears at end of truncated list of prospects
-        "["               ; opening bracket around common match string
-        "]"               ; closing bracket around common match string
-        " [No match]"     ; displayed when there is no match
-        " [Matched]"      ; displayed if there is a single match
-        " [Not readable]" ; current diretory is not readable
-        " [Too big]"      ; directory too big
-        " [Confirm]")))   ; confirm creation of new file or buffer
-
-;; And let us use standard navagation keys that make sense vertically
-(add-hook 'ido-setup-hook
-          (lambda ()
-            (define-key ido-completion-map [down] 'ido-next-match)
-            (define-key ido-completion-map [up] 'ido-prev-match)
-            (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-            (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
-
-;; Make ido stop prompting me about whether I want to create a new buffer
-(setq ido-create-new-buffer 'always)
 
 ;; Tell emacs to wrap lines in vertically split windows
 ;; Much as I would like to leave this set to nil, it seems to cause all sorts of problems.
@@ -501,6 +476,45 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-hook 'inferior-lisp-mode-hook
           (lambda ()
              (setq truncate-lines t)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set up ido
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; Make ido-mode list things vertically
+;; (setq ido-decorations
+;;       (quote
+;;        ("\n-> "           ; Opening bracket around prospect list
+;;         ""                ; Closing bracket around prospect list
+;;         "\n   "           ; separator between prospects
+;;         "\n   ..."        ; appears at end of truncated list of prospects
+;;         "["               ; opening bracket around common match string
+;;         "]"               ; closing bracket around common match string
+;;         " [No match]"     ; displayed when there is no match
+;;         " [Matched]"      ; displayed if there is a single match
+;;         " [Not readable]" ; current diretory is not readable
+;;         " [Too big]"      ; directory too big
+;;         " [Confirm]")))   ; confirm creation of new file or buffer
+
+;; ;; And let us use standard navagation keys that make sense vertically
+;; (add-hook 'ido-setup-hook
+;;           (lambda ()
+;;             (define-key ido-completion-map [down] 'ido-next-match)
+;;             (define-key ido-completion-map [up] 'ido-prev-match)
+;;             (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+;;             (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
+
+;; ;; Make ido stop prompting me about whether I want to create a new buffer
+;; (setq ido-create-new-buffer 'always)
+
+(add-to-list 'load-path "~/.emacs.d/custom/ido-vertical-mode.el/")
+(require 'ido-vertical-mode)
+(ido-mode 1)
+(ido-vertical-mode 1)
+(setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
