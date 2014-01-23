@@ -998,8 +998,19 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
+(global-set-key (kbd "C-c l") 'org-store-link)
+
 (setq load-path (cons "~/.emacs.d/custom/org-mode/lisp" load-path))
 (setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
+(add-hook 'org-mode-hook (lambda ()
+                           (add-to-list 'org-modules 'org-habit)
+                           ;; Weird that I have to do this, but I
+                           ;; can't figure out how to get habits
+                           ;; turned on outside of the customization
+                           ;; interface, which I prefer not to use.
+                           (require 'org-habit)))
+
 (require 'org-install)
 
 (setq org-todo-keywords (quote ((sequence "TODO" "INPROGRESS" "DONE"))))
@@ -1008,6 +1019,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; that it might crash. So I set this variable, which gets me the same
 ;; effect.
 (setq org-hide-leading-stars t)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
