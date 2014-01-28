@@ -1003,8 +1003,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq load-path (cons "~/.emacs.d/custom/org-mode/lisp" load-path))
 (setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
 (add-hook 'org-mode-hook (lambda ()
-                           (add-to-list 'org-modules 'org-habit)
                            (turn-on-flyspell)
+                           (auto-revert-mode 1)
+                           (add-to-list 'org-modules 'org-habit)
                            ;; Weird that I have to do this, but I
                            ;; can't figure out how to get habits
                            ;; turned on outside of the customization
