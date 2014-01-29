@@ -216,7 +216,8 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
         (t
          (setq i 1)
          (setq numWindows (count-windows))
-         (while  (< i numWindows)
+(while  (
+< i numWindows)
            (let* (
                   (w1 (elt (window-list) i))
                   (w2 (elt (window-list) (+ (% i numWindows) 1)))
@@ -868,24 +869,33 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (global-set-key (kbd "C-x y") 'find-yesterday-log-file)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Enable xml-lite for editing XML
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; sgml-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (add-to-list 'load-path (expand-file-name "~/emacs/xml-lite"))
-;; (autoload 'xml-lite-mode "xml-lite" "Major mode to edit XML files" t)
-;; (setq auto-mode-alist
-;;       (append '(
-;;              ("\\.xml$" . sgml-mode)
-;;              ("\\.build$" . sgml-mode)
-;;              ("\\.config$" . sgml-mode)
-;;              ("\\.xslt$" . sgml-mode)
-;;              ("\\.xsl$" . sgml-mode)
-;;              ("\\.xsd$" . sgml-mode)
-;;              ) auto-mode-alist ))
-;; (add-hook 'sgml-mode-hook 'xml-lite-mode)
+(require 'sgml-mode)
+
+(setq auto-mode-alist
+      (append '(
+             ("\\.xml$" . sgml-mode)
+             ("\\.build$" . sgml-mode)
+             ("\\.config$" . sgml-mode)
+             ("\\.xslt$" . sgml-mode)
+             ("\\.xsl$" . sgml-mode)
+             ("\\.xsd$" . sgml-mode)
+             ) auto-mode-alist ))
+
+(defun sgml-pretty-print-buffer ()
+  "Format the entire buffer using sgml-pretty-print"
+  (interactive)
+  (save-excursion
+    (sgml-pretty-print (point-min) (point-max))))
+
+(add-hook 'sgml-mode-hook
+          (lambda ()
+            (define-key sgml-mode-map (kbd "C-c p") 'sgml-pretty-print-buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
