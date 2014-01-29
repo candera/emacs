@@ -91,6 +91,9 @@
 [submodule "gherkin-mode"]
 	path = gherkin-mode
 	url = git@github.com:candera/gherkin-mode.git
+[submodule "markdown-mode"]
+	path = markdown-mode
+	url = http://jblevins.org/git/markdown-mode.git
 [submodule "ido-vertical-mode.el"]
 	path = ido-vertical-mode.el
 	url = https://github.com/gempesaw/ido-vertical-mode.el
