@@ -1048,6 +1048,24 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; org-trello
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'load-path "~/.emacs.d/custom/s.el/")
+(add-to-list 'load-path "~/.emacs.d/custom/esxml/")
+(add-to-list 'load-path "~/.emacs.d/custom/emacs-db/")
+(add-to-list 'load-path "~/.emacs.d/custom/emacs-web/")
+(add-to-list 'load-path "~/.emacs.d/custom/emacs-kv/")
+(add-to-list 'load-path "~/.emacs.d/custom/emacs-noflet/")
+(add-to-list 'load-path "~/.emacs.d/custom/emacs-fakir/")
+(add-to-list 'load-path "~/.emacs.d/custom/elnode/")
+(add-to-list 'load-path "~/.emacs.d/custom/emacs-request/")
+(add-to-list 'load-path "~/.emacs.d/custom/org-trello/")
+(require 'org-trello)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Set up org-babel
 ;; Stolen from https://github.com/stuartsierra/dotfiles/blob/2ec5ab2a45c091d74c8e73d62683b15ddd8bd9c7/.emacs.d/local/init.el#L295
 ;;
