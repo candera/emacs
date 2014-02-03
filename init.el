@@ -1032,8 +1032,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; effect.
 (setq org-hide-leading-stars t)
 
+;; Let me refile by path, and to deeper nesting
+(setq org-refile-use-outline-path 'file)
+;;(setq org-outline-path-complete-in-steps t)
 (setq org-refile-targets
       '((nil . (:maxlevel . 5))))
+
+;; Log into a drawer, which is nice
+(setq org-log-into-drawer t)
 
 ;; Set up for agendas and mobile org
 
