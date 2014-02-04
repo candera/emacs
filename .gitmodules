@@ -1,129 +1,115 @@
 [submodule "auto-complete"]
-	path = auto-complete
-	url = https://github.com/auto-complete/auto-complete
+        path = auto-complete
+        url = https://github.com/auto-complete/auto-complete
 [submodule "clojure-mode"]
-	path = clojure-mode
-	url = https://github.com/technomancy/clojure-mode.git
-[submodule "elein"]
-	path = elein
-	url = https://github.com/remvee/elein.git
+        path = clojure-mode
+        url = https://github.com/technomancy/clojure-mode.git
 [submodule "gist.el"]
-	path = gist.el
-	url = git://github.com/defunkt/gist.el.git
-[submodule "io-mode"]
-	path = io-mode
-	url = https://github.com/superbobry/io-mode.git
+        path = gist.el
+        url = git://github.com/defunkt/gist.el.git
 [submodule "magit"]
-	path = magit
-	url = https://github.com/magit/magit.git
-[submodule "slime-2010-05-19"]
-	path = slime-2010-05-19
-	url = https://github.com/nablaone/slime
-[submodule "swank-clojure"]
-	path = swank-clojure
-	url = https://github.com/technomancy/swank-clojure.git
+        path = magit
+        url = https://github.com/magit/magit.git
+        url = https://github.com/technomancy/swank-clojure.git
 [submodule "coffee-mode"]
-	path = coffee-mode
-	url = git://github.com/defunkt/coffee-mode.git
+        path = coffee-mode
+        url = git://github.com/defunkt/coffee-mode.git
 [submodule "sparql-mode"]
-	path = sparql-mode
-	url = https://github.com/ljos/sparql-mode.git
+        path = sparql-mode
+        url = https://github.com/ljos/sparql-mode.git
 [submodule "org-mode"]
-	path = org-mode
-	url = git://orgmode.org/org-mode.git
+        path = org-mode
+        url = git://orgmode.org/org-mode.git
 [submodule "align-cljlet"]
-	path = align-cljlet
-	url = https://github.com/gstamp/align-cljlet.git
-[submodule "nrepl.el"]
-	path = nrepl.el
-	url = https://github.com/kingtim/nrepl.el.git
+        path = align-cljlet
+        url = https://github.com/gstamp/align-cljlet.git
 [submodule "smex"]
-	path = smex
-	url = https://github.com/nonsequitur/smex.git
+        path = smex
+        url = https://github.com/nonsequitur/smex.git
 [submodule "twittering-mode"]
-	path = twittering-mode
-	url = https://github.com/hayamiz/twittering-mode.git
+        path = twittering-mode
+        url = https://github.com/hayamiz/twittering-mode.git
 [submodule "expand-region"]
-	path = expand-region
-	url = https://github.com/emacsmirror/expand-region.git
+        path = expand-region
+        url = https://github.com/emacsmirror/expand-region.git
 [submodule "midje-mode"]
-	path = midje-mode
-	url = https://github.com/dnaumov/midje-mode.git
+        path = midje-mode
+        url = https://github.com/dnaumov/midje-mode.git
 [submodule "popup-el"]
-	path = popup-el
-	url = https://github.com/auto-complete/popup-el.git
+        path = popup-el
+        url = https://github.com/auto-complete/popup-el.git
 [submodule "command-log-mode"]
-	path = command-log-mode
-	url = https://github.com/lewang/command-log-mode.git
+        path = command-log-mode
+        url = https://github.com/lewang/command-log-mode.git
 [submodule "undo-tree"]
-	path = undo-tree
-	url = http://www.dr-qubit.org/git/undo-tree.git
+        path = undo-tree
+        url = http://www.dr-qubit.org/git/undo-tree.git
 [submodule "evil"]
-	path = evil
-	url = git://gitorious.org/evil/evil.git
+        path = evil
+        url = git://gitorious.org/evil/evil.git
 [submodule "mmm-mode"]
-	path = mmm-mode
-	url = https://github.com/purcell/mmm-mode
+        path = mmm-mode
+        url = https://github.com/purcell/mmm-mode
 [submodule "floobits"]
-	path = floobits
-	url = https://github.com/Floobits/floobits-emacs.git
+        path = floobits
+        url = https://github.com/Floobits/floobits-emacs.git
 [submodule "cl-lib"]
-	path = cl-lib
-	url = https://github.com/emacsmirror/cl-lib.git
+        path = cl-lib
+        url = https://github.com/emacsmirror/cl-lib.git
 [submodule "haml-mode"]
-	path = haml-mode
-	url = https://github.com/nex3/haml-mode
+        path = haml-mode
+        url = https://github.com/nex3/haml-mode
 [submodule "git-modes"]
-	path = git-modes
-	url = https://github.com/magit/git-modes
+        path = git-modes
+        url = https://github.com/magit/git-modes
 [submodule "cider"]
-	path = cider
-	url = https://github.com/clojure-emacs/cider
+        path = cider
+        url = https://github.com/clojure-emacs/cider
 [submodule "dash.el"]
-	path = dash.el
-	url = https://github.com/magnars/dash.el
+        path = dash.el
+        url = https://github.com/magnars/dash.el
 [submodule "pkg-info.el"]
-	path = pkg-info.el
-	url = https://github.com/lunaryorn/pkg-info.el
+        path = pkg-info.el
+        url = https://github.com/lunaryorn/pkg-info.el
 [submodule "epl"]
-	path = epl
-	url = https://github.com/cask/epl
+        path = epl
+        url = https://github.com/cask/epl
 [submodule "gherkin-mode"]
-	path = gherkin-mode
-	url = git@github.com:candera/gherkin-mode.git
+        path = gherkin-mode
+        url = git@github.com:candera/gherkin-mode.git
 [submodule "markdown-mode"]
-	path = markdown-mode
-	url = http://jblevins.org/git/markdown-mode.git
+        path = markdown-mode
+        url = http://jblevins.org/git/markdown-mode.git
 [submodule "ido-vertical-mode.el"]
-	path = ido-vertical-mode.el
-	url = https://github.com/gempesaw/ido-vertical-mode.el
+        path = ido-vertical-mode.el
+        url = https://github.com/gempesaw/ido-vertical-mode.el
 [submodule "org-trello"]
-	path = org-trello
-	url = https://github.com/ardumont/org-trello
+        path = org-trello
+        url = https://github.com/ardumont/org-trello
 [submodule "emacs-request"]
-	path = emacs-request
-	url = https://github.com/tkf/emacs-request
+        path = emacs-request
+        url = https://github.com/tkf/emacs-request
 [submodule "elnode"]
-	path = elnode
-	url = https://github.com/nicferrier/elnode
+        path = elnode
+        url = https://github.com/nicferrier/elnode
 [submodule "emacs-fakir"]
-	path = emacs-fakir
-	url = https://github.com/nicferrier/emacs-fakir
+        path = emacs-fakir
+        url = https://github.com/nicferrier/emacs-fakir
 [submodule "emacs-noflet"]
-	path = emacs-noflet
-	url = https://github.com/nicferrier/emacs-noflet
+        path = emacs-noflet
+        url = https://github.com/nicferrier/emacs-noflet
 [submodule "emacs-kv"]
-	path = emacs-kv
-	url = https://github.com/nicferrier/emacs-kv
+        path = emacs-kv
+        url = https://github.com/nicferrier/emacs-kv
 [submodule "s.el"]
-	path = s.el
-	url = https://github.com/magnars/s.el
+        path = s.el
+        url = https://github.com/magnars/s.el
 [submodule "emacs-web"]
-	path = emacs-web
-	url = https://github.com/nicferrier/emacs-web
+        path = emacs-web
+        url = https://github.com/nicferrier/emacs-web
 [submodule "emacs-db"]
-	path = emacs-db
-	url = https://github.com/nicferrier/emacs-db
+        path = emacs-db
+        url = https://github.com/nicferrier/emacs-db
 [submodule "esxml"]
-	path = esxml
-	url = https://github.com/tali713/esxml
+        path = esxml
+        url = https://github.com/tali713/esxml
