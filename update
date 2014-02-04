@@ -2,6 +2,11 @@
 
 set -e
 
+if [ "$(which makeinfo)" == "" ]; then
+  echo 'texinfo package is not installed. Run `apt-get install texinfo` or equivalent.'
+  exit 1
+fi
+
 # Use this on Mac to get the absolute path of the dir containing the
 # script since we can't use readlink -f
 
