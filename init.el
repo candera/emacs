@@ -815,13 +815,13 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/elein")
-(require 'elein)
+;; (add-to-list 'load-path "~/.emacs.d/custom/elein")
+;; (require 'elein)
 
-(defun lein-repl ()
-  "Run 'lein repl' in an inferior-lisp."
-  (interactive)
-  (inferior-lisp "lein repl"))
+;; (defun lein-repl ()
+;;   "Run 'lein repl' in an inferior-lisp."
+;;   (interactive)
+;;   (inferior-lisp "lein repl"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -993,13 +993,13 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/gist.el")
-(require 'gist)
+;; (add-to-list 'load-path "~/.emacs.d/custom/gist.el")
+;; (require 'gist)
 
-;; Turn on longlines mode whenever we're in an edit server buffer
-(add-hook 'edit-server-text-mode-hook
-          '(lambda ()
-             (longlines-mode 1)))
+;; ;; Turn on longlines mode whenever we're in an edit server buffer
+;; (add-hook 'edit-server-text-mode-hook
+;;           '(lambda ()
+;;              (longlines-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
