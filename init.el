@@ -1084,41 +1084,21 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(when (locate-file "ob" load-path load-suffixes)
-  (require 'org)
-  (require 'ob)
-  (require 'ob-tangle)
-  (add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
+(require 'org)
+(require 'ob)
+(require 'ob-tangle)
+(require 'ob-clojure)
+(setq org-babel-clojure-backend 'cider)
+(require 'cider)
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (clojure . t)
-     (sh . t)))
+;; Don't make me confirm evaluation every single time
+(setq org-confirm-babel-evaluate nil)
 
-  (defun org-babel-execute:clojure (body params)
-    "Evaluate a block of Clojure code with Babel."
-    (let* ((result (cider-eval-sync body (cider-current-ns)))
-           (value (plist-get result :value))
-           (out (plist-get result :stdout))
-           (out (when out
-                  (if (string= "\n" (substring out -1))
-                      (substring out 0 -1)
-                    out)))
-           (stdout (when out
-                     (mapconcat (lambda (line)
-                                  (concat ";; " line))
-                                (split-string out "\n")
-                                "\n"))))
-      (concat stdout
-              (when (and stdout (not (string= "\n" (substring stdout -1))))
-                "\n")
-              ";;=> " value)))
-
-  (provide 'ob-clojure)
-
-  (setq org-src-fontify-natively t)
-  (setq org-confirm-babel-evaluate nil))
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (clojure . t)
+   (sh . t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
