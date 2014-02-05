@@ -1049,15 +1049,15 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq org-log-into-drawer t)
 
 ;; Set up for agendas and mobile org
-
-;; Set to the location of your Org files on your local system
-(setq org-directory "~/Dropbox/org/")
-;; Set to the name of the file where new notes will be stored
-(setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
-;; Set to <your Dropbox root directory>/MobileOrg.
-(setq org-mobile-directory "~/Dropbox/MobileOrg")
-;; A file that lists which org files should be pulled into the agenda
-(setq org-agenda-files "~/Dropbox/org/agendas.org")
+(when (file-exists-p "~/Dropbox/org/")
+  ;; Set to the location of your Org files on your local system
+  (setq org-directory "~/Dropbox/org/")
+  ;; Set to the name of the file where new notes will be stored
+  (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
+  ;; Set to <your Dropbox root directory>/MobileOrg.
+  (setq org-mobile-directory "~/Dropbox/MobileOrg")
+  ;; A file that lists which org files should be pulled into the agenda
+  (setq org-agenda-files "~/Dropbox/org/agendas.org"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
