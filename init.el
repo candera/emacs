@@ -1043,7 +1043,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq org-refile-use-outline-path 'file)
 ;;(setq org-outline-path-complete-in-steps t)
 (setq org-refile-targets
-      '((nil . (:maxlevel . 5))))
+      '((org-agenda-files . (:maxlevel . 5))))
 
 ;; Log into a drawer, which is nice
 (setq org-log-into-drawer t)
