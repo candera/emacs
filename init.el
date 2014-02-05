@@ -1014,6 +1014,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
 (add-hook 'org-mode-hook (lambda ()
                            (turn-on-flyspell)
+                           ;; I always type this instead of C-c C-t
+                           (define-key org-mode-map (kbd "C-c t") 'org-todo)
                            (auto-revert-mode 1)
                            (add-to-list 'org-modules 'org-habit)
                            ;; Weird that I have to do this, but I
@@ -1021,6 +1023,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                            ;; turned on outside of the customization
                            ;; interface, which I prefer not to use.
                            (require 'org-habit)))
+
+(add-hook 'org-agenda-mode-hook
+          (lambda ()
+            ;; I always type this instead of C-c C-t
+            (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)))
 
 (require 'org-install)
 
