@@ -19,6 +19,9 @@
      ((zerop (length display-env)) nil)
      (display-env))))
 
+;; The default is way too dark on a black background
+(set-face-foreground 'org-table "#5f87ff")
+
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
