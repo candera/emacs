@@ -1032,7 +1032,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (require 'org-install)
 
 ;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
-(setq org-todo-keywords (quote ((sequence "TODO(t)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d/!)"))))
+(setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
 
 ;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
 ;; that it might crash. So I set this variable, which gets me the same
