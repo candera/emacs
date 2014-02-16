@@ -59,6 +59,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Save some buffers whenever emacs is idle
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar idle-save-buffer-list '())
+(defvar idle-save-buffer-time 10)
+
+(defvar idle-save-timer
+  (run-with-idle-timer
+   idle-save-buffer-time
+   t
+   (lambda ()
+     (dolist (b idle-save-buffer-list)
+       (when (buffer-modified-p b)
+         (save-excursion
+           (save-window-excursion
+             (message "Saving %s because emacs is idle." b)
+             (switch-to-buffer b)
+             (save-buffer))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Change the way emacs handles buffer
 ;; names for files with the same name.
 ;;
@@ -1022,7 +1044,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                            ;; can't figure out how to get habits
                            ;; turned on outside of the customization
                            ;; interface, which I prefer not to use.
-                           (require 'org-habit)))
+                           (require 'org-habit)
+                           ;; Automatically save org-mode buffers when
+                           ;; idle. Important because I use Dropbox to
+                           ;; sync them, and forgetting to save when
+                           ;; switching computers means conflicts.
+                           (add-to-list 'idle-save-buffer-list (current-buffer))))
 
 (add-hook 'org-agenda-mode-hook
           (lambda ()
@@ -1058,6 +1085,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   (setq org-mobile-directory "~/Dropbox/MobileOrg")
   ;; A file that lists which org files should be pulled into the agenda
   (setq org-agenda-files "~/Dropbox/org/agendas.org"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
