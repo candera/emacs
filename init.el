@@ -73,7 +73,8 @@
    (lambda ()
      (dolist (b idle-save-buffer-list)
        (if (buffer-live-p b)
-           (when (buffer-modified-p b)
+           (when (and buffer-file-name
+                      (buffer-modified-p b))
              (save-excursion
                (save-window-excursion
                  (message "Saving %s because emacs is idle." (buffer-name b))
