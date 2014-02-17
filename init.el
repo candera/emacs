@@ -72,12 +72,15 @@
    t
    (lambda ()
      (dolist (b idle-save-buffer-list)
-       (when (buffer-modified-p b)
-         (save-excursion
-           (save-window-excursion
-             (message "Saving %s because emacs is idle." b)
-             (switch-to-buffer b)
-             (save-buffer))))))))
+       (if (buffer-live-p b)
+           (when (buffer-modified-p b)
+             (save-excursion
+               (save-window-excursion
+                 (message "Saving %s because emacs is idle." (buffer-name b))
+                 (switch-to-buffer b)
+                 (save-buffer))))
+         ;; Buffer has been killed toss it out of the list
+         (setq idle-save-buffer-list (remove b idle-save-buffer-list)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
