@@ -1090,6 +1090,23 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   ;; A file that lists which org files should be pulled into the agenda
   (setq org-agenda-files "~/Dropbox/org/agendas.org"))
 
+(defun org-custom-todo-sort-fn ()
+  "Returns a value that sorts tasks according to my personal heuristic"
+  (format "%s%s%s"
+          (if (member "ARCHIVE" (org-get-tags)) "1" "0")
+          (pcase (org-get-todo-state)
+            ("INPROGRESS" 1)
+            ("BLOCKED" 2)
+            ("TODO" 3)
+            (`nil 4)
+            ("DONE" 5)
+            (otherwise 6))
+          (org-get-heading :no-tags :no-todo)))
+
+(defun org-custom-entry-sort ()
+  "Sorts entries according to my personal heuristic"
+  (interactive)
+  (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
