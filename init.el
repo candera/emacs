@@ -1099,7 +1099,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
             ("BLOCKED" 2)
             ("TODO" 3)
             (`nil 4)
-            ("DONE" 5)
+            ("DONE" (format "5%s" (or (org-entry-get (point) "CLOSED") "")))
             (otherwise 6))
           (org-get-heading :no-tags :no-todo)))
 
