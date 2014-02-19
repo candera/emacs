@@ -1044,6 +1044,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                            (define-key org-mode-map (kbd "C-c t") 'org-todo)
                            (auto-revert-mode 1)
                            (add-to-list 'org-modules 'org-habit)
+                           ;; Org files can get big and have lots of
+                           ;; folded content. There's not much benefit
+                           ;; in line numbers, and they slow down org
+                           ;; noticably.
+                           (linum-mode 0)
                            ;; Weird that I have to do this, but I
                            ;; can't figure out how to get habits
                            ;; turned on outside of the customization
