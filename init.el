@@ -1079,6 +1079,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Log into a drawer, which is nice
 (setq org-log-into-drawer t)
 
+;; Log time task was closed
+(setq org-log-done t)
+
 ;; Set up for agendas and mobile org
 (when (file-exists-p "~/Dropbox/org/")
   ;; Set to the location of your Org files on your local system
@@ -1090,17 +1093,40 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   ;; A file that lists which org files should be pulled into the agenda
   (setq org-agenda-files "~/Dropbox/org/agendas.org"))
 
+(defun org-time-difference (ts1 ts2)
+  "Given two org time strings, return the floating point time
+  difference between them."
+  (let* ((time1 (org-time-string-to-time ts1))
+         (time2 (org-time-string-to-time ts2))
+         (t1 (org-float-time time1))
+         (t2 (org-float-time time2)))
+    (- t2 t1)))
+
 (defun org-custom-todo-sort-fn ()
-  "Returns a value that sorts tasks according to my personal heuristic"
-  (format "%s%s%s"
+  "Returns a value that sorts tasks according to my personal
+heuristic. Namely, by task state: INPROGRESS, then BLOCKED, the
+TODO, then nothing, then DONE. Within the non-done states, sort
+by scheduled, or by deadline if not scheduled, with oldest dates
+first. Within DONE, most-recently done first. Archived items are
+always last."
+  (format "%s/%s-%010d/%s"
           (if (member "ARCHIVE" (org-get-tags)) "1" "0")
           (pcase (org-get-todo-state)
             ("INPROGRESS" 1)
             ("BLOCKED" 2)
             ("TODO" 3)
             (`nil 4)
-            ("DONE" (format "5%s" (or (org-entry-get (point) "CLOSED") "")))
+            ("DONE" (format "5%20d" (let ((ct (org-entry-get (point) "CLOSED")))
+                                      (if ct
+                                          (org-time-difference ct "3000-01-01")
+                                        0))))
             (otherwise 6))
+          (let ((etime (or (org-entry-get (point) "SCHEDULED")
+                           (org-entry-get (point) "DEADLINE"))))
+            (if etime
+                (org-float-time (org-time-string-to-time etime))
+              0))
+
           (org-get-heading :no-tags :no-todo)))
 
 (defun org-custom-entry-sort ()
