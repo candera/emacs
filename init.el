@@ -1139,6 +1139,70 @@ always last."
   (interactive)
   (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
 
+;; Compute my own custom scores for habits
+
+(defun org-candera-habit-penalty (days-since-last)
+  (- (if days-since-last
+         (if (< 1 days-since-last)
+             (- (expt 2 days-since-last)
+                2)
+           0)
+       0)))
+
+(defun org-candera-habit-score (days today)
+  (let ((score-to-last-activity
+         (reduce (lambda (acc d)
+                   (let* ((last-day (gethash :last-day acc))
+                          (days-since-last (when last-day (- d last-day)))
+                          (on-streak? (when days-since-last (= 1 days-since-last)))
+                          (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
+                          (streak-bonus (if on-streak?
+                                            (if (zerop (mod streak 3))
+                                                (/ streak 3)
+                                              0)
+                                          0))
+                          (score (gethash :score acc 0)))
+                     (puthash :last-day d acc)
+                     (puthash :streak streak acc)
+                     (puthash :score (max 1 (+ score
+                                               streak-bonus
+                                               1
+                                               (org-candera-habit-penalty days-since-last)))
+                              acc)
+                     acc))
+                 days
+                 :initial-value (make-hash-table))))
+    (max 0 (+ (gethash :score score-to-last-activity)
+              (org-candera-habit-penalty (- (1+ today) (first (last days))))))))
+
+(defun org-entry-start ()
+  "Returns the position of the start of the current entry"
+  (save-excursion
+    (outline-back-to-heading)
+    (point)))
+
+(defun org-entry-end ()
+  "Returns the position of the end of the current entry"
+  (save-excursion
+    (outline-back-to-heading)
+    (outline-forward-same-level 1)
+    (point)))
+
+(defun org-dblock-write:compute-habit-score (params)
+  "Returns a 'score' for the current entry based on timestamps
+  that appear in it. One point is given for each consecutive day
+  that appears. A day without activity drops the score by (expt 2
+  days-since-last-activity). Every third day of a streak, a bonus
+  of (/ streak-length 3) is awarded."
+  (interactive)
+  (save-excursion
+    (insert
+     (format "Score as of %s: %s"
+             (format-time-string "%Y-%m-%d" (current-time))
+             (org-candera-habit-score
+              (org-get-all-dates (org-entry-start) (org-entry-end) nil nil t)
+              (time-to-days (current-time)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; org-trello
