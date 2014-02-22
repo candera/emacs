@@ -1123,8 +1123,8 @@ always last."
             (`nil 4)
             ("DONE" (format "5%20d" (let ((ct (org-entry-get (point) "CLOSED")))
                                       (if ct
-                                          (org-time-difference ct "3000-01-01")
-                                        0))))
+                                          (org-time-difference ct "2038-01-01")
+                                        1.0e23))))
             (otherwise 6))
           (let ((etime (or (org-entry-get (point) "SCHEDULED")
                            (org-entry-get (point) "DEADLINE"))))
