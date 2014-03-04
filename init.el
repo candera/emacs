@@ -1035,6 +1035,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; diary setup
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq diary-file "~/Dropbox/diary")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Set up later version of org-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1090,8 +1098,16 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Log into a drawer, which is nice
 (setq org-log-into-drawer t)
 
+;; Include things in the diary file
+(setq org-agenda-include-diary t)
+
 ;; Log time task was closed
 (setq org-log-done t)
+
+;; Turn off the annoying mouse highlight in agenda views
+(add-hook 'org-finalize-agenda-hook
+          (lambda () (remove-text-properties
+                      (point-min) (point-max) '(mouse-face t))))
 
 ;; Set up for agendas and mobile org
 (when (file-exists-p "~/Dropbox/org/")
