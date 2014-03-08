@@ -73,7 +73,7 @@
    (lambda ()
      (dolist (b idle-save-buffer-list)
        (if (buffer-live-p b)
-           (when (and buffer-file-name
+           (when (and (buffer-file-name b)
                       (buffer-modified-p b))
              (save-excursion
                (save-window-excursion
