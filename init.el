@@ -114,8 +114,6 @@
 ;; Enable ido-mode
 (ido-mode 1)
 
-;; Enable line numbering globally
-(global-linum-mode 1)
 ;; And add a space after the line number in text-only terminals
 (unless window-system (setq linum-format "%d "))
 
@@ -772,31 +770,32 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; expression.
 ;; Ctrl-c Ctrl-e is also there, because I kept typoing it.
 (add-hook 'clojure-mode-hook
-          '(lambda ()
-             ;; (highlight-parentheses-mode 1)
-             (linum-mode 1)
-             (paredit-mode 1)
-             (hs-minor-mode 1)
-             (setq show-trailing-whitespace t)
-             (flyspell-mode 0)
-             (when (fboundp 'clojure-enable-nrepl)
-               (clojure-enable-nrepl))
-             (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
-             (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
-             (define-key clojure-mode-map (kbd "C-c C-e") 'lisp-eval-last-sexp)
-             (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
-             ;; Fix the keys that paredit screws up
-             (define-key paredit-mode-map (kbd "<C-left>") nil)
-             (define-key paredit-mode-map (kbd "<C-right>") nil)
-             ;; And define some new bindings since the OS eats some of the useful ones
-             (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
-             (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
-             (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
-             (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
-             ;; Not all terminals can transmit the standard key sequencences for
-             ;; paredit-forward-slurp-sexp, which is super-useful
-             (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
-             (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)))
+          (lambda ()
+            ;; (highlight-parentheses-mode 1)
+            (unless (eq major-mode 'cider-repl-mode)
+              (linum-mode 1))
+            (paredit-mode 1)
+            (hs-minor-mode 1)
+            (setq show-trailing-whitespace t)
+            (flyspell-mode 0)
+            (when (fboundp 'clojure-enable-nrepl)
+              (clojure-enable-nrepl))
+            (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
+            (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
+            (define-key clojure-mode-map (kbd "C-c C-e") 'lisp-eval-last-sexp)
+            (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
+            ;; Fix the keys that paredit screws up
+            (define-key paredit-mode-map (kbd "<C-left>") nil)
+            (define-key paredit-mode-map (kbd "<C-right>") nil)
+            ;; And define some new bindings since the OS eats some of the useful ones
+            (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
+            (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
+            (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
+            (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
+            ;; Not all terminals can transmit the standard key sequencences for
+            ;; paredit-forward-slurp-sexp, which is super-useful
+            (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
+            (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)))
 
 (require 'clojure-test-mode)
 
@@ -823,22 +822,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-hook 'cider-repl-mode-hook
           (lambda ()
-            ;; Linum mode interferes with automatic scrolling in the
-            ;; REPL. The symptom is that scrolling will suddendly
-            ;; stop, leaving point stranded in the middle of text
-            ;; that was just output.
-            ;;
-            ;; Only problem: this doesn't actually work when run
-            ;; straightforwardly. I think global-linum-mode is fubar.
-            ;; So we run it after half a second. Which is probably a
-            ;; lovely race condition.
-            ;;
-            ;; Later: Worse, it seems to turn off linum mode in all
-            ;; the clojure-mode buffers, suggesting this hook is run
-            ;; in every buffer. Neato.
-            (run-with-timer 0.5 nil (lambda ()
-                                      (unless (= major-mode 'clojure-mode)
-                                        (linum-mode 0))))
             (paredit-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
