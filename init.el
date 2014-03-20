@@ -339,6 +339,17 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Calendar customization
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; 38.8526° N, 77.3044° W
+(setq calendar-latitude 38.9)
+(setq calendar-longitude -77.3)
+(setq calendar-location-name "Fairfax, VA")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Whitespace cleanup and display
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
