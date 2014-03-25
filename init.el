@@ -1154,59 +1154,98 @@ always last."
            0)
        0)))
 
-(defun org-candera-habit-score (days today)
-  (let ((score-to-last-activity
-         (reduce (lambda (acc d)
-                   (let* ((last-day (gethash :last-day acc))
-                          (days-since-last (when last-day (- d last-day)))
-                          (on-streak? (when days-since-last (= 1 days-since-last)))
-                          (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
-                          (streak-bonus (if on-streak?
-                                            (if (zerop (mod streak 3))
-                                                (/ streak 3)
-                                              0)
-                                          0))
-                          (score (gethash :score acc 0)))
-                     (puthash :last-day d acc)
-                     (puthash :streak streak acc)
-                     (puthash :score (max 1 (+ score
-                                               streak-bonus
-                                               1
-                                               (org-candera-habit-penalty days-since-last)))
-                              acc)
-                     acc))
-                 days
-                 :initial-value (make-hash-table))))
-    (max 0 (+ (gethash :score score-to-last-activity)
-              (org-candera-habit-penalty (- (1+ today) (first (last days))))))))
+(defun org-candera-habit-score (days today initial-value)
+  (when days
+    (let ((score-info
+           (reduce (lambda (acc d)
+                     (let* ((last-day (gethash :last-day acc))
+                            (days-since-last (when last-day (- d last-day)))
+                            (on-streak? (when days-since-last (= 1 days-since-last)))
+                            (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
+                            (streak-bonus (if on-streak?
+                                              (if (zerop (mod streak 3))
+                                                  (/ streak 3)
+                                                0)
+                                            0))
+                            (score (gethash :score acc 0)))
+                       (puthash :last-day d acc)
+                       (puthash :streak streak acc)
+                       (puthash :score (max 1 (+ (or score 0)
+                                                 streak-bonus
+                                                 1
+                                                 (org-candera-habit-penalty days-since-last)))
+                                acc)
+                       acc))
+                   days
+                   :initial-value initial-value)))
+      (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
+                                                         (first (last days))))))
+        (puthash :score
+                 (max 0 (+ (gethash :score score-info) today-penalty))
+                 score-info)
+        (unless (zerop today-penalty)
+          (puthash :streak 0 score-info))
+        score-info))))
 
-(defun org-entry-start ()
-  "Returns the position of the start of the current entry"
-  (save-excursion
-    (outline-back-to-heading)
-    (point)))
+(defun org-collect-dates-for-element ()
+  "Gets all the dates for the element at point"
+  (let* ((element (org-element-at-point))
+         (start (org-element-property :begin element))
+         (end (org-element-property :end element)))
+    (org-get-all-dates start end nil nil t)))
 
-(defun org-entry-end ()
-  "Returns the position of the end of the current entry"
-  (save-excursion
-    (outline-back-to-heading)
-    (outline-forward-same-level 1)
-    (point)))
+(defun org-collect-dates (match)
+  "Returns all the unique dates that appear in items that match MATCH"
+  ;; TODO: Figure how to keep it from scanning both parents and
+  ;; children, since that's redundant
+  ;; TODO: Skipping archived items doesn't seem to work,
+  ;; although skipping commented items does.
+  (let* ((dates (apply #'append
+                       (org-map-entries #'org-collect-dates-for-element
+                                        match
+                                        'file
+                                        'archive
+                                        'comment)))
+         (uniques (cl-remove-duplicates dates))
+         (sorted ))
+    (cl-sort uniques #'<)))
 
 (defun org-dblock-write:compute-habit-score (params)
-  "Returns a 'score' for the current entry based on timestamps
-  that appear in it. One point is given for each consecutive day
-  that appears. A day without activity drops the score by (expt 2
+  "Returns a 'score' for entries that match `match` (e.g. a tag)
+  based on timestamps that appear in them.
+
+  One point is given for each consecutive day that appears. A day
+  without activity drops the score by (expt 2
   days-since-last-activity). Every third day of a streak, a bonus
-  of (/ streak-length 3) is awarded."
+  of (/ streak-length 3) is awarded.
+
+  If not all data is recorded in the org file initially, initial
+  values can be provided via :last-day, :initial-streak,
+  and :initial-score params."
   (interactive)
-  (save-excursion
-    (insert
-     (format "Score as of %s: %s"
-             (format-time-string "%Y-%m-%d" (current-time))
-             (org-candera-habit-score
-              (org-get-all-dates (org-entry-start) (org-entry-end) nil nil t)
-              (time-to-days (current-time)))))))
+  (let* ((last-day-param (plist-get params :last-day))
+         (last-day (when last-day-param
+                     (time-to-days (org-time-string-to-time last-day-param))))
+         (initial-streak (plist-get params :initial-streak))
+         (initial-score (plist-get params :initial-score))
+         (initial-value (make-hash-table))
+         (match (plist-get params :match)))
+    (puthash :last-day last-day initial-value)
+    (puthash :streak initial-streak initial-value)
+    (puthash :score initial-score initial-value)
+    (save-excursion
+      (let* ((dates (org-collect-dates match))
+             (score-info (org-candera-habit-score
+                          (if last-day
+                              (remove-if (lambda (d) (<= d last-day)) dates)
+                            dates)
+                          (time-to-days (current-time))
+                          initial-value)))
+        (insert
+         (format "Score as of %s: %s\nStreak: %d"
+                 (format-time-string "%Y-%m-%d" (current-time))
+                 (if score-info (or (gethash :score score-info) "No score") "No score")
+                 (if score-info (or (gethash :streak score-info) 0) 0)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
