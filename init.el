@@ -339,6 +339,17 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Calendar customization
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; 38.8526° N, 77.3044° W
+(setq calendar-latitude 38.9)
+(setq calendar-longitude -77.3)
+(setq calendar-location-name "Fairfax, VA")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Whitespace cleanup and display
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1119,7 +1130,7 @@ TODO, then nothing, then DONE. Within the non-done states, sort
 by scheduled, or by deadline if not scheduled, with oldest dates
 first. Within DONE, most-recently done first. Archived items are
 always last."
-  (format "%s/%s-%010d/%s"
+  (format "%s/%s-%s/%s"
           (if (member "ARCHIVE" (org-get-tags)) "1" "0")
           (pcase (org-get-todo-state)
             ("INPROGRESS" 1)
@@ -1134,8 +1145,8 @@ always last."
           (let ((etime (or (org-entry-get (point) "SCHEDULED")
                            (org-entry-get (point) "DEADLINE"))))
             (if etime
-                (org-float-time (org-time-string-to-time etime))
-              0))
+                (format "%013.2f" (org-float-time (org-time-string-to-time etime)))
+              "zzzzzzzzzzzzzz"))
 
           (org-get-heading :no-tags :no-todo)))
 
