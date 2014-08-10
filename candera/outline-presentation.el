@@ -20,21 +20,21 @@
   on. With a negative argument, turns outline-presentation minor
   mode off."
   (interactive "P")
-  (setq outline-presentation-mode 
-	(if (null enable)
-	    (not outline-presentation-mode)
-	    (> (prefix-numeric-value enable) 0)))
+  (setq outline-presentation-mode
+        (if (null enable)
+            (not outline-presentation-mode)
+            (> (prefix-numeric-value enable) 0)))
   (if outline-presentation-mode
-      (progn 
-	(outline-presentation-start)
-	(if (not (assq 'outline-presentation-mode minor-mode-alist))
-	    (setq minor-mode-alist
-		  (cons '(outline-presentation-mode " Presentation")
-			minor-mode-alist)))
-	(use-local-map outline-presentation-mode-map))
       (progn
-	(use-local-map nil)
-	(outline-presentation-end))))
+        (outline-presentation-start)
+        (if (not (assq 'outline-presentation-mode minor-mode-alist))
+            (setq minor-mode-alist
+                  (cons '(outline-presentation-mode " Presentation")
+                        minor-mode-alist)))
+        (use-local-map outline-presentation-mode-map))
+      (progn
+        (use-local-map nil)
+        (outline-presentation-end))))
 
 
 (defun outline-presentation-mode-on ()
@@ -50,7 +50,7 @@
 
 (defun outline-presentation-start ()
   "Begin the presentation by making only the current node visible"
-  (outline-mode) 
+  (outline-mode)
   (outline-back-to-heading)
   (let ((start (point)))
     (outline-next-heading)
@@ -82,6 +82,3 @@
     (outline-previous-heading)
     (narrow-to-region start (point)))
   (outline-back-to-heading t))
-
-
-  
