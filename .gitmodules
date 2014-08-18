@@ -112,3 +112,6 @@
 [submodule "esxml"]
         path = esxml
         url = https://github.com/tali713/esxml
+[submodule "gnuplot-el"]
+	path = gnuplot-el
+	url = https://github.com/rudi/gnuplot-el
