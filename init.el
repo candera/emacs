@@ -817,6 +817,54 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (put-clojure-indent 'doseq> 1)          ; Like 'let'
 (put-clojure-indent 'for> 1)            ; Like 'let'
 
+;; clojure-fill-docstring got changed rather radically in a newer
+;; version of clojure-mode than the one I use. I prefer the one I
+;; wrote, so I override it here. I also made a few changes, like
+;; respecting markdown syntax to give me things like correctly
+;; indenting bulleted lists.
+(defun clojure-fill-docstring ()
+  "Fill the definition that the point is on appropriate for Clojure.
+
+Fills so that every paragraph has a minimum of two initial spaces,
+with the exception of the first line.  Fill margins are taken from
+paragraph start, so a paragraph that begins with four spaces will
+remain indented by four spaces after refilling."
+  (interactive)
+  (if (and (fboundp 'paredit-in-string-p) paredit-mode)
+      (unless (paredit-in-string-p)
+        (error "Must be inside a string")))
+  ;; Oddly, save-excursion doesn't do a good job of preserving point.
+  ;; It's probably because we delete the string and then re-insert it.
+  (let ((old-point (point)))
+    (save-restriction
+      (save-excursion
+        (let* ((clojure-fill-column 70)
+               (string-region (clojure-docstring-start+end-points))
+               (string-start (1+ (car string-region)))
+               (string-end (1- (cdr string-region)))
+               (string (buffer-substring-no-properties string-start
+                                                       string-end)))
+          (delete-region string-start string-end)
+          (insert
+           (with-temp-buffer
+             ;; Bah, this doesn't work, because it isn't idempotent.
+             ;; To make it so, and to preserve correctly line flow for
+             ;; things like bulleted lists, it looks like we might
+             ;; have to heuristically detect that every non-blank line
+             ;; starts with two spaces and remove them before trying
+             ;; again. I think the fix might be to make
+             ;; `markdown-adaptive-fill-function` aware of
+             ;; `left-margin`.
+             (insert string)
+             (markdown-mode)
+             (setq fill-column (- clojure-fill-column 2))
+             (fill-region (point-min) (point-max))
+             (goto-char (point-min))
+             (replace-regexp "^" "  ")
+             (delete-trailing-whitespace)
+             (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))
+    (goto-char old-point)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; cider
