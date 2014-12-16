@@ -748,6 +748,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-to-list 'load-path "~/.emacs.d/custom/epl/")
 (add-to-list 'load-path "~/.emacs.d/custom/dash.el/")
 (add-to-list 'load-path "~/.emacs.d/custom/pkg-info.el/")
+
+;; cider prereqs that aren't available except as MELPA packages: one
+;; of these days I'm going to have to break down and switch.
+(add-to-list 'load-path "~/.emacs.d/custom/queue-el/")
+
 (add-to-list 'load-path "~/.emacs.d/custom/cider/")
 
 ;; Require clojure-mode to load and associate it to all .clj files.
@@ -808,20 +813,21 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
             (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
             (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)))
 
-(require 'clojure-test-mode)
+;;(require 'clojure-test-mode)
 
 ;; Some indentation fixups for core.async
-(put-clojure-indent 'go-loop 1)         ; Like 'let'
+;;(put-clojure-indent 'go-loop 1)         ; Like 'let'
 
 ;; Same thing for core.typed
-(put-clojure-indent 'doseq> 1)          ; Like 'let'
-(put-clojure-indent 'for> 1)            ; Like 'let'
+;;(put-clojure-indent 'doseq> 1)          ; Like 'let'
+;;(put-clojure-indent 'for> 1)            ; Like 'let'
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; cider
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (add-to-list 'load-path "~/.emacs.d/custom/cider")
 (require 'cider)
 
@@ -1095,6 +1101,18 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; Include things in the diary file
 (setq org-agenda-include-diary t)
 
+;; Make events sort by newest first in the agenda view
+(setq org-agenda-sorting-strategy
+      '((agenda timestamp-down habit-down time-up priority-down category-keep)
+        (todo priority-down category-keep)
+        (tags priority-down category-keep)
+        (search category-keep)))
+
+;; Store captured notes in notes.org, and bind capture to C-c c
+(setq org-default-notes-file (concat org-directory "/notes.org"))
+(define-key global-map (kbd "C-c c") 'org-capture)
+
+
 ;; Log time task was closed
 (setq org-log-done t)
 
@@ -1257,6 +1275,19 @@ always last."
                  (format-time-string "%Y-%m-%d" (current-time))
                  (if score-info (or (gethash :score score-info) "No score") "No score")
                  (if score-info (or (gethash :streak score-info) 0) 0)))))))
+
+(defun candera:goal-achieved?
+  (achieved?)
+  (string-prefix-p achieved? "y" t))
+
+(defun candera:streak-game-compute-elapsed
+  (current-date prior-date current-achievement prior-achievement prior-elapsed)
+  (let ((date-difference (floor
+                          (/ (org-time-difference current-date prior-date)
+                             (* 24 60 60.0)))))
+    (if (candera:goal-achieved? current-achievement)
+        (+ prior-elapsed date-difference)))
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
