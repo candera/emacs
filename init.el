@@ -741,6 +741,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; OMG: cider requires org-mode, which will pull in the default
+;; version built in to Emacs if I don't set the path first.
+(setq load-path (cons "~/.emacs.d/custom/org-mode/lisp" load-path))
+(setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
+
 ;; clojure-mode and nrepl appear to require each other as well as
 ;; other libraries. Make sure everyone can find each other
 
