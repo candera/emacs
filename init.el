@@ -1156,7 +1156,7 @@ remain indented by four spaces after refilling."
 
 ;; Make events sort by newest first in the agenda view
 (setq org-agenda-sorting-strategy
-      '((agenda timestamp-down habit-down time-up priority-down category-keep)
+      '((agenda priority-down timestamp-down habit-down time-up category-keep)
         (todo priority-down category-keep)
         (tags priority-down category-keep)
         (search category-keep)))
