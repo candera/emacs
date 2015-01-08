@@ -1461,6 +1461,7 @@ always last."
 (require 'find-file-in-project)
 (global-set-key (kbd "C-x M-f") 'find-file-in-project)
 (setq ffip-patterns (append ffip-patterns '("*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn")))
+(setq ffip-limit 2048)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
