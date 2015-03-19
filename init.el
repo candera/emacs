@@ -508,9 +508,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq truncate-lines t)
 
 ;; Except in inferior-lisp, where it screws things up
-(add-hook 'inferior-lisp-mode-hook
-          (lambda ()
-             (setq truncate-lines t)))
+;; (add-hook 'inferior-lisp-mode-hook
+;;           (lambda ()
+;;              (setq truncate-lines t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -874,6 +874,19 @@ remain indented by four spaces after refilling."
              (delete-trailing-whitespace)
              (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))
     (goto-char old-point)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; inferior-lisp
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Right now I only use inferior lisp for clojure, so we configure for that
+(define-key inferior-lisp-mode-map (kbd "C-c C-c") 'lisp-eval-defun)
+
+(add-hook inferior-lisp-mode-hook
+          (lambda ()
+            (paredit-mode t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
