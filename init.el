@@ -318,7 +318,9 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 
 (setq default-major-mode 'text-mode)
 (setq display-time-day-and-date 'true)
-(display-time)
+;; display-time has the wonderful effect of causing my emacs to
+;; totally hang for the first five seconds of every minute on windows.
+;;(display-time)
 
 ;; text-mode-hook runs even in modes derived from text-mode, like
 ;; javascript-mode, where having flyspell turned on is not exactly
