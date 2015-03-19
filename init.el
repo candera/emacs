@@ -884,11 +884,18 @@ remain indented by four spaces after refilling."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Right now I only use inferior lisp for clojure, so we configure for that
-(define-key inferior-lisp-mode-map (kbd "C-c C-c") 'lisp-eval-defun)
+(define-key clojure-mode-map (kbd "C-c C-c") 'lisp-eval-defun)
 
 (add-hook inferior-lisp-mode-hook
           (lambda ()
             (paredit-mode t)))
+
+(defun comint-clear-buffer ()
+  (interactive)
+  (let ((comint-buffer-maximum-size 0))
+    (comint-truncate-buffer)))
+
+(define-key inferior-lisp-mode-map (kbd "C-c M-o") #'comint-clear-buffer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
