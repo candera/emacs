@@ -10,15 +10,6 @@
 
 ;; (load "~/.emacs.d/custom/nxhtml/autostart.el")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Include cl-lib (needed by at least nrepl and magit)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path "~/.emacs.d/custom/cl-lib")
-(require 'cl-lib)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -43,11 +34,80 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Set up the load-path
+;; Set up the load-path. Generally it is best to set all the load
+;; paths here in case there are dependencies between libraries.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'load-path "~/.emacs.d/custom/candera/")
-(add-to-list 'load-path "~/.emacs.d/custom/")
+(setq custom-load-paths
+      '("~/.emacs.d/custom/candera/"
+        "~/.emacs.d/custom/"
+        "~/.emacs.d/custom/clojure-mode/"
+        "~/.emacs.d/custom/cl-lib"
+        "~/.emacs.d/custom/ido-vertical-mode.el/"
+
+        ;; OMG: cider requires org-mode, which will pull in the default
+        ;; version built in to Emacs if I don't set the path first.
+        "~/.emacs.d/custom/org-mode/lisp"
+        "~/.emacs.d/custom/org-mode/contrib/lisp"
+
+        ;; clojure-mode and nrepl appear to require each other as well as
+        ;; other libraries. Make sure everyone can find each other
+
+        "~/.emacs.d/custom/"
+        "~/.emacs.d/custom/epl/"
+        "~/.emacs.d/custom/dash.el/"
+        "~/.emacs.d/custom/pkg-info.el/"
+
+        ;; cider prereqs that aren't available except as MELPA packages: one
+        ;; of these days I'm going to have to break down and switch.
+        "~/.emacs.d/custom/queue-el/"
+
+        "~/.emacs.d/custom/cider/"
+        "~/.emacs.d/custom/flexwiki"
+        "~/.emacs.d/custom/markdown-mode"
+
+        "~/.emacs.d/custom/git-modes"
+        "~/.emacs.d/custom/magit"
+
+        "~/.emacs.d/custom/org-mode/lisp"
+        "~/.emacs.d/custom/org-mode/contrib/lisp"
+
+        ;; org-trello
+        "~/.emacs.d/custom/s.el/"
+        "~/.emacs.d/custom/esxml/"
+        "~/.emacs.d/custom/emacs-db/"
+        "~/.emacs.d/custom/emacs-web/"
+        "~/.emacs.d/custom/emacs-kv/"
+        "~/.emacs.d/custom/emacs-noflet/"
+        "~/.emacs.d/custom/emacs-fakir/"
+        "~/.emacs.d/custom/elnode/"
+        "~/.emacs.d/custom/emacs-request/"
+        "~/.emacs.d/custom/org-trello/"
+
+        "~/.emacs.d/custom/coffee-mode"
+        "~/.emacs.d/custom/sparql-mode"
+        "~/.emacs.d/custom/align-cljlet"
+        "~/.emacs.d/custom/smex"
+        "~/.emacs.d/custom/align-cljlet"
+        "~/.emacs.d/custom/midje-mode"
+        "~/.emacs.d.custom/auto-complete/dict"
+        "~/.emacs.d/custom/mmm-mode"
+        "~/.emacs.d/custom/gnuplot-el"
+        "~/.emacs.d/custom/org-mode/lisp"
+        "~/.emacs.d/custom/org-mode/contrib/lisp"
+        "~/.emacs.d/custom/ido-vertical-mode.el/"
+        "~/.emacs.d/custom/cl-lib"
+        "~/.emacs.d/custom/gherkin-mode"
+        "~/.emacs.d/custom/command-log-mode"
+        "~/.emacs.d/custom/auto-complete"
+        "~/.emacs.d/custom/midje-mode"
+        "~/.emacs.d/custom/twittering-mode"
+        "~/.emacs.d/custom/expand-region"
+        "~/.emacs.d/custom/popup-el"
+        "~/.emacs.d/custom/undo-tree"
+        "~/.emacs.d/custom/haml-mode"))
+
+(setq load-path (append load-path custom-load-paths))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -546,7 +606,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; ;; Make ido stop prompting me about whether I want to create a new buffer
 ;; (setq ido-create-new-buffer 'always)
 
-(add-to-list 'load-path "~/.emacs.d/custom/ido-vertical-mode.el/")
 (require 'ido-vertical-mode)
 (ido-mode 1)
 (ido-vertical-mode 1)
@@ -737,33 +796,22 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                      (region-beginning)
                      (region-end))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Include cl-lib (needed by at least nrepl and magit)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;(require 'cl-lib)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; This section sets up clojure-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; OMG: cider requires org-mode, which will pull in the default
-;; version built in to Emacs if I don't set the path first.
-(setq load-path (cons "~/.emacs.d/custom/org-mode/lisp" load-path))
-(setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
-
-;; clojure-mode and nrepl appear to require each other as well as
-;; other libraries. Make sure everyone can find each other
-
-(add-to-list 'load-path "~/.emacs.d/custom/")
-(add-to-list 'load-path "~/.emacs.d/custom/epl/")
-(add-to-list 'load-path "~/.emacs.d/custom/dash.el/")
-(add-to-list 'load-path "~/.emacs.d/custom/pkg-info.el/")
-
-;; cider prereqs that aren't available except as MELPA packages: one
-;; of these days I'm going to have to break down and switch.
-(add-to-list 'load-path "~/.emacs.d/custom/queue-el/")
-
-(add-to-list 'load-path "~/.emacs.d/custom/cider/")
-
 ;; Require clojure-mode to load and associate it to all .clj files.
-(add-to-list 'load-path "~/.emacs.d/custom/clojure-mode/")
 
 (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
@@ -883,10 +931,14 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(require 'inf-lisp)
+(require 'clojure-mode)
+(require 'paredit)
+
 ;; Right now I only use inferior lisp for clojure, so we configure for that
 (define-key clojure-mode-map (kbd "C-c C-c") 'lisp-eval-defun)
 
-(add-hook inferior-lisp-mode-hook
+(add-hook 'inferior-lisp-mode-hook
           (lambda ()
             (paredit-mode t)))
 
@@ -903,7 +955,6 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/cider")
 (require 'cider)
 
 ;; Don't use on the Pi, due to excessive CPU
@@ -922,7 +973,6 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (add-to-list 'load-path "~/.emacs.d/custom/elein")
 ;; (require 'elein)
 
 ;; (defun lein-repl ()
@@ -1028,7 +1078,6 @@ remain indented by four spaces after refilling."
 ; This sets up my FlexWiki mode
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/custom/flexwiki"))
 (add-to-list 'auto-mode-alist '("\\.wiki$" . flexwiki-mode))
 (require 'flexwiki)
 
@@ -1048,7 +1097,6 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;(add-to-list 'load-path "/path/to/highlight-symbol")
 (require 'highlight-symbol)
 
 (global-set-key [(control f3)] 'highlight-symbol-at-point)
@@ -1062,7 +1110,6 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/custom/markdown-mode"))
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
 (setq auto-mode-alist
@@ -1074,8 +1121,6 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/git-modes")
-(add-to-list 'load-path "~/.emacs.d/custom/magit")
 (require 'magit)
 
 ;; C-x m is normally compose-mail, but I never do mail inside of
@@ -1100,7 +1145,6 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (add-to-list 'load-path "~/.emacs.d/custom/gist.el")
 ;; (require 'gist)
 
 ;; ;; Turn on longlines mode whenever we're in an edit server buffer
@@ -1125,8 +1169,6 @@ remain indented by four spaces after refilling."
 (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
 (global-set-key (kbd "C-c l") 'org-store-link)
 
-(setq load-path (cons "~/.emacs.d/custom/org-mode/lisp" load-path))
-(setq load-path (cons "~/.emacs.d/custom/org-mode/contrib/lisp" load-path))
 (add-hook 'org-mode-hook (lambda ()
                            (turn-on-flyspell)
                            ;; I always type this instead of C-c C-t
@@ -1370,16 +1412,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/s.el/")
-(add-to-list 'load-path "~/.emacs.d/custom/esxml/")
-(add-to-list 'load-path "~/.emacs.d/custom/emacs-db/")
-(add-to-list 'load-path "~/.emacs.d/custom/emacs-web/")
-(add-to-list 'load-path "~/.emacs.d/custom/emacs-kv/")
-(add-to-list 'load-path "~/.emacs.d/custom/emacs-noflet/")
-(add-to-list 'load-path "~/.emacs.d/custom/emacs-fakir/")
-(add-to-list 'load-path "~/.emacs.d/custom/elnode/")
-(add-to-list 'load-path "~/.emacs.d/custom/emacs-request/")
-(add-to-list 'load-path "~/.emacs.d/custom/org-trello/")
 (require 'org-trello)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1422,7 +1454,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/coffee-mode")
 (require 'coffee-mode)
 
 ;; Uncomment if necessary
@@ -1449,7 +1480,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/sparql-mode")
 (autoload 'sparql-mode "sparql-mode.el"
      "Major mode for editing SPARQL files" t)
 (add-to-list 'auto-mode-alist '("\\.sparql$" . sparql-mode))
@@ -1491,7 +1521,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/align-cljlet")
 (require 'align-cljlet)
 (define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
 
@@ -1501,7 +1530,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/smex")
 (require 'smex)
 (smex-initialize)
 
@@ -1517,7 +1545,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/twittering-mode")
 (require 'twittering-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1527,7 +1554,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/expand-region")
 (require 'expand-region)
 (global-set-key (kbd "C-=") 'er/expand-region)
 
@@ -1538,7 +1564,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/midje-mode")
 ;; (require 'midje-mode)
 ;; (require 'clojure-jump-to-file)
 
@@ -1549,7 +1574,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/popup-el")
 (require 'popup)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1559,9 +1583,7 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/auto-complete")
 (require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories "~/.emacs.d.custom/auto-complete/dict")
 (ac-config-default)
 
 ;; Turn off automatic start of auto-complete
@@ -1582,7 +1604,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/command-log-mode")
 (require 'command-log-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1592,7 +1613,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/undo-tree")
 (require 'undo-tree)
 (global-undo-tree-mode 1)
 
@@ -1632,8 +1652,6 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/mmm-mode")
-
 (require 'mmm-auto)
 (mmm-add-classes
  '((markdown-clojure
@@ -1653,8 +1671,6 @@ always last."
 ;; haml-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path "~/.emacs.d/custom/haml-mode")
 
 (require 'haml-mode)
 
@@ -1681,17 +1697,14 @@ always last."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'load-path "~/.emacs.d/custom/gherkin-mode")
-(add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
 (require 'gherkin-mode)
+(add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; gnuplot-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path "~/.emacs.d/custom/gnuplot-el")
 
 (autoload 'gnuplot-mode "gnuplot" "gnuplot major mode" t)
 (autoload 'gnuplot-make-buffer "gnuplot" "open a buffer in gnuplot mode" t)
