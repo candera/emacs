@@ -39,16 +39,14 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq custom-load-paths
-      '("~/.emacs.d/custom/candera/"
+      '("~/.emacs.d/custom/org-mode/lisp"
+        "~/.emacs.d/custom/org-mode/contrib/lisp"
+
+        "~/.emacs.d/custom/candera/"
         "~/.emacs.d/custom/"
         "~/.emacs.d/custom/clojure-mode/"
         "~/.emacs.d/custom/cl-lib"
         "~/.emacs.d/custom/ido-vertical-mode.el/"
-
-        ;; OMG: cider requires org-mode, which will pull in the default
-        ;; version built in to Emacs if I don't set the path first.
-        "~/.emacs.d/custom/org-mode/lisp"
-        "~/.emacs.d/custom/org-mode/contrib/lisp"
 
         ;; clojure-mode and nrepl appear to require each other as well as
         ;; other libraries. Make sure everyone can find each other
@@ -68,9 +66,6 @@
 
         "~/.emacs.d/custom/git-modes"
         "~/.emacs.d/custom/magit"
-
-        "~/.emacs.d/custom/org-mode/lisp"
-        "~/.emacs.d/custom/org-mode/contrib/lisp"
 
         ;; org-trello
         "~/.emacs.d/custom/s.el/"
@@ -93,8 +88,6 @@
         "~/.emacs.d.custom/auto-complete/dict"
         "~/.emacs.d/custom/mmm-mode"
         "~/.emacs.d/custom/gnuplot-el"
-        "~/.emacs.d/custom/org-mode/lisp"
-        "~/.emacs.d/custom/org-mode/contrib/lisp"
         "~/.emacs.d/custom/ido-vertical-mode.el/"
         "~/.emacs.d/custom/cl-lib"
         "~/.emacs.d/custom/gherkin-mode"
@@ -107,7 +100,7 @@
         "~/.emacs.d/custom/undo-tree"
         "~/.emacs.d/custom/haml-mode"))
 
-(setq load-path (append load-path custom-load-paths))
+(setq load-path (append custom-load-paths load-path))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -805,6 +798,288 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;(require 'cl-lib)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; OMFG: cider requires org-mode, which will pull in the default
+;; version built in to Emacs if I don't set it up before
+;; clojure-mode/cider.
+;;
+;; Set up later version of org-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'org)
+(require 'org-install)
+
+(global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
+(global-set-key (kbd "C-c l") 'org-store-link)
+
+(add-hook 'org-mode-hook (lambda ()
+                           (turn-on-flyspell)
+                           ;; I always type this instead of C-c C-t
+                           (define-key org-mode-map (kbd "C-c t") 'org-todo)
+                           (auto-revert-mode 1)
+                           (add-to-list 'org-modules 'org-habit)
+                           ;; Org files can get big and have lots of
+                           ;; folded content. There's not much benefit
+                           ;; in line numbers, and they slow down org
+                           ;; noticably.
+                           (linum-mode 0)
+                           ;; Weird that I have to do this, but I
+                           ;; can't figure out how to get habits
+                           ;; turned on outside of the customization
+                           ;; interface, which I prefer not to use.
+                           (require 'org-habit)
+                           ;; Automatically save org-mode buffers when
+                           ;; idle. Important because I use Dropbox to
+                           ;; sync them, and forgetting to save when
+                           ;; switching computers means conflicts.
+                           (add-to-list 'idle-save-buffer-list (current-buffer))))
+
+(add-hook 'org-agenda-mode-hook
+          (lambda ()
+            ;; I always type this instead of C-c C-t
+            (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)))
+
+;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
+(setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
+
+;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
+;; that it might crash. So I set this variable, which gets me the same
+;; effect.
+(setq org-hide-leading-stars t)
+
+;; Let me refile by path, and to deeper nesting
+(setq org-refile-use-outline-path 'file)
+;;(setq org-outline-path-complete-in-steps t)
+(setq org-refile-targets
+      '((org-agenda-files . (:maxlevel . 5))))
+
+;; Log into a drawer, which is nice
+(setq org-log-into-drawer t)
+
+;; Include things in the diary file
+(setq org-agenda-include-diary t)
+
+;; Make events sort by newest first in the agenda view
+(setq org-agenda-sorting-strategy
+      '((agenda priority-down timestamp-down habit-down time-up category-keep)
+        (todo priority-down category-keep)
+        (tags priority-down category-keep)
+        (search category-keep)))
+
+;; Store captured notes in notes.org, and bind capture to C-c c
+(setq org-default-notes-file (concat org-directory "/notes.org"))
+(define-key global-map (kbd "C-c c") 'org-capture)
+
+
+;; Log time task was closed
+(setq org-log-done t)
+
+;; Turn off the annoying mouse highlight in agenda views
+(add-hook 'org-finalize-agenda-hook
+          (lambda () (remove-text-properties
+                      (point-min) (point-max) '(mouse-face t))))
+
+;; Set up for agendas and mobile org
+(when (file-exists-p "~/Dropbox/org/")
+  ;; Set to the location of your Org files on your local system
+  (setq org-directory "~/Dropbox/org/")
+  ;; Set to the name of the file where new notes will be stored
+  (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
+  ;; Set to <your Dropbox root directory>/MobileOrg.
+  (setq org-mobile-directory "~/Dropbox/MobileOrg")
+  ;; A file that lists which org files should be pulled into the agenda
+  (setq org-agenda-files "~/Dropbox/org/agendas.org"))
+
+(defun org-time-difference (ts1 ts2)
+  "Given two org time strings, return the floating point time
+  difference between them."
+  (let* ((time1 (org-time-string-to-time ts1))
+         (time2 (org-time-string-to-time ts2))
+         (t1 (org-float-time time1))
+         (t2 (org-float-time time2)))
+    (- t2 t1)))
+
+(defun org-custom-todo-sort-fn ()
+  "Returns a value that sorts tasks according to my personal
+heuristic. Namely, by task state: INPROGRESS, then BLOCKED, the
+TODO, then nothing, then DONE. Within the non-done states, sort
+by scheduled, or by deadline if not scheduled, with oldest dates
+first. Within DONE, most-recently done first. Archived items are
+always last."
+  (format "%s/%s-%s/%s"
+          (if (member "ARCHIVE" (org-get-tags)) "1" "0")
+          (pcase (org-get-todo-state)
+            ("INPROGRESS" 1)
+            ("BLOCKED" 2)
+            ("TODO" 3)
+            (`nil 4)
+            ("DONE" (format "5%20d" (let ((ct (org-entry-get (point) "CLOSED")))
+                                      (if ct
+                                          (org-time-difference ct "2038-01-01")
+                                        1.0e23))))
+            (otherwise 6))
+          (let ((etime (or (org-entry-get (point) "SCHEDULED")
+                           (org-entry-get (point) "DEADLINE"))))
+            (if etime
+                (format "%013.2f" (org-float-time (org-time-string-to-time etime)))
+              "zzzzzzzzzzzzzz"))
+
+          (org-get-heading :no-tags :no-todo)))
+
+(defun org-custom-entry-sort ()
+  "Sorts entries according to my personal heuristic"
+  (interactive)
+  (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
+
+;; Compute my own custom scores for habits
+
+(defun org-candera-habit-penalty (days-since-last)
+  (- (if days-since-last
+         (if (< 1 days-since-last)
+             (- (expt 2 days-since-last)
+                2)
+           0)
+       0)))
+
+(defun org-candera-habit-score (days today initial-value)
+  (when days
+    (let ((score-info
+           (reduce (lambda (acc d)
+                     (let* ((last-day (gethash :last-day acc))
+                            (days-since-last (when last-day (- d last-day)))
+                            (on-streak? (when days-since-last (= 1 days-since-last)))
+                            (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
+                            (streak-bonus (if on-streak?
+                                              (if (zerop (mod streak 3))
+                                                  (/ streak 3)
+                                                0)
+                                            0))
+                            (score (gethash :score acc 0)))
+                       (puthash :last-day d acc)
+                       (puthash :streak streak acc)
+                       (puthash :score (max 1 (+ (or score 0)
+                                                 streak-bonus
+                                                 1
+                                                 (org-candera-habit-penalty days-since-last)))
+                                acc)
+                       acc))
+                   days
+                   :initial-value initial-value)))
+      (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
+                                                         (first (last days))))))
+        (puthash :score
+                 (max 0 (+ (gethash :score score-info) today-penalty))
+                 score-info)
+        (unless (zerop today-penalty)
+          (puthash :streak 0 score-info))
+        score-info))))
+
+(defun org-collect-dates-for-element ()
+  "Gets all the dates for the element at point"
+  (let* ((element (org-element-at-point))
+         (start (org-element-property :begin element))
+         (end (org-element-property :end element)))
+    (org-get-all-dates start end nil nil t)))
+
+(defun org-collect-dates (match)
+  "Returns all the unique dates that appear in items that match MATCH"
+  ;; TODO: Figure how to keep it from scanning both parents and
+  ;; children, since that's redundant
+  ;; TODO: Skipping archived items doesn't seem to work,
+  ;; although skipping commented items does.
+  (let* ((dates (apply #'append
+                       (org-map-entries #'org-collect-dates-for-element
+                                        match
+                                        'file
+                                        'archive
+                                        'comment)))
+         (uniques (cl-remove-duplicates dates))
+         (sorted ))
+    (cl-sort uniques #'<)))
+
+(defun org-dblock-write:compute-habit-score (params)
+  "Returns a 'score' for entries that match `match` (e.g. a tag)
+  based on timestamps that appear in them.
+
+  One point is given for each consecutive day that appears. A day
+  without activity drops the score by (expt 2
+  days-since-last-activity). Every third day of a streak, a bonus
+  of (/ streak-length 3) is awarded.
+
+  If not all data is recorded in the org file initially, initial
+  values can be provided via :last-day, :initial-streak,
+  and :initial-score params."
+  (interactive)
+  (let* ((last-day-param (plist-get params :last-day))
+         (last-day (when last-day-param
+                     (time-to-days (org-time-string-to-time last-day-param))))
+         (initial-streak (plist-get params :initial-streak))
+         (initial-score (plist-get params :initial-score))
+         (initial-value (make-hash-table))
+         (match (plist-get params :match)))
+    (puthash :last-day last-day initial-value)
+    (puthash :streak initial-streak initial-value)
+    (puthash :score initial-score initial-value)
+    (save-excursion
+      (let* ((dates (org-collect-dates match))
+             (score-info (org-candera-habit-score
+                          (if last-day
+                              (remove-if (lambda (d) (<= d last-day)) dates)
+                            dates)
+                          (time-to-days (current-time))
+                          initial-value)))
+        (insert
+         (format "Score as of %s: %s\nStreak: %d"
+                 (format-time-string "%Y-%m-%d" (current-time))
+                 (if score-info (or (gethash :score score-info) "No score") "No score")
+                 (if score-info (or (gethash :streak score-info) 0) 0)))))))
+
+(defun candera:goal-achieved?
+  (achieved?)
+  (string-prefix-p achieved? "y" t))
+
+(defun candera:streak-game-compute-elapsed
+  (current-date prior-date current-achievement prior-achievement prior-elapsed)
+  (let ((date-difference (floor
+                          (/ (org-time-difference current-date prior-date)
+                             (* 24 60 60.0)))))
+    (if (candera:goal-achieved? current-achievement)
+        (+ prior-elapsed date-difference)))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-trello
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'org-trello)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Set up org-babel
+;; Stolen from https://github.com/stuartsierra/dotfiles/blob/2ec5ab2a45c091d74c8e73d62683b15ddd8bd9c7/.emacs.d/local/init.el#L295
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'org)
+(require 'ob)
+(require 'ob-tangle)
+(require 'ob-clojure)
+(setq org-babel-clojure-backend 'cider)
+(require 'cider)
+
+;; Don't make me confirm evaluation every single time
+(setq org-confirm-babel-evaluate nil)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (clojure . t)
+   (sh . t)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; This section sets up clojure-mode
@@ -1159,283 +1434,6 @@ remain indented by four spaces after refilling."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq diary-file "~/Dropbox/diary")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up later version of org-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
-(global-set-key (kbd "C-c l") 'org-store-link)
-
-(add-hook 'org-mode-hook (lambda ()
-                           (turn-on-flyspell)
-                           ;; I always type this instead of C-c C-t
-                           (define-key org-mode-map (kbd "C-c t") 'org-todo)
-                           (auto-revert-mode 1)
-                           (add-to-list 'org-modules 'org-habit)
-                           ;; Org files can get big and have lots of
-                           ;; folded content. There's not much benefit
-                           ;; in line numbers, and they slow down org
-                           ;; noticably.
-                           (linum-mode 0)
-                           ;; Weird that I have to do this, but I
-                           ;; can't figure out how to get habits
-                           ;; turned on outside of the customization
-                           ;; interface, which I prefer not to use.
-                           (require 'org-habit)
-                           ;; Automatically save org-mode buffers when
-                           ;; idle. Important because I use Dropbox to
-                           ;; sync them, and forgetting to save when
-                           ;; switching computers means conflicts.
-                           (add-to-list 'idle-save-buffer-list (current-buffer))))
-
-(add-hook 'org-agenda-mode-hook
-          (lambda ()
-            ;; I always type this instead of C-c C-t
-            (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)))
-
-(require 'org-install)
-
-;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
-(setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
-
-;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
-;; that it might crash. So I set this variable, which gets me the same
-;; effect.
-(setq org-hide-leading-stars t)
-
-;; Let me refile by path, and to deeper nesting
-(setq org-refile-use-outline-path 'file)
-;;(setq org-outline-path-complete-in-steps t)
-(setq org-refile-targets
-      '((org-agenda-files . (:maxlevel . 5))))
-
-;; Log into a drawer, which is nice
-(setq org-log-into-drawer t)
-
-;; Include things in the diary file
-(setq org-agenda-include-diary t)
-
-;; Make events sort by newest first in the agenda view
-(setq org-agenda-sorting-strategy
-      '((agenda priority-down timestamp-down habit-down time-up category-keep)
-        (todo priority-down category-keep)
-        (tags priority-down category-keep)
-        (search category-keep)))
-
-;; Store captured notes in notes.org, and bind capture to C-c c
-(setq org-default-notes-file (concat org-directory "/notes.org"))
-(define-key global-map (kbd "C-c c") 'org-capture)
-
-
-;; Log time task was closed
-(setq org-log-done t)
-
-;; Turn off the annoying mouse highlight in agenda views
-(add-hook 'org-finalize-agenda-hook
-          (lambda () (remove-text-properties
-                      (point-min) (point-max) '(mouse-face t))))
-
-;; Set up for agendas and mobile org
-(when (file-exists-p "~/Dropbox/org/")
-  ;; Set to the location of your Org files on your local system
-  (setq org-directory "~/Dropbox/org/")
-  ;; Set to the name of the file where new notes will be stored
-  (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
-  ;; Set to <your Dropbox root directory>/MobileOrg.
-  (setq org-mobile-directory "~/Dropbox/MobileOrg")
-  ;; A file that lists which org files should be pulled into the agenda
-  (setq org-agenda-files "~/Dropbox/org/agendas.org"))
-
-(defun org-time-difference (ts1 ts2)
-  "Given two org time strings, return the floating point time
-  difference between them."
-  (let* ((time1 (org-time-string-to-time ts1))
-         (time2 (org-time-string-to-time ts2))
-         (t1 (org-float-time time1))
-         (t2 (org-float-time time2)))
-    (- t2 t1)))
-
-(defun org-custom-todo-sort-fn ()
-  "Returns a value that sorts tasks according to my personal
-heuristic. Namely, by task state: INPROGRESS, then BLOCKED, the
-TODO, then nothing, then DONE. Within the non-done states, sort
-by scheduled, or by deadline if not scheduled, with oldest dates
-first. Within DONE, most-recently done first. Archived items are
-always last."
-  (format "%s/%s-%s/%s"
-          (if (member "ARCHIVE" (org-get-tags)) "1" "0")
-          (pcase (org-get-todo-state)
-            ("INPROGRESS" 1)
-            ("BLOCKED" 2)
-            ("TODO" 3)
-            (`nil 4)
-            ("DONE" (format "5%20d" (let ((ct (org-entry-get (point) "CLOSED")))
-                                      (if ct
-                                          (org-time-difference ct "2038-01-01")
-                                        1.0e23))))
-            (otherwise 6))
-          (let ((etime (or (org-entry-get (point) "SCHEDULED")
-                           (org-entry-get (point) "DEADLINE"))))
-            (if etime
-                (format "%013.2f" (org-float-time (org-time-string-to-time etime)))
-              "zzzzzzzzzzzzzz"))
-
-          (org-get-heading :no-tags :no-todo)))
-
-(defun org-custom-entry-sort ()
-  "Sorts entries according to my personal heuristic"
-  (interactive)
-  (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
-
-;; Compute my own custom scores for habits
-
-(defun org-candera-habit-penalty (days-since-last)
-  (- (if days-since-last
-         (if (< 1 days-since-last)
-             (- (expt 2 days-since-last)
-                2)
-           0)
-       0)))
-
-(defun org-candera-habit-score (days today initial-value)
-  (when days
-    (let ((score-info
-           (reduce (lambda (acc d)
-                     (let* ((last-day (gethash :last-day acc))
-                            (days-since-last (when last-day (- d last-day)))
-                            (on-streak? (when days-since-last (= 1 days-since-last)))
-                            (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
-                            (streak-bonus (if on-streak?
-                                              (if (zerop (mod streak 3))
-                                                  (/ streak 3)
-                                                0)
-                                            0))
-                            (score (gethash :score acc 0)))
-                       (puthash :last-day d acc)
-                       (puthash :streak streak acc)
-                       (puthash :score (max 1 (+ (or score 0)
-                                                 streak-bonus
-                                                 1
-                                                 (org-candera-habit-penalty days-since-last)))
-                                acc)
-                       acc))
-                   days
-                   :initial-value initial-value)))
-      (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
-                                                         (first (last days))))))
-        (puthash :score
-                 (max 0 (+ (gethash :score score-info) today-penalty))
-                 score-info)
-        (unless (zerop today-penalty)
-          (puthash :streak 0 score-info))
-        score-info))))
-
-(defun org-collect-dates-for-element ()
-  "Gets all the dates for the element at point"
-  (let* ((element (org-element-at-point))
-         (start (org-element-property :begin element))
-         (end (org-element-property :end element)))
-    (org-get-all-dates start end nil nil t)))
-
-(defun org-collect-dates (match)
-  "Returns all the unique dates that appear in items that match MATCH"
-  ;; TODO: Figure how to keep it from scanning both parents and
-  ;; children, since that's redundant
-  ;; TODO: Skipping archived items doesn't seem to work,
-  ;; although skipping commented items does.
-  (let* ((dates (apply #'append
-                       (org-map-entries #'org-collect-dates-for-element
-                                        match
-                                        'file
-                                        'archive
-                                        'comment)))
-         (uniques (cl-remove-duplicates dates))
-         (sorted ))
-    (cl-sort uniques #'<)))
-
-(defun org-dblock-write:compute-habit-score (params)
-  "Returns a 'score' for entries that match `match` (e.g. a tag)
-  based on timestamps that appear in them.
-
-  One point is given for each consecutive day that appears. A day
-  without activity drops the score by (expt 2
-  days-since-last-activity). Every third day of a streak, a bonus
-  of (/ streak-length 3) is awarded.
-
-  If not all data is recorded in the org file initially, initial
-  values can be provided via :last-day, :initial-streak,
-  and :initial-score params."
-  (interactive)
-  (let* ((last-day-param (plist-get params :last-day))
-         (last-day (when last-day-param
-                     (time-to-days (org-time-string-to-time last-day-param))))
-         (initial-streak (plist-get params :initial-streak))
-         (initial-score (plist-get params :initial-score))
-         (initial-value (make-hash-table))
-         (match (plist-get params :match)))
-    (puthash :last-day last-day initial-value)
-    (puthash :streak initial-streak initial-value)
-    (puthash :score initial-score initial-value)
-    (save-excursion
-      (let* ((dates (org-collect-dates match))
-             (score-info (org-candera-habit-score
-                          (if last-day
-                              (remove-if (lambda (d) (<= d last-day)) dates)
-                            dates)
-                          (time-to-days (current-time))
-                          initial-value)))
-        (insert
-         (format "Score as of %s: %s\nStreak: %d"
-                 (format-time-string "%Y-%m-%d" (current-time))
-                 (if score-info (or (gethash :score score-info) "No score") "No score")
-                 (if score-info (or (gethash :streak score-info) 0) 0)))))))
-
-(defun candera:goal-achieved?
-  (achieved?)
-  (string-prefix-p achieved? "y" t))
-
-(defun candera:streak-game-compute-elapsed
-  (current-date prior-date current-achievement prior-achievement prior-elapsed)
-  (let ((date-difference (floor
-                          (/ (org-time-difference current-date prior-date)
-                             (* 24 60 60.0)))))
-    (if (candera:goal-achieved? current-achievement)
-        (+ prior-elapsed date-difference)))
-  )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; org-trello
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'org-trello)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up org-babel
-;; Stolen from https://github.com/stuartsierra/dotfiles/blob/2ec5ab2a45c091d74c8e73d62683b15ddd8bd9c7/.emacs.d/local/init.el#L295
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'org)
-(require 'ob)
-(require 'ob-tangle)
-(require 'ob-clojure)
-(setq org-babel-clojure-backend 'cider)
-(require 'cider)
-
-;; Don't make me confirm evaluation every single time
-(setq org-confirm-babel-evaluate nil)
-
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((emacs-lisp . t)
-   (clojure . t)
-   (sh . t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
