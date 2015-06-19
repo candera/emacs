@@ -360,6 +360,7 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (global-set-key (quote [C-up]) 'scroll-window-up-one)
 (global-set-key (quote [C-down]) 'scroll-window-down-one)
 (global-set-key (kbd "C-;") 'flyspell-auto-correct-previous-word)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
 
 (global-set-key (quote [C-tab]) 'other-window)
 
