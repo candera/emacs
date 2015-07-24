@@ -64,8 +64,8 @@
         "~/.emacs.d/custom/flexwiki"
         "~/.emacs.d/custom/markdown-mode"
 
-        "~/.emacs.d/custom/git-modes"
-        "~/.emacs.d/custom/magit"
+        ;;"~/.emacs.d/custom/git-modes"
+        "~/.emacs.d/custom/magit/lisp"
 
         ;; org-trello
         "~/.emacs.d/custom/s.el/"
@@ -98,7 +98,8 @@
         "~/.emacs.d/custom/expand-region"
         "~/.emacs.d/custom/popup-el"
         "~/.emacs.d/custom/undo-tree"
-        "~/.emacs.d/custom/haml-mode"))
+        "~/.emacs.d/custom/haml-mode"
+        "~/.emacs.d/custom/csv-mode"))
 
 (setq load-path (append custom-load-paths load-path))
 
@@ -1401,6 +1402,11 @@ remain indented by four spaces after refilling."
 
 (require 'magit)
 
+(with-eval-after-load 'info
+  (info-initialize)
+  (add-to-list 'Info-directory-list
+	       "~/.emacs.d/custom/magit/Documentation/"))
+
 ;; C-x m is normally compose-mail, but I never do mail inside of
 ;; emacs, whereas I run magit-status all the time
 (global-set-key (kbd "C-x m") 'magit-status)
@@ -1712,6 +1718,16 @@ remain indented by four spaces after refilling."
 
 (unless (assoc "\\.gp\\'" auto-mode-alist)
   (add-to-list 'auto-mode-alist '("\\.gp\\'" . gnuplot-mode)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; csv-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
+(autoload 'csv-mode "csv-mode"
+   "Major mode for editing comma-separated value files." t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

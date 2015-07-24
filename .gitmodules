@@ -115,3 +115,9 @@
 [submodule "gnuplot-el"]
 	path = gnuplot-el
 	url = https://github.com/rudi/gnuplot-el
+[submodule "csv-mode"]
+	path = csv-mode
+	url = https://github.com/emacsmirror/csv-mode
+[submodule "dash"]
+	path = dash
+	url = https://github.com/magnars/dash.el
