@@ -45,7 +45,7 @@
         url = http://www.dr-qubit.org/git/undo-tree.git
 [submodule "evil"]
         path = evil
-        url = git://gitorious.org/evil/evil.git
+        url = https://github.com/emacsmirror/evil.git
 [submodule "mmm-mode"]
         path = mmm-mode
         url = https://github.com/purcell/mmm-mode
