@@ -52,9 +52,6 @@
 [submodule "floobits"]
         path = floobits
         url = https://github.com/Floobits/floobits-emacs.git
-[submodule "cl-lib"]
-        path = cl-lib
-        url = https://github.com/emacsmirror/cl-lib.git
 [submodule "haml-mode"]
         path = haml-mode
         url = https://github.com/nex3/haml-mode
