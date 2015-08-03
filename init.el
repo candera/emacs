@@ -1743,6 +1743,8 @@ remain indented by four spaces after refilling."
 (add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
 (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
+(setq save-interprogram-paste-before-kill t)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
