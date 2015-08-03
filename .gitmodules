@@ -44,8 +44,8 @@
         path = undo-tree
         url = http://www.dr-qubit.org/git/undo-tree.git
 [submodule "evil"]
-        path = evil
-        url = https://github.com/emacsmirror/evil.git
+	path = evil
+	url = https://github.com/emacsmirror/evil
 [submodule "mmm-mode"]
         path = mmm-mode
         url = https://github.com/purcell/mmm-mode
