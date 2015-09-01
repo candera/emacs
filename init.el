@@ -13,7 +13,7 @@
                        smex ido-vertical-mode gherkin-mode
                        command-log-mode auto-complete
                        expand-region undo-tree haml-mode
-                       csv-mode markdown-mode))
+                       csv-mode markdown-mode arduino-mode))
   (unless (package-installed-p package)
     (package-install package)))
 
