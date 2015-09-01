@@ -9,7 +9,11 @@
  t)
 (package-initialize)
 
-(dolist (package '(org clojure-mode magit cider))
+(dolist (package '(org clojure-mode magit cider align-cljlet
+                       smex ido-vertical-mode gherkin-mode
+                       command-log-mode auto-complete
+                       expand-region undo-tree haml-mode
+                       csv-mode markdown-mode))
   (unless (package-installed-p package)
     (package-install package)))
 
@@ -52,37 +56,33 @@
 (setq custom-load-paths
       '("~/.emacs.d/custom/candera/"
         "~/.emacs.d/custom/"
-        "~/.emacs.d/custom/cl-lib"
-        "~/.emacs.d/custom/ido-vertical-mode.el/"
-
-        "~/.emacs.d/custom/"
 
         "~/.emacs.d/custom/flexwiki"
-        "~/.emacs.d/custom/markdown-mode"
+        ;; mv "~/.emacs.d/custom/markdown-mode"
 
         ;;"~/.emacs.d/custom/git-modes"
 
-        "~/.emacs.d/custom/coffee-mode"
-        "~/.emacs.d/custom/sparql-mode"
-        "~/.emacs.d/custom/align-cljlet"
-        "~/.emacs.d/custom/smex"
-        "~/.emacs.d/custom/align-cljlet"
-        "~/.emacs.d/custom/midje-mode"
+        ;; rm "~/.emacs.d/custom/coffee-mode"
+        ;; rm "~/.emacs.d/custom/sparql-mode"
+        ;; mv "~/.emacs.d/custom/align-cljlet"
+        ;; mv "~/.emacs.d/custom/smex"
+        ;; rm "~/.emacs.d/custom/midje-mode"
         "~/.emacs.d.custom/auto-complete/dict"
-        "~/.emacs.d/custom/mmm-mode"
-        "~/.emacs.d/custom/gnuplot-el"
-        "~/.emacs.d/custom/ido-vertical-mode.el/"
-        "~/.emacs.d/custom/cl-lib"
-        "~/.emacs.d/custom/gherkin-mode"
-        "~/.emacs.d/custom/command-log-mode"
-        "~/.emacs.d/custom/auto-complete"
-        "~/.emacs.d/custom/midje-mode"
-        "~/.emacs.d/custom/twittering-mode"
-        "~/.emacs.d/custom/expand-region"
-        "~/.emacs.d/custom/popup-el"
-        "~/.emacs.d/custom/undo-tree"
-        "~/.emacs.d/custom/haml-mode"
-        "~/.emacs.d/custom/csv-mode"))
+        ;; rm "~/.emacs.d/custom/mmm-mode"
+        ;; rm "~/.emacs.d/custom/gnuplot-el"
+        ;; mv "~/.emacs.d/custom/ido-vertical-mode.el/"
+        ;; rm "~/.emacs.d/custom/cl-lib"
+        ;; mv "~/.emacs.d/custom/gherkin-mode"
+        ;; mv "~/.emacs.d/custom/command-log-mode"
+        ;; mv "~/.emacs.d/custom/auto-complete"
+        ;; rm "~/.emacs.d/custom/midje-mode"
+        ;; rm "~/.emacs.d/custom/twittering-mode"
+        ;; mv "~/.emacs.d/custom/expand-region"
+        ;; rm "~/.emacs.d/custom/popup-el"
+        ;; mv "~/.emacs.d/custom/undo-tree"
+        ;; mv "~/.emacs.d/custom/haml-mode"
+        ;; mv "~/.emacs.d/custom/csv-mode"
+        ))
 
 (setq load-path (append custom-load-paths load-path))
 
