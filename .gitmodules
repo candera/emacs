@@ -49,15 +49,6 @@
 [submodule "git-modes"]
         path = git-modes
         url = https://github.com/magit/git-modes
-[submodule "dash.el"]
-        path = dash.el
-        url = https://github.com/magnars/dash.el
-[submodule "pkg-info.el"]
-        path = pkg-info.el
-        url = https://github.com/lunaryorn/pkg-info.el
-[submodule "epl"]
-        path = epl
-        url = https://github.com/cask/epl
 [submodule "gherkin-mode"]
         path = gherkin-mode
         url = git@github.com:candera/gherkin-mode.git

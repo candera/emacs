@@ -9,9 +9,9 @@
  t)
 (package-initialize)
 
-(package-install 'org)
-(package-install 'clojure-mode)
-(package-install 'magit)
+(dolist (package '(org clojure-mode magit cider))
+  (unless (package-installed-p package)
+    (package-install package)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -56,9 +56,6 @@
         "~/.emacs.d/custom/ido-vertical-mode.el/"
 
         "~/.emacs.d/custom/"
-        "~/.emacs.d/custom/epl/"
-        "~/.emacs.d/custom/dash.el/"
-        "~/.emacs.d/custom/pkg-info.el/"
 
         "~/.emacs.d/custom/flexwiki"
         "~/.emacs.d/custom/markdown-mode"
