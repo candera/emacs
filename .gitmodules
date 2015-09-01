@@ -1,15 +1,9 @@
 [submodule "auto-complete"]
         path = auto-complete
         url = https://github.com/auto-complete/auto-complete
-[submodule "clojure-mode"]
-        path = clojure-mode
-        url = https://github.com/technomancy/clojure-mode.git
 [submodule "gist.el"]
         path = gist.el
         url = git://github.com/defunkt/gist.el.git
-[submodule "magit"]
-        path = magit
-        url = https://github.com/magit/magit.git
 [submodule "coffee-mode"]
         path = coffee-mode
         url = git://github.com/defunkt/coffee-mode.git
@@ -55,9 +49,6 @@
 [submodule "git-modes"]
         path = git-modes
         url = https://github.com/magit/git-modes
-[submodule "cider"]
-        path = cider
-        url = https://github.com/clojure-emacs/cider
 [submodule "dash.el"]
         path = dash.el
         url = https://github.com/magnars/dash.el

@@ -9,6 +9,10 @@
  t)
 (package-initialize)
 
+(package-install 'org)
+(package-install 'clojure-mode)
+(package-install 'magit)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Load nxhtml-mode (with MuMaMo)
@@ -48,28 +52,18 @@
 (setq custom-load-paths
       '("~/.emacs.d/custom/candera/"
         "~/.emacs.d/custom/"
-        "~/.emacs.d/custom/clojure-mode/"
         "~/.emacs.d/custom/cl-lib"
         "~/.emacs.d/custom/ido-vertical-mode.el/"
-
-        ;; clojure-mode and nrepl appear to require each other as well as
-        ;; other libraries. Make sure everyone can find each other
 
         "~/.emacs.d/custom/"
         "~/.emacs.d/custom/epl/"
         "~/.emacs.d/custom/dash.el/"
         "~/.emacs.d/custom/pkg-info.el/"
 
-        ;; cider prereqs that aren't available except as MELPA packages: one
-        ;; of these days I'm going to have to break down and switch.
-        "~/.emacs.d/custom/queue-el/"
-
-        "~/.emacs.d/custom/cider/"
         "~/.emacs.d/custom/flexwiki"
         "~/.emacs.d/custom/markdown-mode"
 
         ;;"~/.emacs.d/custom/git-modes"
-        "~/.emacs.d/custom/magit/lisp"
 
         "~/.emacs.d/custom/coffee-mode"
         "~/.emacs.d/custom/sparql-mode"
