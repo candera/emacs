@@ -16,9 +16,6 @@
 [submodule "sparql-mode"]
         path = sparql-mode
         url = https://github.com/ljos/sparql-mode.git
-[submodule "org-mode"]
-        path = org-mode
-        url = git://orgmode.org/org-mode.git
 [submodule "align-cljlet"]
         path = align-cljlet
         url = https://github.com/gstamp/align-cljlet.git
@@ -79,9 +76,6 @@
 [submodule "ido-vertical-mode.el"]
         path = ido-vertical-mode.el
         url = https://github.com/gempesaw/ido-vertical-mode.el
-[submodule "org-trello"]
-        path = org-trello
-        url = https://github.com/ardumont/org-trello
 [submodule "emacs-request"]
         path = emacs-request
         url = https://github.com/tkf/emacs-request
