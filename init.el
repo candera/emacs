@@ -1240,7 +1240,13 @@ remain indented by four spaces after refilling."
 (unless (string= "raspberrypi" system-name)
   (add-hook 'cider-mode-hook
            (lambda ()
-             (cider-turn-on-eldoc-mode))))
+             (cider-turn-on-eldoc-mode)
+             ;; Suppress some really stupid shit that cider is doing
+             ;; around background colors. I think it's assuming
+             ;; there's a theme. Or it could be the problem that when
+             ;; cider loads, the background color is still light.
+             (setq cider-stacktrace-frames-background-color
+                   (cider-scale-background-color)))))
 
 (add-hook 'cider-repl-mode-hook
           (lambda ()
@@ -1519,7 +1525,7 @@ remain indented by four spaces after refilling."
 
 (require 'find-file-in-project)
 (global-set-key (kbd "C-x M-f") 'find-file-in-project)
-(setq ffip-patterns (append ffip-patterns '("*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn")))
+(setq ffip-patterns (append '("*.clj" "*.cljc" "*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn") ffip-patterns))
 (setq ffip-limit 2048)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
