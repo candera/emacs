@@ -76,33 +76,6 @@
 [submodule "ido-vertical-mode.el"]
         path = ido-vertical-mode.el
         url = https://github.com/gempesaw/ido-vertical-mode.el
-[submodule "emacs-request"]
-        path = emacs-request
-        url = https://github.com/tkf/emacs-request
-[submodule "elnode"]
-        path = elnode
-        url = https://github.com/nicferrier/elnode
-[submodule "emacs-fakir"]
-        path = emacs-fakir
-        url = https://github.com/nicferrier/emacs-fakir
-[submodule "emacs-noflet"]
-        path = emacs-noflet
-        url = https://github.com/nicferrier/emacs-noflet
-[submodule "emacs-kv"]
-        path = emacs-kv
-        url = https://github.com/nicferrier/emacs-kv
-[submodule "s.el"]
-        path = s.el
-        url = https://github.com/magnars/s.el
-[submodule "emacs-web"]
-        path = emacs-web
-        url = https://github.com/nicferrier/emacs-web
-[submodule "emacs-db"]
-        path = emacs-db
-        url = https://github.com/nicferrier/emacs-db
-[submodule "esxml"]
-        path = esxml
-        url = https://github.com/tali713/esxml
 [submodule "gnuplot-el"]
 	path = gnuplot-el
 	url = https://github.com/rudi/gnuplot-el

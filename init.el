@@ -2,6 +2,13 @@
   (if (file-exists-p path)
       (load-file path)))
 
+(require 'package)
+(add-to-list
+ 'package-archives
+ '("melpa" . "http://melpa.org/packages/")
+ t)
+(package-initialize)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Load nxhtml-mode (with MuMaMo)
@@ -39,10 +46,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq custom-load-paths
-      '("~/.emacs.d/custom/org-mode/lisp"
-        "~/.emacs.d/custom/org-mode/contrib/lisp"
-
-        "~/.emacs.d/custom/candera/"
+      '("~/.emacs.d/custom/candera/"
         "~/.emacs.d/custom/"
         "~/.emacs.d/custom/clojure-mode/"
         "~/.emacs.d/custom/cl-lib"
@@ -66,18 +70,6 @@
 
         ;;"~/.emacs.d/custom/git-modes"
         "~/.emacs.d/custom/magit/lisp"
-
-        ;; org-trello
-        "~/.emacs.d/custom/s.el/"
-        "~/.emacs.d/custom/esxml/"
-        "~/.emacs.d/custom/emacs-db/"
-        "~/.emacs.d/custom/emacs-web/"
-        "~/.emacs.d/custom/emacs-kv/"
-        "~/.emacs.d/custom/emacs-noflet/"
-        "~/.emacs.d/custom/emacs-fakir/"
-        "~/.emacs.d/custom/elnode/"
-        "~/.emacs.d/custom/emacs-request/"
-        "~/.emacs.d/custom/org-trello/"
 
         "~/.emacs.d/custom/coffee-mode"
         "~/.emacs.d/custom/sparql-mode"
@@ -1050,14 +1042,6 @@ always last."
     (if (candera:goal-achieved? current-achievement)
         (+ prior-elapsed date-difference)))
   )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; org-trello
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'org-trello)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
