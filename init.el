@@ -57,32 +57,7 @@
       '("~/.emacs.d/custom/candera/"
         "~/.emacs.d/custom/"
 
-        "~/.emacs.d/custom/flexwiki"
-        ;; mv "~/.emacs.d/custom/markdown-mode"
-
-        ;;"~/.emacs.d/custom/git-modes"
-
-        ;; rm "~/.emacs.d/custom/coffee-mode"
-        ;; rm "~/.emacs.d/custom/sparql-mode"
-        ;; mv "~/.emacs.d/custom/align-cljlet"
-        ;; mv "~/.emacs.d/custom/smex"
-        ;; rm "~/.emacs.d/custom/midje-mode"
-        "~/.emacs.d.custom/auto-complete/dict"
-        ;; rm "~/.emacs.d/custom/mmm-mode"
-        ;; rm "~/.emacs.d/custom/gnuplot-el"
-        ;; mv "~/.emacs.d/custom/ido-vertical-mode.el/"
-        ;; rm "~/.emacs.d/custom/cl-lib"
-        ;; mv "~/.emacs.d/custom/gherkin-mode"
-        ;; mv "~/.emacs.d/custom/command-log-mode"
-        ;; mv "~/.emacs.d/custom/auto-complete"
-        ;; rm "~/.emacs.d/custom/midje-mode"
-        ;; rm "~/.emacs.d/custom/twittering-mode"
-        ;; mv "~/.emacs.d/custom/expand-region"
-        ;; rm "~/.emacs.d/custom/popup-el"
-        ;; mv "~/.emacs.d/custom/undo-tree"
-        ;; mv "~/.emacs.d/custom/haml-mode"
-        ;; mv "~/.emacs.d/custom/csv-mode"
-        ))
+        "~/.emacs.d/custom/flexwiki"))
 
 (setq load-path (append custom-load-paths load-path))
 
@@ -777,14 +752,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Include cl-lib (needed by at least nrepl and magit)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;(require 'cl-lib)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;; OMFG: cider requires org-mode, which will pull in the default
 ;; version built in to Emacs if I don't set it up before
 ;; clojure-mode/cider.
@@ -1434,19 +1401,6 @@ remain indented by four spaces after refilling."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;(load "~/.emacs.d/custom/nxhtml/autostart.el")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up coffee-mode
-;;
-;; http://ozmm.org/posts/coffee_mode.html
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'coffee-mode)
-
-;; Uncomment if necessary
-;; (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
-;; (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1529,14 +1483,6 @@ remain indented by four spaces after refilling."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Twittering-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'twittering-mode)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;; expand-region
 ;;   https://github.com/emacsmirror/expand-region.git
 ;;
@@ -1544,25 +1490,6 @@ remain indented by four spaces after refilling."
 
 (require 'expand-region)
 (global-set-key (kbd "C-=") 'er/expand-region)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; midje-mode
-;;  https://github.com/dnaumov/midje-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (require 'midje-mode)
-;; (require 'clojure-jump-to-file)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; popup.el
-;;  https://github.com/auto-complete/popup-el.git
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'popup)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1634,25 +1561,6 @@ remain indented by four spaces after refilling."
   (let ((inhibit-read-only t))
     (erase-buffer)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up mmm-mode for Clojurey goodness in markdown mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'mmm-auto)
-(mmm-add-classes
- '((markdown-clojure
-    :submode clojure-mode
-    :face mmm-declaration-submode-face
-    :front "^```clj[\n\r]+"
-    :back "^```$")))
-
-(setq mmm-global-mode 'maybe)
-(mmm-add-mode-ext-class 'markdown-mode nil 'markdown-clojure)
-
-;; TODO: Need to add the code that sets cider-interaction-mode when in
-;; the Clojure region
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1687,18 +1595,6 @@ remain indented by four spaces after refilling."
 
 (require 'gherkin-mode)
 (add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; gnuplot-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(autoload 'gnuplot-mode "gnuplot" "gnuplot major mode" t)
-(autoload 'gnuplot-make-buffer "gnuplot" "open a buffer in gnuplot mode" t)
-
-(unless (assoc "\\.gp\\'" auto-mode-alist)
-  (add-to-list 'auto-mode-alist '("\\.gp\\'" . gnuplot-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
