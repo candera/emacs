@@ -9,13 +9,17 @@
  t)
 (package-initialize)
 
-(dolist (package '(org clojure-mode magit cider align-cljlet
-                       smex ido-vertical-mode gherkin-mode
-                       command-log-mode auto-complete
-                       expand-region undo-tree haml-mode
-                       csv-mode markdown-mode arduino-mode))
+(dolist (package '(clojure-mode magit cider align-cljlet
+                                smex ido-vertical-mode gherkin-mode
+                                command-log-mode auto-complete
+                                expand-region undo-tree haml-mode
+                                csv-mode markdown-mode arduino-mode))
   (unless (package-installed-p package)
     (package-install package)))
+
+;; Someone broke org-mobile. We have to load from a fixed copy.
+(setq load-path (append '("~/.emacs.d/custom/org-mode/lisp" "~/path/to/orgdir/contrib/lisp")
+                        load-path))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1530,24 +1534,6 @@ remain indented by four spaces after refilling."
 
 (require 'undo-tree)
 (global-undo-tree-mode 1)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; evil-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(add-to-list 'load-path "~/.emacs.d/custom/evil")
-(require 'evil)
-;; (evil-mode 1)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; floobits plugin
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(load "~/.emacs.d/custom/floobits/floobits.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
