@@ -13,12 +13,14 @@
                                 smex ido-vertical-mode gherkin-mode
                                 command-log-mode auto-complete
                                 expand-region undo-tree haml-mode
-                                csv-mode markdown-mode arduino-mode))
+                                csv-mode markdown-mode arduino-mode
+                                inf-clojure))
   (unless (package-installed-p package)
     (package-install package)))
 
 ;; Someone broke org-mobile. We have to load from a fixed copy.
-(setq load-path (append '("~/.emacs.d/custom/org-mode/lisp" "~/path/to/orgdir/contrib/lisp")
+(setq load-path (append '("~/.emacs.d/custom/org-mode/lisp"
+                          "~/.emacs.d/custom/org-mode/contrib/lisp")
                         load-path))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
