@@ -1205,7 +1205,8 @@ remain indented by four spaces after refilling."
           (lambda ()
             (paredit-mode 1)
             ;; For some reason this isn't defined correctly
-            (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)))
+            (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)
+            (define-key cider-repl-mode-map (kbd "}") #'paredit-close-curly)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
