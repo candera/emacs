@@ -2,11 +2,16 @@
   (if (file-exists-p path)
       (load-file path)))
 
+;; Add the following to your init file to have packages installed by
+;; Homebrew added to your load-path:
+(let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+  (normal-top-level-add-subdirs-to-load-path))
+
 (require 'package)
-(add-to-list
- 'package-archives
- '("melpa" . "http://melpa.org/packages/")
- t)
+(setq package-archives
+ (append package-archives
+         '(("melpa" . "http://melpa.org/packages/")
+           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))))
 (package-initialize)
 
 (dolist (package '(clojure-mode magit cider align-cljlet
@@ -14,7 +19,7 @@
                                 command-log-mode auto-complete
                                 expand-region undo-tree haml-mode
                                 csv-mode markdown-mode arduino-mode
-                                inf-clojure))
+                                inf-clojure csharp-mode))
   (unless (package-installed-p package)
     (package-install package)))
 
@@ -1198,7 +1203,9 @@ remain indented by four spaces after refilling."
 
 (add-hook 'cider-repl-mode-hook
           (lambda ()
-            (paredit-mode 1)))
+            (paredit-mode 1)
+            ;; For some reason this isn't defined correctly
+            (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1359,7 +1366,7 @@ remain indented by four spaces after refilling."
 (with-eval-after-load 'info
   (info-initialize)
   (add-to-list 'Info-directory-list
-	       "~/.emacs.d/custom/magit/Documentation/"))
+               "~/.emacs.d/custom/magit/Documentation/"))
 
 ;; C-x m is normally compose-mail, but I never do mail inside of
 ;; emacs, whereas I run magit-status all the time
