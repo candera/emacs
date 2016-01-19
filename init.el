@@ -777,6 +777,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
 (global-set-key (kbd "C-c l") 'org-store-link)
 
+;; Bizarrely, org-clock defaults to showing the current year only
+(setq org-clock-display-default-range 'untilnow)
+
 (add-hook 'org-mode-hook (lambda ()
                            (turn-on-flyspell)
                            ;; I always type this instead of C-c C-t
