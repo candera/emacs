@@ -1634,6 +1634,8 @@ remain indented by four spaces after refilling."
 
 (setq save-interprogram-paste-before-kill t)
 
+;; First indent, then complete
+(setq tab-always-indent 'complete)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
