@@ -313,6 +313,11 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
   (interactive)
   (set-cursor-type "box"))
 
+(defun google-word-at-point ()
+  "Opens a browser for the word at point on google.co"
+  (interactive)
+  (browse-url (format "https://www.google.com/search?q=%s" (word-at-point))))
+
 (set-bar-cursor)
 
 ;; A single space ends a sentence
