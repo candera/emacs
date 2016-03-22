@@ -34,7 +34,7 @@
                             (format-time-string ", %Y." logfile-date)))
             ;; Auto save over SSH is a PITA. This will still auto-save
             ;; on idle.
-            (when (zerop (string-match-p "/ssh:" new-logfile-filename))
+            (when (numberp (string-match "/ssh:" new-logfile-filename))
               (set-variable 'auto-save-interval 0))
             (newline)
             (newline)
