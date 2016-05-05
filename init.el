@@ -23,6 +23,9 @@
   (unless (package-installed-p package)
     (package-install package)))
 
+;; This would be great if it didn't just cause cider to completely disappear
+;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
+
 ;; Someone broke org-mobile. We have to load from a fixed copy.
 (setq load-path (append '("~/.emacs.d/custom/org-mode/lisp"
                           "~/.emacs.d/custom/org-mode/contrib/lisp")
@@ -1098,6 +1101,7 @@ always last."
             ;; (highlight-parentheses-mode 1)
             (unless (eq major-mode 'cider-repl-mode)
               (linum-mode 1))
+            (highlight-symbol-mode t)
             (paredit-mode 1)
             (hs-minor-mode 1)
             (setq show-trailing-whitespace t)
@@ -1621,7 +1625,18 @@ remain indented by four spaces after refilling."
 
 (add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
 (autoload 'csv-mode "csv-mode"
-   "Major mode for editing comma-separated value files." t)
+  "Major mode for editing comma-separated value files." t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Un-pork scrolling
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
+(setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+(setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+(setq scroll-step 1) ;; keyboard scroll one line at a time
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
