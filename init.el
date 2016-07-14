@@ -1069,8 +1069,9 @@ always last."
 
 (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
-(add-to-list 'auto-mode-alist '("\\.cljs$" . clojure-mode))
-(add-to-list 'auto-mode-alist '("\\.cljc$" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.cljs$" . clojurescript-mode))
+(add-to-list 'auto-mode-alist '("\\.hl$" . clojurescript-mode))
+(add-to-list 'auto-mode-alist '("\\.cljc$" . clojurec-mode))
 (add-to-list 'auto-mode-alist '("\\.edn$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.boot$" . clojure-mode))
@@ -1096,34 +1097,43 @@ always last."
 ;; Within clojure-mode, have Ctrl-x Ctrl-e evaluate the last
 ;; expression.
 ;; Ctrl-c Ctrl-e is also there, because I kept typoing it.
-(add-hook 'clojure-mode-hook
-          (lambda ()
-            ;; (highlight-parentheses-mode 1)
-            (unless (eq major-mode 'cider-repl-mode)
-              (linum-mode 1))
-            (highlight-symbol-mode t)
-            (paredit-mode 1)
-            (hs-minor-mode 1)
-            (setq show-trailing-whitespace t)
-            (flyspell-mode 0)
-            (when (fboundp 'clojure-enable-nrepl)
-              (clojure-enable-nrepl))
-            (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
-            (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
-            (define-key clojure-mode-map (kbd "C-c C-e") 'lisp-eval-last-sexp)
-            (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
-            ;; Fix the keys that paredit screws up
-            (define-key paredit-mode-map (kbd "<C-left>") nil)
-            (define-key paredit-mode-map (kbd "<C-right>") nil)
-            ;; And define some new bindings since the OS eats some of the useful ones
-            (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
-            (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
-            (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
-            (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
-            ;; Not all terminals can transmit the standard key sequencences for
-            ;; paredit-forward-slurp-sexp, which is super-useful
-            (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
-            (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)))
+(defun setup-clojure-mode ()
+  ;; Buffer local variables are not visible in mode hooks
+  (add-hook 'hack-local-variables-hook
+            (lambda ()
+              (when use-inf-clojure
+                (inf-clojure-minor-mode 1)
+                (eldoc-mode 1)))
+            nil
+            t)
+  ;; (highlight-parentheses-mode 1)
+  (unless (eq major-mode 'cider-repl-mode)
+    (linum-mode 1))
+  (highlight-symbol-mode t)
+  (paredit-mode 1)
+  (hs-minor-mode 1)
+  (setq show-trailing-whitespace t)
+  (flyspell-mode 0)
+  (when (fboundp 'clojure-enable-nrepl)
+    (clojure-enable-nrepl))
+  (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
+  (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
+  (define-key clojure-mode-map (kbd "C-c C-e") 'lisp-eval-last-sexp)
+  (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
+  ;; Fix the keys that paredit screws up
+  (define-key paredit-mode-map (kbd "<C-left>") nil)
+  (define-key paredit-mode-map (kbd "<C-right>") nil)
+  ;; And define some new bindings since the OS eats some of the useful ones
+  (define-key paredit-mode-map (kbd "<C-S-left>") 'paredit-backward-slurp-sexp)
+  (define-key paredit-mode-map (kbd "<C-S-right>") 'paredit-forward-slurp-sexp)
+  (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-backward-barf-sexp)
+  (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-forward-barf-sexp)
+  ;; Not all terminals can transmit the standard key sequencences for
+  ;; paredit-forward-slurp-sexp, which is super-useful
+  (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
+  (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp))
+
+(add-hook 'clojure-mode-hook #'setup-clojure-mode)
 
 ;;(require 'clojure-test-mode)
 
@@ -1638,7 +1648,25 @@ remain indented by four spaces after refilling."
 (add-hook 'inf-clojure-mode-hook
           (lambda ()
             (paredit-mode 1)
-            (eldoc-mode)))
+            (eldoc-mode 1)))
+
+(require 'inf-clojure)
+
+(defvar use-inf-clojure nil
+  "If true, indicate that clojure-mode should also set up to use inf-clojure-minor-mode")
+
+(defun inf-clojure-jack-in (cmd)
+  "Starts a new inf-clojure process and renames the resulting
+  buffer to whatever inf-clojure-buffer is set to."
+  (interactive (list (read-string "Run Clojure: " inf-clojure-program)))
+  (lexical-let ((source-inf-clojure-buffer inf-clojure-buffer))
+    (inf-clojure cmd)
+    (switch-to-buffer "*inf-clojure*")
+    (rename-buffer source-inf-clojure-buffer)))
+
+;; Make it so that I can set inf-clojure-buffer in a .dir-locals.el file
+(put 'inf-clojure-buffer 'safe-local-variable #'stringp)
+(put 'use-inf-clojure 'safe-local-variable #'booleanp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1664,6 +1692,7 @@ remain indented by four spaces after refilling."
                ;; Hoplon functions and macros
                (dolist (pair '((page . 'defun)
                                (loop-tpl . 'defun)
+                               (cell-let . 'defun)
                                (if-tpl . '1)
                                (for-tpl . '1)
                                (case-tpl . '1)
