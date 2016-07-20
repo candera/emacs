@@ -1103,7 +1103,8 @@ always last."
             (lambda ()
               (when use-inf-clojure
                 (inf-clojure-minor-mode 1)
-                (eldoc-mode 1)))
+                (eldoc-mode 1)
+                (cider-mode 0)))
             nil
             t)
   ;; (highlight-parentheses-mode 1)
@@ -1114,7 +1115,8 @@ always last."
   (hs-minor-mode 1)
   (setq show-trailing-whitespace t)
   (flyspell-mode 0)
-  (when (fboundp 'clojure-enable-nrepl)
+  (when (and (not use-inf-clojure)
+             (fboundp 'clojure-enable-nrepl))
     (clojure-enable-nrepl))
   (define-key clojure-mode-map (kbd "C-c e") 'shell-eval-last-expression)
   (define-key clojure-mode-map (kbd "C-c x") 'shell-eval-defun)
