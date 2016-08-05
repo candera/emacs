@@ -1133,7 +1133,9 @@ always last."
   ;; Not all terminals can transmit the standard key sequencences for
   ;; paredit-forward-slurp-sexp, which is super-useful
   (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
-  (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp))
+  (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)
+  (when use-inf-clojure
+    (define-key clojure-mode-map (kbd "M-.") 'imenu)))
 
 (add-hook 'clojure-mode-hook #'setup-clojure-mode)
 
@@ -1669,6 +1671,13 @@ remain indented by four spaces after refilling."
 ;; Make it so that I can set inf-clojure-buffer in a .dir-locals.el file
 (put 'inf-clojure-buffer 'safe-local-variable #'stringp)
 (put 'use-inf-clojure 'safe-local-variable #'booleanp)
+
+;; Redefine C-c C-c since I always wind up killing the process
+(defun comint-prevent-idiocy ()
+  (interactive)
+  (ding)
+  (message "Command disabled because Craig is stupid. Use M-x comint-interrupt-subjob if you really meant it."))
+(define-key inf-clojure-mode-map (kbd "C-c C-c") 'comint-prevent-idiocy)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
