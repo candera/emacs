@@ -1659,14 +1659,31 @@ remain indented by four spaces after refilling."
 (defvar use-inf-clojure nil
   "If true, indicate that clojure-mode should also set up to use inf-clojure-minor-mode")
 
-(defun inf-clojure-jack-in (cmd)
+(defun inf-clojure-jack-in (dir cmd name)
   "Starts a new inf-clojure process and renames the resulting
   buffer to whatever inf-clojure-buffer is set to."
-  (interactive (list (read-string "Run Clojure: " inf-clojure-program)))
-  (lexical-let ((source-inf-clojure-buffer inf-clojure-buffer))
-    (inf-clojure cmd)
-    (switch-to-buffer "*inf-clojure*")
-    (rename-buffer source-inf-clojure-buffer)))
+  (interactive (lexical-let* ((dir (read-directory-name "Project directory: "
+                                                        default-directory
+                                                        nil
+                                                        t))
+                              (_   (switch-to-buffer-other-window "*inf-clojure*"))
+                              (_   (cd dir))
+                              (_   (hack-dir-local-variables-non-file-buffer))
+                              (dir-vars (rest
+                                         (assoc 'clojure-mode
+                                                (assoc-default dir
+                                                               dir-locals-class-alist
+                                                               #'(lambda (i k)
+                                                                   (file-equal-p k (symbol-name i)))))))
+                              (cmd (read-string "Run Clojure: "
+                                                (assoc-default 'inf-clojure-program
+                                                               dir-vars)))
+                              (name (read-buffer "REPL buffer name: "
+                                                 (assoc-default 'inf-clojure-buffer
+                                                                dir-vars))))
+                 (list dir cmd name)))
+  (inf-clojure cmd)
+  (rename-buffer name))
 
 ;; Make it so that I can set inf-clojure-buffer in a .dir-locals.el file
 (put 'inf-clojure-buffer 'safe-local-variable #'stringp)
