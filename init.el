@@ -1661,7 +1661,15 @@ remain indented by four spaces after refilling."
 
 (defun inf-clojure-jack-in (dir cmd name)
   "Starts a new inf-clojure process and renames the resulting
-  buffer to whatever inf-clojure-buffer is set to."
+  buffer to whatever inf-clojure-buffer is set to. To get the
+  defaults to fill in correctly, use a .dir-locals.el that looks
+  like this:
+
+((clojure-mode
+  (inf-clojure-buffer . \"requestinator-repl\")
+  (use-inf-clojure-program . \"lein repl\")
+  (use-inf-clojure . t)))
+"
   (interactive (lexical-let* ((dir (read-directory-name "Project directory: "
                                                         default-directory
                                                         nil
