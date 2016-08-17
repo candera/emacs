@@ -1676,7 +1676,7 @@ remain indented by four spaces after refilling."
                                                                #'(lambda (i k)
                                                                    (file-equal-p k (symbol-name i)))))))
                               (cmd (read-string "Run Clojure: "
-                                                (assoc-default 'inf-clojure-program
+                                                (assoc-default 'use-inf-clojure-program
                                                                dir-vars)))
                               (name (read-buffer "REPL buffer name: "
                                                  (assoc-default 'inf-clojure-buffer
@@ -1687,6 +1687,7 @@ remain indented by four spaces after refilling."
 
 ;; Make it so that I can set inf-clojure-buffer in a .dir-locals.el file
 (put 'inf-clojure-buffer 'safe-local-variable #'stringp)
+(put 'use-inf-clojure-program 'safe-local-variable #'stringp)
 (put 'use-inf-clojure 'safe-local-variable #'booleanp)
 
 ;; Redefine C-c C-c since I always wind up killing the process
