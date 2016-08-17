@@ -1683,7 +1683,15 @@ remain indented by four spaces after refilling."
                                                                 dir-vars))))
                  (list dir cmd name)))
   (inf-clojure cmd)
-  (rename-buffer name))
+  (rename-buffer name)
+  ;; Re-enable inf-clojure-minor-mode in all open clojure-mode buffers
+  ;; for this project, since eldoc and completion don't work if you
+  ;; start the REPL later.
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (and (derived-mode-p 'clojure-mode)
+                 (file-equal-p dir (inf-clojure-project-root)))
+        (inf-clojure-minor-mode 1)))))
 
 ;; Make it so that I can set inf-clojure-buffer in a .dir-locals.el file
 (put 'inf-clojure-buffer 'safe-local-variable #'stringp)
