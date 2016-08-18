@@ -1036,6 +1036,10 @@ always last."
         (+ prior-elapsed date-difference)))
   )
 
+;; I don't want to see days in cumulative durations, thanks
+(setq org-time-clocksum-format
+      '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Set up org-babel
