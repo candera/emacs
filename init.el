@@ -462,11 +462,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Set M-. to do imenu rather than find-tag
+;; Set M-. to do dumb-jump-go rather than find-tag
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "M-.") 'imenu)
+(global-set-key (kbd "M-.") 'dumb-jump-go)
+(global-set-key (kbd "M-,") 'dumb-jump-back)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -645,9 +646,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-hook 'ruby-mode-hook (lambda () (define-key ruby-mode-map (kbd "M-.") 'imenu)))
-(define-key emacs-lisp-mode-map (kbd "M-.") 'imenu)
-(add-hook 'javascript-mode-hook (lambda () (define-key js-mode-map (kbd "M-.") 'imenu)))
+;; (add-hook 'ruby-mode-hook (lambda () (define-key ruby-mode-map (kbd "M-.") 'imenu)))
+;; (define-key emacs-lisp-mode-map (kbd "M-.") 'imenu)
+;; (add-hook 'javascript-mode-hook (lambda () (define-key js-mode-map (kbd "M-.") 'imenu)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1080,6 +1081,9 @@ always last."
 (add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.boot$" . clojure-mode))
 
+(add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljc"))
+(add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs"))
+
 ;; Turn on paredit for clojure files
 ;(require 'clojure-paredit)
 (setq clojure-enable-paredit t)
@@ -1139,7 +1143,8 @@ always last."
   (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
   (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)
   (when use-inf-clojure
-    (define-key clojure-mode-map (kbd "M-.") 'imenu)))
+    (define-key clojure-mode-map (kbd "M-.") 'dumb-jump-go)
+    (define-key clojure-mode-map (kbd "M-,") 'dumb-jump-back)))
 
 (add-hook 'clojure-mode-hook #'setup-clojure-mode)
 
