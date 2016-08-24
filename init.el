@@ -1793,8 +1793,9 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-key input-decode-map [?\C-m] [C-m])
-(global-set-key (kbd "<C-m>") 'next-line)
+;; Caused more problems than it solved.
+;; (define-key input-decode-map [?\C-m] [C-m])
+;; (global-set-key (kbd "<C-m>") 'next-line)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
