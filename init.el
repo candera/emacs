@@ -1081,6 +1081,7 @@ always last."
 (add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.boot$" . clojure-mode))
 
+(require 'dumb-jump)
 (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljc"))
 (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs"))
 
