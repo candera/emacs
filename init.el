@@ -1784,6 +1784,16 @@ remain indented by four spaces after refilling."
  (setq mac-right-option-modifier 'control)
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Compensate for the fact that I frequently fat-finger C-m instead of
+;; C-n by first mapping C-m away from return (which will only work
+;; when in a GUI session), and then binding C-m
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-key input-decode-map [?\C-m] [C-m])
+(global-set-key (kbd "<C-m>") 'next-line)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
