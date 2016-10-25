@@ -1150,6 +1150,10 @@ always last."
 
 (add-hook 'clojure-mode-hook #'setup-clojure-mode)
 
+;; Not really specific to clojure-mode: make comments fill as if they
+;; were multi-line, which they often are
+(setq comment-multi-line t)
+
 ;;(require 'clojure-test-mode)
 
 ;; Some indentation fixups for core.async
