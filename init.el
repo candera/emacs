@@ -1084,6 +1084,7 @@ always last."
 (require 'dumb-jump)
 (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljc"))
 (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs"))
+(add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs.hl"))
 
 ;; Turn on paredit for clojure files
 ;(require 'clojure-paredit)
