@@ -1725,8 +1725,11 @@ remain indented by four spaces after refilling."
 (defun comint-prevent-idiocy ()
   (interactive)
   (ding)
-  (message "Command disabled because Craig is stupid. Use M-x comint-interrupt-subjob if you really meant it."))
+  (message "Command disabled because Craig is stupid. Use M-x <whatever> if you really meant it."))
 (define-key inf-clojure-mode-map (kbd "C-c C-c") 'comint-prevent-idiocy)
+(define-key inf-clojure-mode-map (kbd "C-c C-d") 'comint-prevent-idiocy)
+
+(add-to-list 'comint-output-filter-functions 'comint-truncate-buffer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
