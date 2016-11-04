@@ -1686,7 +1686,9 @@ remain indented by four spaces after refilling."
   (use-inf-clojure . t)))
 "
   (interactive (lexical-let* ((dir (read-directory-name "Project directory: "
-                                                        default-directory
+                                                        (locate-dominating-file
+                                                          default-directory
+                                                          ".git")
                                                         nil
                                                         t))
                               (_   (switch-to-buffer-other-window "*inf-clojure*"))
