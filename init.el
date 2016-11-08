@@ -11,7 +11,8 @@
 (setq package-archives
  (append package-archives
          '(("melpa" . "http://melpa.org/packages/")
-           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))))
+           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
+           ("org" . "http://orgmode.org/elpa/"))))
 (package-initialize)
 
 (dolist (package '(clojure-mode magit cider align-cljlet
@@ -27,9 +28,9 @@
 ;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
 
 ;; Someone broke org-mobile. We have to load from a fixed copy.
-(setq load-path (append '("~/.emacs.d/custom/org-mode/lisp"
-                          "~/.emacs.d/custom/org-mode/contrib/lisp")
-                        load-path))
+;; (setq load-path (append '("~/.emacs.d/custom/org-mode/lisp"
+;;                           "~/.emacs.d/custom/org-mode/contrib/lisp")
+;;                         load-path))
 
 ;; Fix garbage collection so that it doesn't happen when the
 ;; minibuffer is open. See
