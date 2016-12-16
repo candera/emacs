@@ -463,12 +463,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Set M-. to do dumb-jump-go rather than find-tag
+;; Set M-. to do imenu rather than find-tag
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "M-.") 'dumb-jump-go)
-(global-set-key (kbd "M-,") 'dumb-jump-back)
+(global-set-key (kbd "M-.") 'imenu)
+;; (global-set-key (kbd "M-,") 'dumb-jump-back)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
