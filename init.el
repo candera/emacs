@@ -353,18 +353,6 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (global-set-key (quote [C-up]) 'scroll-window-up-one)
 (global-set-key (quote [C-down]) 'scroll-window-down-one)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
-;;(global-set-key (kbd "C-;") 'flyspell-auto-correct-previous-word)
-
-(defun flyspell-popup-correct-previous-word ()
-  (interactive)
-  ;; This hack brought to you courtesy of
-  ;; http://endlessparentheses.com/understanding-letf-and-how-it-replaces-flet.html
-  (cl-letf (((symbol-function 'flyspell-auto-correct-word) #'flyspell-popup-correct))
-    (flyspell-auto-correct-previous-word (point))))
-
-(global-set-key (kbd "C-;") 'flyspell-popup-correct-previous-word)
-(define-key flyspell-mode-map (kbd "C-;") 'flyspell-popup-correct-previous-word)
-
 
 (global-set-key (quote [C-tab]) 'other-window)
 
@@ -1787,6 +1775,25 @@ remain indented by four spaces after refilling."
                                (cond-tpl . 'defun)))
                  (put-clojure-indent (car pair)
                                      (car (last pair))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; flyspell
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'flyspell)
+
+(defun flyspell-popup-correct-previous-word ()
+  (interactive)
+  ;; This hack brought to you courtesy of
+  ;; http://endlessparentheses.com/understanding-letf-and-how-it-replaces-flet.html
+  (cl-letf (((symbol-function 'flyspell-auto-correct-word) #'flyspell-popup-correct))
+    (flyspell-auto-correct-previous-word (point))))
+
+(global-set-key (kbd "C-;") 'flyspell-popup-correct-previous-word)
+(define-key flyspell-mode-map (kbd "C-;") 'flyspell-popup-correct-previous-word)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
