@@ -1817,6 +1817,34 @@ remain indented by four spaces after refilling."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Adzerk stuff
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'epa-file)
+(epa-file-enable)
+
+(defun get-adzerk-var (name)
+  (save-mark-and-excursion
+   (lexical-let ((temp-file (make-temp-file "adzerk")))
+     (message temp-file)
+     (unwind-protect
+         (progn
+           (epa-decrypt-file "~/.adzerk.asc" temp-file)
+           (with-temp-buffer
+             (insert-file-contents temp-file)
+             (goto-char 0)
+             (re-search-forward (format "^export %s=" (regexp-quote name)))
+             (lexical-let ((start (point)))
+               (end-of-line)
+               (buffer-substring start (point)))))
+       (delete-file temp-file)))))
+
+(setq adzerk-api-key (get-adzerk-var "ADZERK_API_KEY"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Miscellaneous customizations
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
