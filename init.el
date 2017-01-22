@@ -270,6 +270,8 @@ Accepts WIDTH as a numeric prefix, but defaults to 85."
 (global-set-key (kbd "M-N") 'other-window)
 (global-set-key (kbd "M-P") (lambda () (interactive) (other-window -1)))
 (global-set-key (kbd "M-`") 'other-frame)
+(global-set-key (kbd "M-[") 'previous-buffer)
+(global-set-key (kbd "M-]") 'next-buffer)
 
 ;; Flips the left and right windows. Taken from
 ;; http://whattheemacsd.com//buffer-defuns.el-02.html
