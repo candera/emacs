@@ -1525,10 +1525,28 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'find-file-in-project)
-(global-set-key (kbd "C-x M-f") 'find-file-in-project)
-(setq ffip-patterns (append '("*.clj" "*.cljc" "*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn") ffip-patterns))
-(setq ffip-limit 2048)
+;; (require 'find-file-in-project)
+;; (global-set-key (kbd "C-x M-f") 'find-file-in-project)
+;; (setq ffip-patterns (append '("*.clj" "*.cljc" "*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn") ffip-patterns))
+;; (setq ffip-limit 2048)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; helm-projectile
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'helm-projectile)
+(global-set-key (kbd "C-x M-f") 'helm-projectile-find-file)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; helm-ag
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'helm-ag)
+(global-set-key (kbd "C-x M-s") 'helm-do-ag-project-root)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
