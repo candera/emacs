@@ -465,11 +465,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Set M-. to do imenu rather than find-tag
+;; Set M-. to do something useful
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "M-.") 'imenu)
+;; ctags command: ctags -R -e . --language-force=Clojure
+
+(global-set-key (kbd "M-.") 'xref-find-definitions)
+;;(global-set-key (kbd "M-.") 'imenu)
 ;; (global-set-key (kbd "M-,") 'dumb-jump-back)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
