@@ -1730,6 +1730,9 @@ remain indented by four spaces after refilling."
                               (name (read-buffer "REPL buffer name: "
                                                  (assoc-default 'inf-clojure-buffer
                                                                 dir-vars))))
+                 (when (get-buffer name)
+                    (when (y-or-n-p "REPL buffer exists. Delete existing?")
+                       (kill-buffer name)))
                  (list dir cmd name)))
   (inf-clojure cmd)
   (rename-buffer name)
