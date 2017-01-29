@@ -1827,6 +1827,11 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; http://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
+(require 'pinentry)
+(setenv "INSIDE_EMACS" (format "%s,comint" emacs-version))
+(pinentry-start)
+
 (require 'epa-file)
 (epa-file-enable)
 
