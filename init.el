@@ -1218,6 +1218,16 @@ remain indented by four spaces after refilling."
              (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))
     (goto-char old-point)))
 
+(defun find-clojure-namespaced-tag ()
+  "Find the tag to search for at point. Remove the namespace
+  prefix, since xref doesn't do a good job of dealing with it."
+  (let ((tag (find-tag-default)))
+    (string-match "\\([^/]*/\\)?\\([^/]+\\)" tag)
+    (match-string 2 tag)))
+
+(put 'clojure-mode 'find-tag-default-function #'find-clojure-namespaced-tag)
+(put 'clojurescript-mode 'find-tag-default-function #'find-clojure-namespaced-tag)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; inferior-lisp
