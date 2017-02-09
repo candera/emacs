@@ -1799,7 +1799,8 @@ remain indented by four spaces after refilling."
                                (if-tpl . '1)
                                (for-tpl . '1)
                                (case-tpl . '1)
-                               (cond-tpl . 'defun)))
+                               (cond-tpl . 'defun)
+                               (formula-of . 'defun)))
                  (put-clojure-indent (car pair)
                                      (car (last pair))))))
 
