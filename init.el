@@ -1129,6 +1129,7 @@ always last."
   (highlight-symbol-mode t)
   (paredit-mode 1)
   (hs-minor-mode 1)
+  (auto-complete-mode 1)
   (setq show-trailing-whitespace t)
   (flyspell-mode 0)
   (when (and (not use-inf-clojure)
