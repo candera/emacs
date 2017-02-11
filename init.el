@@ -1222,11 +1222,16 @@ remain indented by four spaces after refilling."
   "Find the tag to search for at point. Remove the namespace
   prefix, since xref doesn't do a good job of dealing with it."
   (let ((tag (find-tag-default)))
-    (string-match "\\([^/]*/\\)?\\([^/]+\\)" tag)
-    (match-string 2 tag)))
+    (when tag
+      (string-match "\\([^/]*/\\)?\\([^/]+\\)" tag)
+      (match-string 2 tag))))
 
 (put 'clojure-mode 'find-tag-default-function #'find-clojure-namespaced-tag)
 (put 'clojurescript-mode 'find-tag-default-function #'find-clojure-namespaced-tag)
+(put 'clojurec-mode 'find-tag-default-function #'find-clojure-namespaced-tag)
+
+;; Don't ask before reading the updated TAGS file
+(setq tags-revert-without-query t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
