@@ -1845,6 +1845,9 @@ remain indented by four spaces after refilling."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (require 'epa-file)
+
+(setq epa-file-name-regexp "\\.\\(gpg\\)\\|\\(asc\\)\\(~\\|\\.~[0-9]+~\\)?\\'")
+
 (epa-file-enable)
 
 ;; This is what lets emacs do the password prompt, instead of that
