@@ -1565,6 +1565,8 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Even though it breaks sometimes, it's still better than counsel-ag
+;; because it uses a separate buffer.
 (require 'helm-ag)
 (global-set-key (kbd "C-x M-s") 'helm-do-ag-project-root)
 
@@ -1586,11 +1588,41 @@ remain indented by four spaces after refilling."
 (require 'smex)
 (smex-initialize)
 
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "M-X") 'smex-major-mode-commands)
+;; (global-set-key (kbd "M-x") 'smex)
+;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
 ;; This is your old M-x.
 (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Ivy, Counsel, Company
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'ivy)
+(ivy-mode 1)
+(setq ivy-re-builders-alist
+      '((t . ivy--regex-fuzzy)))
+
+(define-key ivy-minibuffer-map (kbd "RET") 'ivy-alt-done)
+
+(require 'counsel)
+
+(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Projectile
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'projectile)
+(projectile-mode 1)
+(projectile-load-known-projects)
+
+;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
+;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1775,7 +1807,8 @@ remain indented by four spaces after refilling."
 (define-key inf-clojure-mode-map (kbd "C-c C-c") 'comint-prevent-idiocy)
 (define-key inf-clojure-mode-map (kbd "C-c C-d") 'comint-prevent-idiocy)
 
-(add-to-list 'comint-output-filter-functions 'comint-truncate-buffer)
+;; I wonder if this is the source of the delays I would see in magit, ag, etc?
+;; (add-to-list 'comint-output-filter-functions 'comint-truncate-buffer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
