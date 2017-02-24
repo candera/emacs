@@ -1871,6 +1871,20 @@ remain indented by four spaces after refilling."
 (global-set-key (kbd "C-;") 'flyspell-popup-correct-previous-word)
 (define-key flyspell-mode-map (kbd "C-;") 'flyspell-popup-correct-previous-word)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-babel for restclient
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Not working yet - the execution is asynchronous
+(defun org-babel-execute:restclient (body params)
+  (save-mark-and-excursion
+   (with-temp-buffer
+     (insert body)
+     (restclient-http-send-current nil t)
+     (switch-to-buffer "*HTTP Response*")
+     (buffer-substring (point-min) (point-max)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
