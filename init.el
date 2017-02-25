@@ -538,6 +538,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
    nil
    '( (font . "-outline-Courier New-bold-r-normal-normal-12-142-96-96-c-110-iso10646-1"))))
 
+(defun set-default-font-size (height)
+  "Sets the default font size to `height`."
+  (interactive "nFont size: ")
+  (set-face-attribute 'default nil :height height))
+
 (defun set-default-frame-properties ()
   "Sets the frame properties back to the defaults"
   (interactive)
