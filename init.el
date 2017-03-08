@@ -20,7 +20,8 @@
                                 command-log-mode auto-complete
                                 expand-region undo-tree haml-mode
                                 csv-mode markdown-mode arduino-mode
-                                inf-clojure csharp-mode))
+                                inf-clojure csharp-mode yaml-mode paredit
+                                paganini-theme))
   (unless (package-installed-p package)
     (package-install package)))
 
@@ -1968,6 +1969,15 @@ remain indented by four spaces after refilling."
 ;; Caused more problems than it solved.
 ;; (define-key input-decode-map [?\C-m] [C-m])
 ;; (global-set-key (kbd "<C-m>") 'next-line)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Load a theme
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load-theme 'paganini)
+(set-default-font-size 180)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
