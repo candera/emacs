@@ -200,7 +200,7 @@ width to 60% frame width, or 85, whichever is larger."
   (interactive "P")
   (push (current-window-configuration) former-window-configuration)
   (let ((width (or width (max 85 (/ (* (frame-parameter nil 'width) 2) 5)))))
-    (let ((side-window-width (/ (- (frame-parameter nil 'width) width) 2)))
+    (let ((side-window-width (/ (* (- (frame-parameter nil 'width) width) 10) 19)))
       (delete-other-windows)
       (set-window-buffer (split-window-horizontally side-window-width)
                          (other-buffer nil nil))
