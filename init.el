@@ -1940,7 +1940,7 @@ remain indented by four spaces after refilling."
 
 (setq confirm-nonexistent-file-or-buffer nil)
 
-(load "~/.emacs.d/custom/colors.el")
+;;(load "~/.emacs.d/custom/colors.el")
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
 (add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
@@ -1980,7 +1980,7 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(load-theme 'paganini)
+(load-theme 'paganini t)
 (set-default-font-size 180)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
