@@ -1619,6 +1619,7 @@ remain indented by four spaces after refilling."
 (require 'counsel)
 
 (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+(global-set-key (kbd "M-x") 'counsel-M-x)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
