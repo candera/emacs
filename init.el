@@ -15,7 +15,7 @@
            ("org" . "http://orgmode.org/elpa/"))))
 (package-initialize)
 
-(dolist (package '(clojure-mode magit cider align-cljlet
+(dolist (package '(clojure-mode magit cider
                                 smex ido-vertical-mode gherkin-mode
                                 command-log-mode auto-complete
                                 expand-region undo-tree haml-mode
@@ -1582,8 +1582,11 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'align-cljlet)
-(define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
+;; (require 'align-cljlet)
+;; (define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
+
+;; Deprecated - replaced by clojure-mode support
+(define-key clojure-mode-map (kbd "C-c |") 'clojure-align)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
