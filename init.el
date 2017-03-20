@@ -1908,6 +1908,12 @@ remain indented by four spaces after refilling."
 
 (epa-file-enable)
 
+;; WARNING: Nonsense required:
+;; - Uninstall all gpg stuff
+;; - brew install gnupg21
+;; - brew link --force gnupg21
+;; - ln -s /usr/local/bin/gpg2 /usr/local/bin/gpg
+
 ;; This is what lets emacs do the password prompt, instead of that
 ;; weird terminal popup thing. Also need allow-emacs-pinentry in
 ;; ~/.gnupg/gpg-agent.conf
@@ -1943,7 +1949,6 @@ remain indented by four spaces after refilling."
 ;;(load "~/.emacs.d/custom/colors.el")
 
 (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
-(add-to-list 'auto-mode-alist '("\\.asc$" . javascript-mode))
 (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
 (setq save-interprogram-paste-before-kill t)
