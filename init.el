@@ -1917,8 +1917,8 @@ remain indented by four spaces after refilling."
 (require 'epa-file)
 
 (setq epa-file-name-regexp "\\.\\(gpg\\)\\|\\(asc\\)\\(~\\|\\.~[0-9]+~\\)?\\'")
-
 (epa-file-enable)
+(epa-file-name-regexp-update)
 
 ;; WARNING: Nonsense required:
 ;; - Uninstall all gpg stuff
