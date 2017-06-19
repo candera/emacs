@@ -1319,8 +1319,8 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (load "~/.emacs.d/custom/candera/typing-speed.el")
-(add-hook 'text-mode-hook (lambda ()
-                            (turn-on-typing-speed)))
+;; (add-hook 'text-mode-hook (lambda ()
+;;                             (turn-on-typing-speed)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
