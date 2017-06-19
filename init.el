@@ -1899,6 +1899,17 @@ remain indented by four spaces after refilling."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; csharp-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Lets me use tags to navigate csharp files
+(setq semantic-symref-filepattern-alist
+      (append semantic-symref-filepattern-alist
+              '((csharp-mode "*.cs" "*.CS"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Adzerk stuff
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
