@@ -791,12 +791,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (defun shell-eval-region ()
   "Send the contents of the region to the *shell* buffer."
   (interactive)
-  (shell-send-input (buffer-substring-no-properties
-                     (region-beginning)
-                     (region-end))))
-
-(global-set-key (kbd "C-x E") 'shell-eval-region)
-
+  (if (use-region-p)
+    (shell-send-input (buffer-substring-no-properties
+                       (region-beginning)
+                       (region-end)))
+    (error "The region is not active - nothing to evaluate")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1910,6 +1909,40 @@ remain indented by four spaces after refilling."
 (setq semantic-symref-filepattern-alist
       (append semantic-symref-filepattern-alist
               '((csharp-mode "*.cs" "*.CS"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; sql-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun sql-shell-eval-region ()
+  "Send the contents of the region to the *shell* buffer. Strips newlines from the string first."
+  (interactive)
+  (if (use-region-p)
+      (shell-send-input (replace-regexp-in-string "\n" " "
+                                                  (buffer-substring-no-properties (region-beginning)
+                                                                                  (region-end))))
+    (error "The region is not active - nothing to evaluate")))
+
+(defun sql-shell-eval-defun ()
+  "Send the text surrounding point (to the nearest blank line) to the *shell* buffer."
+  (interactive)
+  (save-excursion
+    (save-match-data
+      (lexical-let* ((p (point))
+                     (beg (or (search-backward-regexp "^\\s-*$" nil t) (buffer-end -1)))
+                     (_   (goto-char p))
+                     (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1)))
+                     (sql (replace-regexp-in-string "\n" " "
+                                                    (buffer-substring-no-properties beg end))))
+        (shell-send-input sql)))))
+
+(require 'sql)
+(define-key sql-mode-map (kbd "C-c e") 'sql-shell-eval-region)
+(define-key sql-mode-map (kbd "C-M-x") 'sql-shell-eval-defun)
+
+(define-key sql-mode-map (kbd "C-M") 'newline)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
