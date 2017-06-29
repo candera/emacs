@@ -795,6 +795,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                      (region-beginning)
                      (region-end))))
 
+(global-set-key (kbd "C-x E") 'shell-eval-region)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
