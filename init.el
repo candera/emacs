@@ -1906,6 +1906,7 @@ remain indented by four spaces after refilling."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Lets me use tags to navigate csharp files
+(require 'semantic/symref/grep)
 (setq semantic-symref-filepattern-alist
       (append semantic-symref-filepattern-alist
               '((csharp-mode "*.cs" "*.CS"))))
