@@ -1973,7 +1973,7 @@ remain indented by four spaces after refilling."
      (message temp-file)
      (unwind-protect
          (progn
-           (epa-decrypt-file "~/.adzerk.asc" temp-file)
+           (epa-decrypt-file "~/.adzerk-defaults.asc" temp-file)
            (with-temp-buffer
              (insert-file-contents temp-file)
              (goto-char 0)
