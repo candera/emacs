@@ -1921,13 +1921,18 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun sql-to-single-line (sql)
+  "Given a SQL string, returns a one-line version of that string."
+  (replace-regexp-in-string "\n" " "
+                            (replace-regexp-in-string "--.*" "" sql)))
+
 (defun sql-shell-eval-region ()
   "Send the contents of the region to the *shell* buffer. Strips newlines from the string first."
   (interactive)
   (if (use-region-p)
-      (shell-send-input (replace-regexp-in-string "\n" " "
-                                                  (buffer-substring-no-properties (region-beginning)
-                                                                                  (region-end))))
+      (shell-send-input (sql-to-single-line
+                         (buffer-substring-no-properties (region-beginning)
+                                                         (region-end))))
     (error "The region is not active - nothing to evaluate")))
 
 (defun sql-shell-eval-defun ()
@@ -1939,9 +1944,8 @@ remain indented by four spaces after refilling."
                      (beg (or (search-backward-regexp "^\\s-*$" nil t) (buffer-end -1)))
                      (_   (goto-char p))
                      (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1)))
-                     (sql (replace-regexp-in-string "\n" " "
-                                                    (buffer-substring-no-properties beg end))))
-        (shell-send-input sql)))))
+                     (sql (buffer-substring-no-properties beg end)))
+        (shell-send-input (sql-to-single-line sql))))))
 
 (require 'sql)
 (define-key sql-mode-map (kbd "C-c e") 'sql-shell-eval-region)
