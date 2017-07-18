@@ -1953,6 +1953,12 @@ remain indented by four spaces after refilling."
 
 (define-key sql-mode-map (kbd "C-M") 'newline)
 
+(require 'sqlup-mode)
+
+(add-hook 'sql-mode-hook
+          (lambda ()
+            (sqlup-mode 1)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Adzerk stuff
