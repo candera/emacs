@@ -1941,7 +1941,8 @@ remain indented by four spaces after refilling."
   (save-excursion
     (save-match-data
       (lexical-let* ((p (point))
-                     (beg (or (search-backward-regexp "^\\s-*$" nil t) (buffer-end -1)))
+                     (empty (search-backward-regexp "^\\s-*$" nil t))
+                     (beg (if empty (1+ empty) (buffer-end -1)))
                      (_   (goto-char p))
                      (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1)))
                      (sql (buffer-substring-no-properties beg end)))
