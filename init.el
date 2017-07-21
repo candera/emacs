@@ -750,10 +750,10 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; This is a total hack: we're hardcoding the name of the shell buffer
-(defun shell-send-input (input)
+(defun shell-send-input (input &optional buf)
   "Send INPUT into the *shell* buffer and leave it visible."
   (save-selected-window
-    (switch-to-buffer-other-window "*shell*")
+    (switch-to-buffer-other-window (or buf "*shell*"))
     (goto-char (point-max))
     (insert input)
     (comint-send-input)))
@@ -1921,6 +1921,21 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(require 'sql)
+
+(define-key sql-mode-map (kbd "C-M") 'newline)
+
+(require 'sqlup-mode)
+
+(add-hook 'sql-mode-hook
+          (lambda ()
+            (sqlup-mode 1)))
+
+;; sql-eval-mode
+
+(defvar sql-eval-mode-shell-buffer "*scratch*")
+(make-variable-buffer-local 'sql-eval-mode-shell-buffer)
+
 (defun sql-to-single-line (sql)
   "Given a SQL string, returns a one-line version of that string."
   (replace-regexp-in-string "\n" " "
@@ -1935,30 +1950,44 @@ remain indented by four spaces after refilling."
                                                          (region-end))))
     (error "The region is not active - nothing to evaluate")))
 
-(defun sql-shell-eval-defun ()
+(defun sql-shell-eval-defun (buffer)
   "Send the text surrounding point (to the nearest blank line) to the *shell* buffer."
-  (interactive)
-  (save-excursion
-    (save-match-data
-      (lexical-let* ((p (point))
-                     (empty (search-backward-regexp "^\\s-*$" nil t))
-                     (beg (if empty (1+ empty) (buffer-end -1)))
-                     (_   (goto-char p))
-                     (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1)))
-                     (sql (buffer-substring-no-properties beg end)))
-        (shell-send-input (sql-to-single-line sql))))))
+  (interactive "P")
+  (let ((buf (if (null buffer)
+                 sql-eval-mode-shell-buffer
+               (read-buffer "Buffer: " "*shell*" t))))
+    (save-excursion
+      (save-match-data
+        (lexical-let* ((p (point))
+                       (empty (search-backward-regexp "^\\s-*$" nil t))
+                       (beg (if empty (1+ empty) (buffer-end -1)))
+                       (_   (goto-char p))
+                       (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1)))
+                       (sql (buffer-substring-no-properties beg end)))
+          (shell-send-input (sql-to-single-line sql) buf))))))
 
-(require 'sql)
-(define-key sql-mode-map (kbd "C-c e") 'sql-shell-eval-region)
-(define-key sql-mode-map (kbd "C-M-x") 'sql-shell-eval-defun)
+(defvar sql-eval-mode-map (make-keymap))
+(define-key sql-eval-mode-map (kbd "C-c e") 'sql-shell-eval-region)
+(define-key sql-eval-mode-map (kbd "C-M-x") 'sql-shell-eval-defun)
 
-(define-key sql-mode-map (kbd "C-M") 'newline)
+(defun sql-eval-mode-lighter ()
+  "Returns the value for the ligther to use when sql-eval-mode is enabled."
+  (format " sql-eval[%s]" sql-eval-mode-shell-buffer))
 
-(require 'sqlup-mode)
+(make-variable-buffer-local 'sql-eval-mode-shell-buffer)
+
+(defun sql-eval-set-buffer (buffer)
+  "Sets the shell buffer that will be used to receive for commands sent from this buffer."
+  (interactive "bBuffer:")
+  (setq sql-eval-mode-shell-buffer buffer))
+
+(define-minor-mode sql-eval-mode
+  "A minor mode for evaluating SQL statements by sending them to a comint buffer."
+  :lighter (:eval (sql-eval-mode-lighter)))
 
 (add-hook 'sql-mode-hook
           (lambda ()
-            (sqlup-mode 1)))
+            (sqlup-eval-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
