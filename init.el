@@ -1941,7 +1941,7 @@ remain indented by four spaces after refilling."
   (replace-regexp-in-string "\n" " "
                             (replace-regexp-in-string "--.*" "" sql)))
 
-(defun sql-shell-eval-region ()
+(defun sql-eval-region ()
   "Send the contents of the region to the *shell* buffer. Strips newlines from the string first."
   (interactive)
   (if (use-region-p)
@@ -1950,8 +1950,10 @@ remain indented by four spaces after refilling."
                                                          (region-end))))
     (error "The region is not active - nothing to evaluate")))
 
-(defun sql-shell-eval-defun (buffer)
-  "Send the text surrounding point (to the nearest blank line) to the *shell* buffer."
+(defun sql-eval-defun (buffer)
+  "Send the text surrounding point (to the nearest blank line) to the *shell* buffer.
+
+With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (null buffer)
                  sql-eval-mode-shell-buffer
@@ -1966,13 +1968,12 @@ remain indented by four spaces after refilling."
                        (sql (buffer-substring-no-properties beg end)))
           (shell-send-input (sql-to-single-line sql) buf))))))
 
-(defvar sql-eval-mode-map (make-keymap))
-(define-key sql-eval-mode-map (kbd "C-c e") 'sql-shell-eval-region)
-(define-key sql-eval-mode-map (kbd "C-M-x") 'sql-shell-eval-defun)
-
 (defun sql-eval-mode-lighter ()
   "Returns the value for the ligther to use when sql-eval-mode is enabled."
-  (format " sql-eval[%s]" sql-eval-mode-shell-buffer))
+  (propertize
+   (format " sql-eval[%s]" sql-eval-mode-shell-buffer)
+   ;; TODO: make this customizable
+   'face '(:foreground "lightblue")))
 
 (make-variable-buffer-local 'sql-eval-mode-shell-buffer)
 
@@ -1981,13 +1982,27 @@ remain indented by four spaces after refilling."
   (interactive "bBuffer:")
   (setq sql-eval-mode-shell-buffer buffer))
 
+(defvar sql-eval-mode-map (make-keymap))
+(define-key sql-eval-mode-map (kbd "C-c e") 'sql-eval-region)
+(define-key sql-eval-mode-map (kbd "C-M-x") 'sql-eval-defun)
+(define-key sql-eval-mode-map (kbd "C-c C-c") 'sql-eval-defun)
+(define-key sql-eval-mode-map (kbd "C-c C-b") 'sql-eval-set-buffer)
+
 (define-minor-mode sql-eval-mode
   "A minor mode for evaluating SQL statements by sending them to a comint buffer."
   :lighter (:eval (sql-eval-mode-lighter)))
 
 (add-hook 'sql-mode-hook
           (lambda ()
-            (sqlup-eval-mode 1)))
+            (sql-eval-mode 1)))
+
+(defun sql-eval-start-adzerk-shell ()
+  (interactive)
+  (let ((buffer (read-string "Name of buffer: "))
+        (envs   (read-string "Adzerk envs: ")))
+    (shell buffer)
+    (shell-send-input (concat "adzerk_env " envs) buffer)
+    (shell-send-input "msql" buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
