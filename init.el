@@ -1622,6 +1622,9 @@ remain indented by four spaces after refilling."
 (global-set-key (kbd "C-x C-f") 'counsel-find-file)
 (global-set-key (kbd "M-x") 'counsel-M-x)
 
+;; Don't make M-x match on beginning of string
+(add-to-list 'ivy-initial-inputs-alist '(counsel-M-x . ""))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Projectile
