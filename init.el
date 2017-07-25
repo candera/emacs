@@ -749,9 +749,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; This is a total hack: we're hardcoding the name of the shell buffer
 (defun shell-send-input (input &optional buf)
-  "Send INPUT into the *shell* buffer and leave it visible."
+  "Send INPUT into the *shell* buffer (or `buf` if specified) and leave it visible."
   (save-selected-window
     (switch-to-buffer-other-window (or buf "*shell*"))
     (goto-char (point-max))
@@ -1999,13 +1998,22 @@ With a prefix arg, prompts for the buffer to send to."
           (lambda ()
             (sql-eval-mode 1)))
 
-(defun sql-eval-start-adzerk-shell ()
+(defun sql-eval-start-msql (&optional name envs)
+  "Starts a shell that actually works with comint mode."
   (interactive)
-  (let ((buffer (read-string "Name of buffer: "))
-        (envs   (read-string "Adzerk envs: ")))
-    (shell buffer)
-    (shell-send-input (concat "adzerk_env " envs) buffer)
-    (shell-send-input "msql" buffer)))
+  ;; We need process-connection-type to be nil, or it chokes whenever
+  ;; the input exceeds a certain length.
+  (let* ((name (or name (read-buffer "Buffer: " nil nil)))
+         (envs (or envs (read-string "Envs: ")))
+         (process-connection-type nil)
+         (temp-name (symbol-name (gensym)))
+         (process (make-comint temp-name "bash" nil "-i"))
+         (starred-name (concat "*" temp-name "*")))
+    (switch-to-buffer-other-window starred-name)
+    (rename-buffer name)
+    (process-send-string process (concat "adzerk_env " envs "\n"))
+    (process-send-string process "msql\n")))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
