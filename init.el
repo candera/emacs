@@ -1945,7 +1945,7 @@ remain indented by four spaces after refilling."
 
 ;; sql-eval-mode
 
-(defvar sql-eval-mode-shell-buffer "*scratch*")
+(defvar sql-eval-mode-shell-buffer "")
 (make-variable-buffer-local 'sql-eval-mode-shell-buffer)
 
 (defun sql-to-single-line (sql)
