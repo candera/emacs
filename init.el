@@ -1994,6 +1994,8 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "bBuffer:")
   (setq sql-eval-mode-shell-buffer buffer))
 
+(defvar sql-eval-interpreter "dosql -i --tall")
+
 (defvar sql-eval-mode-map (make-keymap))
 (define-key sql-eval-mode-map (kbd "C-c e") 'sql-eval-region)
 (define-key sql-eval-mode-map (kbd "C-M-x") 'sql-eval-defun)
@@ -2008,12 +2010,16 @@ With a prefix arg, prompts for the buffer to send to."
           (lambda ()
             (sql-eval-mode 1)))
 
-(defun sql-eval-start-msql (&optional name envs)
-  "Starts a shell that actually works with comint mode."
-  (interactive)
+(defun sql-eval-start-process (interpreter &optional name envs)
+  "Starts a shell that actually works with comint mode. Defaults
+to `sql-eval-interpreter` for interpreter."
+  (interactive "P")
   ;; We need process-connection-type to be nil, or it chokes whenever
   ;; the input exceeds a certain length.
-  (let* ((name (or name (read-buffer "Buffer: " nil nil)))
+  (let* ((interpreter (if (null interpreter)
+                          sql-eval-interpreter
+                        (read-string "Interpreter: ")))
+         (name (or name (read-buffer "Buffer: " nil nil)))
          (envs (or envs (read-string "Envs: ")))
          (process-connection-type nil)
          (temp-name (symbol-name (gensym)))
@@ -2022,7 +2028,7 @@ With a prefix arg, prompts for the buffer to send to."
     (switch-to-buffer-other-window starred-name)
     (rename-buffer name)
     (process-send-string process (concat "adzerk_env " envs "\n"))
-    (process-send-string process "msql\n")))
+    (process-send-string process (concat interpreter "\n"))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
