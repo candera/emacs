@@ -1967,9 +1967,9 @@ remain indented by four spaces after refilling."
 
 With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
-  (let ((buf (if (null buffer)
+  (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                  sql-eval-mode-shell-buffer
-               (read-buffer "Buffer: " "*shell*" t))))
+               (read-buffer "Buffer: " "staging" t))))
     (save-excursion
       (save-match-data
         (lexical-let* ((p (point))
