@@ -2030,6 +2030,21 @@ to `sql-eval-interpreter` for interpreter."
     (process-send-string process (concat "adzerk_env " envs "\n"))
     (process-send-string process (concat interpreter "\n"))))
 
+;; SQL Org Babel support
+
+(defun org-babel-edit-prep:sql (babel-info)
+  "Get an org src buffer ready to edit SQL. Looks for header
+variables `:buffer-name` and `:eval-buffer`, which set the name
+of the buffer and `sql-eval-mode-shell-buffer` in the Org source
+buffer, respectively."
+  (let* ((arguments (nth 2 babel-info))
+         (buffer-name (alist-get :buffer-name arguments))
+         (eval-buffer (alist-get :eval-buffer arguments)))
+    (when buffer-name
+      (rename-buffer buffer-name))
+    (when eval-buffer
+      (sql-eval-set-buffer eval-buffer))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
