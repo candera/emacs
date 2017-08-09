@@ -2043,7 +2043,7 @@ buffer, respectively."
          (buffer-name (alist-get :buffer-name arguments))
          (eval-buffer (alist-get :eval-buffer arguments)))
     (when buffer-name
-      (rename-buffer buffer-name))
+      (rename-buffer (format "*Org src %s*" buffer-name)))
     (when eval-buffer
       (sql-eval-set-buffer eval-buffer))))
 
