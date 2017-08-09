@@ -1915,7 +1915,8 @@ remain indented by four spaces after refilling."
 
 (add-hook 'csharp-mode-hook
           (lambda ()
-            (linum-mode 1)))
+            (linum-mode 1)
+            (setq c-basic-offset 2)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; java-mode
