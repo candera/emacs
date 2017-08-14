@@ -1964,7 +1964,7 @@ remain indented by four spaces after refilling."
     (error "The region is not active - nothing to evaluate")))
 
 (defun sql-eval-defun (buffer)
-  "Send the text surrounding point (to the nearest blank or GO line) to the *shell* buffer.
+  "Send the text surrounding point (to the nearest blank line) to the *shell* buffer.
 
 With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
@@ -1975,18 +1975,9 @@ With a prefix arg, prompts for the buffer to send to."
       (save-match-data
         (lexical-let* ((p (point))
                        (empty (search-backward-regexp "^\\s-*$" nil t))
-                       (_ (goto-char p))
-                       (prev-go (search-backward-regexp "^GO$" nil t))
-                       (buf-begin (buffer-end -1))
-                       (beg (max (if empty (1+ empty) buf-begin)
-                                 (if prev-go (+ 3 prev-go) buf-begin)))
+                       (beg (if empty (1+ empty) (buffer-end -1)))
                        (_   (goto-char p))
-                       (empty (re-search-forward "^\\s-*$" nil t))
-                       (_   (goto-char p))
-                       (next-go (re-search-forward "^GO$" nil t))
-                       (buf-end (buffer-end 1))
-                       (end (min (or empty buf-end)
-                                 (if next-go (- next-go 3) buf-end)))
+                       (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1)))
                        (sql (buffer-substring-no-properties beg end)))
           (shell-send-input (sql-to-single-line sql) buf))))))
 
