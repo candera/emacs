@@ -1954,14 +1954,33 @@ remain indented by four spaces after refilling."
   (replace-regexp-in-string "\n" " "
                             (replace-regexp-in-string "--.*" "" sql)))
 
-(defun sql-eval-region ()
-  "Send the contents of the region to the *shell* buffer. Strips newlines from the string first."
-  (interactive)
-  (if (use-region-p)
-      (shell-send-input (sql-to-single-line
-                         (buffer-substring-no-properties (region-beginning)
-                                                         (region-end))))
-    (error "The region is not active - nothing to evaluate")))
+(defun sql-eval-buffer-subset (buf beg end)
+  "Send the text in the buffer from `beg` to `end` to SQL eval buffer `buf`"
+  (save-excursion
+    (save-match-data
+      (goto-char beg)
+      (let ((cur (point)))
+        (while (< cur end)
+          (goto-char cur)
+          (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
+                         (block-end (min end (if next-go (- next-go 2) end)))
+                         (sql (buffer-substring-no-properties cur block-end)))
+            (shell-send-input (sql-to-single-line sql) buf)
+            (setq cur (if next-go (1+ next-go) block-end))))))))
+
+(defun sql-eval-region (buffer)
+  "Send the contents of the region to the *shell* buffer. Strips newlines from the string first.
+
+With a prefix arg, prompts for the buffer to send to."
+  (interactive "P")
+  (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
+                sql-eval-mode-shell-buffer
+              (read-buffer "Buffer: " "staging" t))))
+    (if (use-region-p)
+        (sql-eval-buffer-subset buf
+                                (region-beginning)
+                                (region-end))
+      (error "The region is not active - nothing to evaluate"))))
 
 (defun sql-eval-defun (buffer)
   "Send the text surrounding point (to the nearest blank line) to the *shell* buffer.
@@ -1978,15 +1997,7 @@ With a prefix arg, prompts for the buffer to send to."
                        (beg (if empty (1+ empty) (buffer-end -1)))
                        (_   (goto-char p))
                        (end (or (re-search-forward "^\\s-*$" nil t) (buffer-end 1))))
-          (goto-char beg)
-          (let ((cur (point)))
-            (while (< cur end)
-              (goto-char cur)
-              (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
-                             (block-end (if next-go (- next-go 2) end))
-                             (sql (buffer-substring-no-properties cur block-end)))
-                (shell-send-input (sql-to-single-line sql) buf)
-                (setq cur (if next-go (1+ next-go) block-end))))))))))
+          (sql-eval-buffer-subset buf beg end))))))
 
 (defun sql-eval-mode-lighter ()
   "Returns the value for the ligther to use when sql-eval-mode is enabled."
@@ -2006,6 +2017,7 @@ With a prefix arg, prompts for the buffer to send to."
 
 (defvar sql-eval-mode-map (make-keymap))
 (define-key sql-eval-mode-map (kbd "C-c e") 'sql-eval-region)
+(define-key sql-eval-mode-map (kbd "C-c C-r") 'sql-eval-region)
 (define-key sql-eval-mode-map (kbd "C-M-x") 'sql-eval-defun)
 (define-key sql-eval-mode-map (kbd "C-c C-c") 'sql-eval-defun)
 (define-key sql-eval-mode-map (kbd "C-c C-b") 'sql-eval-set-buffer)
