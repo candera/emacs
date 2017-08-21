@@ -2112,6 +2112,79 @@ buffer, respectively."
 
 (setq adzerk-api-key (get-adzerk-var "ADZERK_API_KEY"))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; mirror-image support
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Lets you edit images in text in one buffer and see the changes live
+;; in another. Source:
+;; https://emacs.stackexchange.com/questions/7198/indirect-buffer-in-image-mode-main-buffer-in-text
+
+(defun gpc/mirror-buffer (buffer-name &optional more-after-change)
+  "Create a buffer whose contents will follow the current one's
+and returns the new buffer.  Runs `more-after-change' after each
+change if provided.
+
+This differs from `clone-indirect-buffer' in that the new buffer
+is not visiting a file.  It's really just a kludge to support
+`gpc/mirror-image', which see."
+  (interactive (list
+                (let ((default (concat (buffer-name) "<mirror>")))
+                  (read-string "Buffer name: " default
+                               nil nil default))))
+  (make-local-variable 'after-change-functions)
+  (make-local-variable 'kill-buffer-hook)
+  (lexical-let*
+      ((target-buffer (generate-new-buffer buffer-name))
+       ;; Give lexical scope to arg
+       (after-change more-after-change)
+       (copy-change
+        #'(lambda(start end old-len)
+            (let ((inhibit-read-only t))
+              ;; Quick and dirty: may not be suitable for large buffers.
+              (copy-to-buffer target-buffer (point-min) (point-max))
+              (when (functionp after-change)
+                (funcall after-change target-buffer))))))
+
+    ;; Initialize the target buffer with the source text.
+    (copy-to-buffer target-buffer (point-min) (point-max))
+
+    (add-hook 'after-change-functions copy-change t t)
+
+    ;; Cleanup hooks.
+
+    ;; Kill the other buffer if the source buffer is closed.
+    (add-hook 'kill-buffer-hook
+              #'(lambda () (kill-buffer target-buffer)) t t)
+
+    ;; Destroy the change hook if the other buffer is killed.
+    (with-current-buffer target-buffer
+      (make-local-variable 'kill-buffer-hook)
+      (add-hook 'kill-buffer-hook
+                #'(lambda ()
+                    (remove-hook 'after-change-functions copy-change t))
+                t t))))
+
+(defun gpc/mirror-image ()
+  "Open an `image-mode' buffer that tracks the content of the
+current buffer.  Intended for use with svg files."
+  (interactive)
+  (image-mode-as-text)
+  (let* ((buffer-name (concat (buffer-name) "<image>"))
+         ;; An `image-mode' buffer will switch back to text when its contents
+         ;; are replaced.  Besides, the image is not updated in-place when the
+         ;; content changes, so you'd have to toggle back to image-mode anyway.
+         (after-change '(lambda (buffer)
+                          (with-current-buffer buffer (image-mode))))
+         (mirror (gpc/mirror-buffer buffer-name after-change)))
+    (split-window)
+    (other-window 1)
+    (switch-to-buffer buffer-name)
+    (image-mode)
+    (other-window 1)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
