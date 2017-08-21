@@ -2047,7 +2047,7 @@ to `sql-eval-interpreter` for interpreter."
          (starred-name (concat "*" temp-name "*")))
     (switch-to-buffer-other-window starred-name)
     (rename-buffer name)
-    (process-send-string process (concat "adzerk_env " envs "\n"))
+    (process-send-string process (concat "zerkenv --yes --source " envs "\n"))
     (process-send-string process (concat interpreter "\n"))))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
