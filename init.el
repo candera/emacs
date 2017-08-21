@@ -2061,11 +2061,14 @@ of the buffer and `sql-eval-mode-shell-buffer` in the Org source
 buffer, respectively."
   (let* ((arguments (nth 2 babel-info))
          (buffer-name (alist-get :buffer-name arguments))
-         (eval-buffer (alist-get :eval-buffer arguments)))
+         (eval-buffer (alist-get :eval-buffer arguments))
+         (sql-product-val (alist-get :sql-product arguments)))
     (when buffer-name
       (rename-buffer (format "*Org src %s*" buffer-name)))
     (when eval-buffer
-      (sql-eval-set-buffer eval-buffer))))
+      (sql-eval-set-buffer eval-buffer))
+    (when sql-product
+      (setq sql-product sql-product-val))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
