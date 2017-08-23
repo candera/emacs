@@ -1949,10 +1949,19 @@ remain indented by four spaces after refilling."
 (defvar sql-eval-mode-shell-buffer "")
 (make-variable-buffer-local 'sql-eval-mode-shell-buffer)
 
+(defvar sql-eval-mode-style :dosql)
+(make-variable-buffer-local 'sql-eval-mode-style)
+
 (defun sql-to-single-line (sql)
   "Given a SQL string, returns a one-line version of that string."
   (replace-regexp-in-string "\n" " "
                             (replace-regexp-in-string "--.*" "" sql)))
+
+(defun sql-eval-prep-input (sql)
+  "Modifies the given SQL as appropriate for the current eval style."
+  (if (eq sql-eval-mode-style :dosql)
+      (sql-to-single-line sql)
+    sql))
 
 (defun sql-eval-buffer-subset (buf beg end)
   "Send the text in the buffer from `beg` to `end` to SQL eval buffer `buf`"
@@ -1963,9 +1972,14 @@ remain indented by four spaces after refilling."
         (while (< cur end)
           (goto-char cur)
           (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
-                         (block-end (min end (if next-go (- next-go 2) end)))
+                         (block-end (min end (if next-go
+                                                 (- next-go
+                                                    (if (eq sql-eval-mode-style :dosql)
+                                                        2
+                                                      0))
+                                               end)))
                          (sql (buffer-substring-no-properties cur block-end)))
-            (shell-send-input (sql-to-single-line sql) buf)
+            (shell-send-input (sql-eval-prep-input sql) buf)
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
 (defun sql-eval-region (buffer)
@@ -2062,13 +2076,16 @@ buffer, respectively."
   (let* ((arguments (nth 2 babel-info))
          (buffer-name (alist-get :buffer-name arguments))
          (eval-buffer (alist-get :eval-buffer arguments))
-         (sql-product-val (alist-get :sql-product arguments)))
+         (sql-product-val (alist-get :sql-product arguments))
+         (style (alist-get :sql-eval-mode-style arguments)))
     (when buffer-name
       (rename-buffer (format "*Org src %s*" buffer-name)))
     (when eval-buffer
       (sql-eval-set-buffer eval-buffer))
     (when sql-product
-      (setq sql-product sql-product-val))))
+      (setq sql-product sql-product-val))
+    (when style
+      (setq sql-eval-mode-style (intern-soft style)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
