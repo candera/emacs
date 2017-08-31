@@ -617,10 +617,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun dired-insert-this-directory-recursively ()
+(defun dired-insert-this-directory-recursively (include-hidden)
   "Recursively insert the subdirectories of the current dired directory."
-  (interactive)
-  (dired-insert-subdir dired-directory "-alR"))
+  (interactive "P")
+  (dired-insert-subdir dired-directory (if (null include-hidden)
+                                           "-lR"
+                                         "-alR")))
 
 (add-hook 'dired-mode-hook
           (lambda ()
