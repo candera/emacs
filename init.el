@@ -2230,8 +2230,9 @@ current buffer.  Intended for use with svg files."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (eq system-type 'darwin)
- (setq ns-command-modifier 'meta)       ; Command key is meta
- (setq mac-right-option-modifier 'control)
+  (setq ns-command-modifier 'super)       ; Command key is super
+  (setq mac-right-option-modifier 'meta)
+  (setq ns-function-modifier 'hyper)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
