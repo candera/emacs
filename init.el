@@ -1636,6 +1636,8 @@ remain indented by four spaces after refilling."
 (projectile-mode 1)
 (projectile-load-known-projects)
 
+(global-set-key (kbd "s-p") 'projectile-command-map)
+
 ;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
 ;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
 
@@ -2230,10 +2232,14 @@ current buffer.  Intended for use with svg files."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (eq system-type 'darwin)
-  (setq ns-command-modifier 'super)       ; Command key is super
-  (setq mac-right-option-modifier 'meta)
-  (setq ns-function-modifier 'hyper)
-)
+  (setq ns-command-modifier 'meta)      ; Command key is meta
+  ;; (setq ns-command-modifier 'super)     ; Command key is super
+  ;; (setq mac-right-option-modifier 'meta)
+  (setq mac-right-option-modifier 'hyper)
+  (setq mac-option-modifier 'super)
+  ;; Sadly, doesn't seem to work
+  ;; (setq ns-function-modifier 'hyper)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
