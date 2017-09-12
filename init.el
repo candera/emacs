@@ -270,6 +270,7 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-x 4 3") 'temporarily-display-three-windows)
 (global-set-key (kbd "C-x 4 4") 'temporarily-display-four-windows)
 (global-set-key (kbd "M-N") 'other-window)
+(global-set-key (kbd "s-N") 'other-window)
 (global-set-key (kbd "M-P") (lambda () (interactive) (other-window -1)))
 (global-set-key (kbd "M-`") 'other-frame)
 (global-set-key (kbd "M-[") 'previous-buffer)
@@ -810,6 +811,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (require 'org)
 (require 'org-install)
+
+(define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
 
 (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
 (global-set-key (kbd "C-c l") 'org-store-link)
@@ -1836,6 +1839,13 @@ remain indented by four spaces after refilling."
 (add-hook 'scad-mode-hook
           (lambda ()
             (setq c-basic-offset 2)))
+
+(define-key scad-mode-map (kbd "M-q")
+  (lambda ()
+    (interactive)
+    (save-excursion
+      (mark-defun)
+      (indent-for-tab-command))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
