@@ -390,6 +390,14 @@ width to 60% frame width, or 85, whichever is larger."
 (add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
 (add-hook 'ruby-mode-hook 'turn-off-flyspell)
 
+(defun inside-comment-q ()
+  "Returns non-nil if inside comment, else nil.
+Result depends on syntax table's comment character."
+  (interactive)
+  (let ((result (nth 4 (syntax-ppss))))
+    (message "%s" result)
+    result))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Calendar customization
@@ -1844,8 +1852,11 @@ remain indented by four spaces after refilling."
   (lambda ()
     (interactive)
     (save-excursion
-      (mark-defun)
-      (indent-for-tab-command))))
+      (if (inside-comment-q)
+          (fill-paragraph)
+        (progn
+          (mark-defun)
+          (indent-for-tab-command))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
