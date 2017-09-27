@@ -1836,6 +1836,18 @@ remain indented by four spaces after refilling."
 (define-key inf-clojure-mode-map (kbd "C-c C-c") 'comint-prevent-idiocy)
 (define-key inf-clojure-mode-map (kbd "C-c C-d") 'comint-prevent-idiocy)
 
+(defun inf-clojure-refresh ()
+  "Runs `(refresh)` in the attached REPL."
+  (interactive)
+  (save-excursion
+    (save-window-excursion
+      (switch-to-buffer inf-clojure-buffer)
+      (goto-char (point-max))
+      (insert "(require 'clojure.tools.namespace.repl) (clojure.tools.namespace.repl/refresh)")
+      (comint-send-input))))
+
+(define-key inf-clojure-minor-mode-map (kbd "M-R") 'inf-clojure-refresh)
+
 ;; I wonder if this is the source of the delays I would see in magit, ag, etc?
 ;; (add-to-list 'comint-output-filter-functions 'comint-truncate-buffer)
 
