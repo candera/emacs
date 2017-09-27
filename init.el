@@ -270,11 +270,15 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-x 4 3") 'temporarily-display-three-windows)
 (global-set-key (kbd "C-x 4 4") 'temporarily-display-four-windows)
 (global-set-key (kbd "M-N") 'other-window)
-(global-set-key (kbd "s-N") 'other-window)
 (global-set-key (kbd "M-P") (lambda () (interactive) (other-window -1)))
 (global-set-key (kbd "M-`") 'other-frame)
 (global-set-key (kbd "M-[") 'previous-buffer)
 (global-set-key (kbd "M-]") 'next-buffer)
+
+;; Aliases for super-keys I confuse with the meta equivalent.
+(global-set-key (kbd "s-N") 'other-window)
+(global-set-key (kbd "s-y") 'yank-pop)
+(global-set-key (kbd "s-b") 'backward-word)
 
 ;; Flips the left and right windows. Taken from
 ;; http://whattheemacsd.com//buffer-defuns.el-02.html
@@ -1170,10 +1174,7 @@ always last."
   ;; Not all terminals can transmit the standard key sequencences for
   ;; paredit-forward-slurp-sexp, which is super-useful
   (define-key paredit-mode-map (kbd "C-c )") 'paredit-forward-slurp-sexp)
-  (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp)
-  (when use-inf-clojure
-    (define-key clojure-mode-map (kbd "M-.") 'dumb-jump-go)
-    (define-key clojure-mode-map (kbd "M-,") 'dumb-jump-back)))
+  (define-key paredit-mode-map (kbd "M-)") 'paredit-forward-slurp-sexp))
 
 (add-hook 'clojure-mode-hook #'setup-clojure-mode)
 
@@ -2261,6 +2262,14 @@ current buffer.  Intended for use with svg files."
   ;; Sadly, doesn't seem to work
   ;; (setq ns-function-modifier 'hyper)
   )
+
+(defun undocked-laptop-mode ()
+  "When the laptop isn't connected to my DasKeyboard, different
+  bindings work better."
+  (interactive)
+  (setq ns-command-modifier 'meta)      ; Command key is meta
+  (setq mac-right-option-modifier 'control)
+  (setq mac-option-modifier 'meta))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
