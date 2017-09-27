@@ -2165,7 +2165,12 @@ buffer, respectively."
                (buffer-substring start (point)))))
        (delete-file temp-file)))))
 
-(setq adzerk-api-key (get-adzerk-var "ADZERK_API_KEY"))
+(defvar adzerk-api-key-cache nil)
+
+(defun adzerk-api-key ()
+  (interactive)
+  (or adzerk-api-key-cache
+      (setq adzerk-api-key-cache (get-adzerk-var "ADZERK_API_KEY"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
