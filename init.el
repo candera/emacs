@@ -1857,6 +1857,8 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(require 'scad-mode)
+
 (add-hook 'scad-mode-hook
           (lambda ()
             (setq c-basic-offset 2)))
