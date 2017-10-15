@@ -1839,12 +1839,12 @@ remain indented by four spaces after refilling."
 (defun inf-clojure-refresh ()
   "Runs `(refresh)` in the attached REPL."
   (interactive)
-  (save-excursion
-    (save-window-excursion
-      (switch-to-buffer inf-clojure-buffer)
-      (goto-char (point-max))
-      (insert "(require 'clojure.tools.namespace.repl) (clojure.tools.namespace.repl/refresh)")
-      (comint-send-input))))
+  (let ((cur (current-buffer)))
+    (pop-to-buffer inf-clojure-buffer)
+    (goto-char (point-max))
+    (insert "(require 'clojure.tools.namespace.repl) (clojure.tools.namespace.repl/refresh)")
+    (comint-send-input)
+    (pop-to-buffer cur)))
 
 (define-key inf-clojure-minor-mode-map (kbd "M-R") 'inf-clojure-refresh)
 
