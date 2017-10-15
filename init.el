@@ -2247,6 +2247,14 @@ current buffer.  Intended for use with svg files."
     (image-mode)
     (other-window 1)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Edit server - edit in emacs from Chrome
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'edit-server)
+(edit-server-start)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
