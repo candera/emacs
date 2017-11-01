@@ -2277,6 +2277,11 @@ current buffer.  Intended for use with svg files."
 ;; First indent, then complete
 (setq tab-always-indent 'complete)
 
+(defun clear-tags-tables ()
+  "Removes all tags from the active tags lists."
+  (interactive)
+  (setq tags-table-list '()))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Mac customizations
