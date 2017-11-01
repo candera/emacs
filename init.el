@@ -2293,7 +2293,8 @@ current buffer.  Intended for use with svg files."
   ;; (setq ns-command-modifier 'super)     ; Command key is super
   ;; (setq mac-right-option-modifier 'meta)
   (setq mac-right-option-modifier 'hyper)
-  (setq mac-option-modifier 'super)
+  (setq mac-option-modifier 'meta)
+  ;; (setq mac-option-modifier 'super)
   ;; Sadly, doesn't seem to work
   ;; (setq ns-function-modifier 'hyper)
   )
