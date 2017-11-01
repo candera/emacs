@@ -2140,6 +2140,9 @@ buffer, respectively."
 (epa-file-enable)
 (epa-file-name-regexp-update)
 
+;; Start the pinentry server for use from shells
+(pinentry-start)
+
 ;; WARNING: Nonsense required:
 ;; - Uninstall all gpg stuff
 ;; - brew install gnupg21
