@@ -2292,7 +2292,12 @@ current buffer.  Intended for use with svg files."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(when (eq system-type 'darwin)
+(defvar dock-mode nil)
+
+(defun docked-laptop-mode ()
+  "When the laptop is connected to my DasKeyboard, different
+  bindings work better."
+  (interactive)
   (setq ns-command-modifier 'meta)      ; Command key is meta
   ;; (setq ns-command-modifier 'super)     ; Command key is super
   ;; (setq mac-right-option-modifier 'meta)
@@ -2301,7 +2306,8 @@ current buffer.  Intended for use with svg files."
   ;; (setq mac-option-modifier 'super)
   ;; Sadly, doesn't seem to work
   ;; (setq ns-function-modifier 'hyper)
-  )
+  (setq dock-mode 'docked)
+  (message "Switched to docked laptop mode"))
 
 (defun undocked-laptop-mode ()
   "When the laptop isn't connected to my DasKeyboard, different
@@ -2309,7 +2315,25 @@ current buffer.  Intended for use with svg files."
   (interactive)
   (setq ns-command-modifier 'meta)      ; Command key is meta
   (setq mac-right-option-modifier 'control)
-  (setq mac-option-modifier 'meta))
+  (setq mac-option-modifier 'meta)
+  (setq dock-mode 'undocked)
+  (message "Switched to undocked laptop mode"))
+
+(defvar dock-mode-timer
+  (when (or (string= system-name "valinor")
+            (string= system-name "valinor.local"))
+    (run-with-timer
+     0
+     5
+     (lambda ()
+       (lexical-let ((currently-undocked (= 1920 (display-pixel-width))))
+         (when (and (not (eq dock-mode 'undocked))
+                    currently-undocked)
+           (undocked-laptop-mode))
+         (when (and (not (eq dock-mode 'docked))
+                    (not currently-undocked))
+           (docked-laptop-mode)))))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
