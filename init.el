@@ -2349,6 +2349,23 @@ current buffer.  Intended for use with svg files."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; highlight-focus
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(el-get-bundle kriyative/highlight-focus)
+
+(use-package highlight-focus
+  :config
+  ;; set the background of the mode-line
+  (setq highlight-focus:face 'default
+        highlight-focus:face-property :background
+        highlight-focus:face-property-value "black"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Load a theme
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
