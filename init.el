@@ -2101,6 +2101,10 @@ to `sql-eval-interpreter` for interpreter."
          (starred-name (concat "*" temp-name "*")))
     (switch-to-buffer-other-window starred-name)
     (rename-buffer name)
+    ;; This is a hack to get gpg-agent to have the keys we need. I
+    ;; haven't been able to figure out how to get zerkenv to do it
+    ;; correctly on its own when run under emacs
+    (epa-decrypt-file "~/.adzerk-aws-creds.asc" "/dev/null")
     (process-send-string process (concat "zerkenv --yes --source " envs "\n"))
     (process-send-string process (concat interpreter "\n"))))
 
