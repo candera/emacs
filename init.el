@@ -1092,7 +1092,8 @@ always last."
  'org-babel-load-languages
  '((emacs-lisp . t)
    (clojure . t)
-   (sh . t)))
+   (sh . t)
+   (dot . t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1640,6 +1641,15 @@ remain indented by four spaces after refilling."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; flx
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package flx
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Projectile
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1901,6 +1911,9 @@ remain indented by four spaces after refilling."
                              (if-tpl . '1)
                              (for-tpl . '1)
                              (for-append . '1)
+                             (keyed-for-tpl . '2)
+                             (map-lens-tpl . '2)
+                             (do-watch . '1)
                              (case-tpl . '1)
                              (cond-tpl . 'defun)
                              (formula-of . 'defun)))
@@ -1927,18 +1940,28 @@ remain indented by four spaces after refilling."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; org-babel for restclient
+;; restclient
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Not working yet - the execution is asynchronous
-(defun org-babel-execute:restclient (body params)
-  (save-mark-and-excursion
-   (with-temp-buffer
-     (insert body)
-     (restclient-http-send-current nil t)
-     (switch-to-buffer "*HTTP Response*")
-     (buffer-substring (point-min) (point-max)))))
+;; ;; Not working yet - the execution is asynchronous
+;; (defun org-babel-execute:restclient (body params)
+;;   (save-mark-and-excursion
+;;    (with-temp-buffer
+;;      (insert body)
+;;      (restclient-http-send-current nil t)
+;;      (switch-to-buffer "*HTTP Response*")
+;;      (buffer-substring (point-min) (point-max)))))
+
+(use-package restclient
+  :ensure t)
+
+(use-package ob-restclient
+  :ensure t
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((restclient . t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2256,6 +2279,15 @@ current buffer.  Intended for use with svg files."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; image+
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package image+
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Edit server - edit in emacs from Chrome
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2285,6 +2317,12 @@ current buffer.  Intended for use with svg files."
   "Removes all tags from the active tags lists."
   (interactive)
   (setq tags-table-list '()))
+
+;; This prevents Emacs from creating lockfiles, which prevent two
+;; people from editing the same file at the same time. Since my setup
+;; is single-user, all this does is occasionally confuse me by telling
+;; me a file is locked, and would I like to steal it?
+(setq create-lockfiles nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2351,7 +2389,6 @@ current buffer.  Intended for use with svg files."
 ;;
 ;; highlight-focus
 ;;
-;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (el-get-bundle kriyative/highlight-focus)
@@ -2363,6 +2400,61 @@ current buffer.  Intended for use with svg files."
         highlight-focus:face-property :background
         highlight-focus:face-property-value "black"))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; floobits
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package floobits
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; blockdiag-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package blockdiag-mode
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; graphviz-dot-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package graphviz-dot-mode
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-mind-map
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package org-mind-map
+  :ensure t
+  :init (require 'ox-org))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; plantuml-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package plantuml-mode
+  :ensure t
+  :config
+  (progn
+    (setq plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
+    (add-to-list
+     'org-src-lang-modes '("plantuml" . plantuml))))
+
+;; (use-package flycheck-plantuml
+;;   :ensure t
+;;   :config
+;;   (flycheck-plantuml-setup))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
