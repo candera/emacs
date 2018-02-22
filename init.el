@@ -2453,7 +2453,10 @@ current buffer.  Intended for use with svg files."
   (progn
     (setq plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
     (add-to-list
-     'org-src-lang-modes '("plantuml" . plantuml))))
+     'org-src-lang-modes '("plantuml" . plantuml))
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((plantuml . t)))))
 
 ;; (use-package flycheck-plantuml
 ;;   :ensure t
