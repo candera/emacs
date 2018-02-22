@@ -486,7 +486,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 ;; ctags command: ctags -R -e . --language-force=Clojure
 
-(global-set-key (kbd "M-.") 'xref-find-definitions)
+(global-set-key (kbd "M-.") 'projectile-find-tag)
+;; (global-set-key (kbd "M-.") 'xref-find-definitions)
 ;;(global-set-key (kbd "M-.") 'imenu)
 ;; (global-set-key (kbd "M-,") 'dumb-jump-back)
 
@@ -1654,11 +1655,14 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'projectile)
-(projectile-mode 1)
-(projectile-load-known-projects)
+(use-package projectile
+  :ensure t
 
-(global-set-key (kbd "s-p") 'projectile-command-map)
+  :config
+  (projectile-mode 1)
+  (projectile-load-known-projects)
+  (setq projectile-tags-command "/usr/local/bin/ctags -Re -f \"%s\" %s")
+  (setq projectile-switch-project-action 'projectile-commander))
 
 ;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
 ;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
