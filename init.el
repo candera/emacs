@@ -2296,8 +2296,20 @@ current buffer.  Intended for use with svg files."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'edit-server)
-(edit-server-start)
+;; (require 'edit-server)
+;; (edit-server-start)
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Atomic Chrome - edit with Emacs from Chrome
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package atomic-chrome
+;;   :ensure t
+;;   :config
+;;   (atomic-chrome-start-server))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2452,6 +2464,7 @@ current buffer.  Intended for use with svg files."
   :config
   (progn
     (setq plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
+    (setq org-plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
     (add-to-list
      'org-src-lang-modes '("plantuml" . plantuml))
     (org-babel-do-load-languages
@@ -2462,6 +2475,17 @@ current buffer.  Intended for use with svg files."
 ;;   :ensure t
 ;;   :config
 ;;   (flycheck-plantuml-setup))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; interleave-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; Allows you to take notes on a PDF while reading it in Emacs.
+
+;; (use-package interleave
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
