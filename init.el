@@ -1827,6 +1827,7 @@ remain indented by four spaces after refilling."
                        (kill-buffer name)))
                  (list dir cmd name)))
   (inf-clojure cmd)
+  (setq inf-clojure-buffer name)
   (rename-buffer name)
   ;; Re-enable inf-clojure-minor-mode in all open clojure-mode buffers
   ;; for this project, since eldoc and completion don't work if you
