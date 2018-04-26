@@ -2288,7 +2288,11 @@ current buffer.  Intended for use with svg files."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package image+
-  :ensure t)
+  :ensure t
+  :bind (:map imagex-sticky-mode-map
+              ("+" . imagex-sticky-zoom-in)
+              ("-" . imagex-sticky-zoom-out)
+              ("g" . imagex-sticky-restore-original)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
