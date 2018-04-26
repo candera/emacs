@@ -2501,6 +2501,14 @@ https://github.com/jaypei/emacs-neotree/pull/110"
   (add-hook 'neo-enter-hook #'neotree-resize-window))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; php-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package php-mode
+  :ensure t)
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
 ;; ;; interleave-mode
