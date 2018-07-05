@@ -825,6 +825,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package org :ensure t)
+
 (require 'org)
 (require 'org-install)
 
@@ -1096,7 +1098,7 @@ always last."
  'org-babel-load-languages
  '((emacs-lisp . t)
    (clojure . t)
-   (sh . t)
+   (shell . t)
    (dot . t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1404,12 +1406,12 @@ remain indented by four spaces after refilling."
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun my-shell-setup ()
-  "For cmdproxy shell under Emacs 20"
-  (setq w32-quote-process-args ?\")
-  (make-variable-buffer-local 'comint-completion-addsuffix))
+;; (defun my-shell-setup ()
+;;   "For cmdproxy shell under Emacs 20"
+;;   (setq w32-quote-process-args ?\")
+;;   (make-variable-buffer-local 'comint-completion-addsuffix))
 
-(setq shell-mode-hook 'my-shell-setup)
+;; (setq shell-mode-hook 'my-shell-setup)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1581,6 +1583,9 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package helm-projectile
+  :ensure t)
+
 (require 'helm-projectile)
 (global-set-key (kbd "C-x M-f") 'helm-projectile-find-file)
 
@@ -1627,6 +1632,9 @@ remain indented by four spaces after refilling."
 ;; Ivy, Counsel, Company
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package counsel
+  :ensure t)
 
 (require 'ivy)
 (ivy-mode 1)
@@ -1860,7 +1868,7 @@ remain indented by four spaces after refilling."
   (let ((cur (current-buffer)))
     (pop-to-buffer inf-clojure-buffer)
     (goto-char (point-max))
-    (insert "(require 'clojure.tools.namespace.repl) (clojure.tools.namespace.repl/refresh)")
+    (insert "(require 'clojure.tools.namespace.repl) (if-let [r (resolve 'user/reset)] (r) (clojure.tools.namespace.repl/refresh))")
     (comint-send-input)
     (pop-to-buffer cur)))
 
@@ -1874,6 +1882,9 @@ remain indented by four spaces after refilling."
 ;; scad-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package scad-mode
+  :ensure t)
 
 (require 'scad-mode)
 
@@ -2005,6 +2016,9 @@ remain indented by four spaces after refilling."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package sqlup-mode
+  :ensure t)
+
 (require 'sql)
 
 (define-key sql-mode-map (kbd "C-M") 'newline)
@@ -2049,8 +2063,10 @@ remain indented by four spaces after refilling."
                                                         2
                                                       0))
                                                end)))
-                         (sql (buffer-substring-no-properties cur block-end)))
-            (shell-send-input (sql-eval-prep-input sql) buf)
+                         (sql (buffer-substring-no-properties cur block-end))
+                         (prepped-sql (sql-eval-prep-input sql)))
+            (message "Sending SQL: %s" prepped-sql)
+            (shell-send-input prepped-sql buf)
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
 (defun sql-eval-region (buffer)
@@ -2132,6 +2148,10 @@ to `sql-eval-interpreter` for interpreter."
          (starred-name (concat "*" temp-name "*")))
     (switch-to-buffer-other-window starred-name)
     (rename-buffer name)
+    ;; Somehow inf-clojure is setting this variable in my SQL Eval
+    ;; buffers, which is screwing things up royally. Clobber it back.
+    (make-variable-buffer-local 'comint-input-sender)
+    (setq comint-input-sender 'comint-simple-send)
     ;; This is a hack to get gpg-agent to have the keys we need. I
     ;; haven't been able to figure out how to get zerkenv to do it
     ;; correctly on its own when run under emacs
@@ -2168,6 +2188,9 @@ buffer, respectively."
 ;; Adzerk stuff
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package pinentry
+  :ensure t)
 
 (require 'epa-file)
 
@@ -2511,6 +2534,16 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package php-mode
+  :ensure t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; web-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package web-mode
   :ensure t)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
