@@ -2559,6 +2559,48 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Capture snippet
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Credit http://ul.io/nb/2018/04/30/better-code-snippets-with-org-capture/
+
+(which-function-mode 1)
+
+(defun nb/org-capture-get-src-block-string (major-mode)
+  "Given a major mode symbol, return the associated org-src block
+string that will enable syntax highlighting for that language
+
+E.g. tuareg-mode will return 'ocaml', python-mode 'python', etc..."
+
+  (let ((mm (intern (replace-regexp-in-string "-mode" "" (format "%s" major-mode)))))
+    (or (car (rassoc mm org-src-lang-modes)) (format "%s" mm))))
+
+(defun nb/org-capture-region ()
+  (interactive)
+  (let ((code-snippet (buffer-substring-no-properties (mark) (- (point) 1)))
+        (func-name (which-function))
+        (file-name (buffer-file-name))
+        (line-number (line-number-at-pos (region-beginning)))
+        (org-src-mode (nb/org-capture-get-src-block-string major-mode)))
+    (kill-new (format
+               "file:%s::%s
+In ~%s~:
+#+BEGIN_SRC %s
+%s
+#+END_SRC"
+               file-name
+               line-number
+               func-name
+               org-src-mode
+               code-snippet))))
+
+;; ;; Capture Template
+;; ("s" "code snippet" entry (file ,(my/org-dir-file "snippets.org"))
+;;  "* %?\n%(my/org-capture-code-snippet \"%F\")")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Load a theme
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
