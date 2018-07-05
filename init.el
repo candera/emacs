@@ -142,6 +142,9 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Display line numbers
+(global-display-line-numbers-mode t)
+
 ;; Enable CUA-style undo, cut, copy, paste, and selection
 ;;(cua-mode t)
 
@@ -156,7 +159,7 @@
 (ido-mode 1)
 
 ;; And add a space after the line number in text-only terminals
-(unless window-system (setq linum-format "%d "))
+;; (unless window-system (setq linum-format "%d "))
 
 ;; Enable line highlighting
 (global-hl-line-mode 1)
@@ -1150,8 +1153,8 @@ always last."
             nil
             t)
   ;; (highlight-parentheses-mode 1)
-  (unless (eq major-mode 'cider-repl-mode)
-    (linum-mode 1))
+  ;; (unless (eq major-mode 'cider-repl-mode)
+  ;;   (display-line-numbers-mode 1))
   (highlight-symbol-mode t)
   (paredit-mode 1)
   (hs-minor-mode 1)
@@ -1983,7 +1986,7 @@ remain indented by four spaces after refilling."
 
 (add-hook 'csharp-mode-hook
           (lambda ()
-            (linum-mode 1)
+            ;; (display-line-numbers-mode 1)
             (setq c-basic-offset 2)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
