@@ -1140,6 +1140,10 @@ always last."
                         (message "Disabling slime-mode because clojure-mode-no-slime is set")
                         (slime-mode -1))))
 
+;; Work around bug where inf-clojure-minor-mode sets
+;; comint-input-sender too aggressively
+(make-variable-buffer-local comint-input-sender)
+
 ;; These are extra key defines because I kept typing them.
 ;; Within clojure-mode, have Ctrl-x Ctrl-e evaluate the last
 ;; expression.
@@ -2065,7 +2069,6 @@ remain indented by four spaces after refilling."
                                                end)))
                          (sql (buffer-substring-no-properties cur block-end))
                          (prepped-sql (sql-eval-prep-input sql)))
-            (message "Sending SQL: %s" prepped-sql)
             (shell-send-input prepped-sql buf)
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
@@ -2155,8 +2158,10 @@ to `sql-eval-interpreter` for interpreter."
     ;; This is a hack to get gpg-agent to have the keys we need. I
     ;; haven't been able to figure out how to get zerkenv to do it
     ;; correctly on its own when run under emacs
-    (epa-decrypt-file "~/.adzerk-aws-creds.asc" "/dev/null")
-    (process-send-string process (concat "zerkenv --yes --source " envs "\n"))
+    ;; (epa-decrypt-file "~/.adzerk-aws-creds.asc" "/dev/null")
+    (process-send-string process "zerk\n")
+    (process-send-string process (concat  "zerkload " envs "\n"))
+    ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
     (process-send-string process (concat interpreter "\n"))))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
