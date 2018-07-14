@@ -1265,6 +1265,31 @@ remain indented by four spaces after refilling."
 ;; Don't ask before reading the updated TAGS file
 (setq tags-revert-without-query t)
 
+(defun edit-clojure-string-in-other-buffer ()
+  "Opens a temporary buffer and populates it with the contents of
+the string at point. Hitting C-c C-c in that buffer will save it
+back to the original string."
+  (interactive)
+  (save-mark-and-excursion
+    (paredit-backward-up)
+    (lexical-let* ((orig (current-buffer))
+                   (start (point))
+                   (_ (paredit-forward))
+                   (end (point))
+                   (contents (buffer-substring-no-properties (1+ start) (1- end))))
+      (lexical-let* ((new-buffer (switch-to-buffer (make-temp-name "clojure-string")))))
+      (local-set-key (kbd "C-c C-c") (lambda ()
+                                       (interactive)
+                                       (save-mark-and-excursion
+                                         (lexical-let* ((contents (buffer-substring-no-properties
+                                                                   (point-min)
+                                                                   (point-max))))
+                                           (switch-to-buffer orig)
+                                           (kill-region (1+ start) (1- end))
+                                           (goto-char (1+ start))
+                                           (insert contents)))))
+      (insert contents))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; inferior-lisp
