@@ -2220,6 +2220,12 @@ buffer, respectively."
     (when style
       (setq sql-eval-mode-style (intern-soft style)))))
 
+(defun org-babel-execute:sql (body params)
+  "Execute SQL. This function is called by `org-babel-execute-src-block`."
+  (with-temp-buffer
+    (insert body)
+    (sql-eval-buffer-subset (alist-get :eval-buffer params) (point-min) (point-max))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
