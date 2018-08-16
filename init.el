@@ -2652,149 +2652,29 @@ In ~%s~:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Modified from org-clubhouse.el. https://github.com/urbint/org-clubhouse
-
 (use-package dash
   :ensure t)
 
 (use-package dash-functional
   :ensure t)
 
-(require 'cl-lib)
+(use-package clubhouse-api
+  :config
+  (setq clubhouse-api-team-name "adzerk")
+  (setq clubhouse-api-default-project "Management")
+  (setq clubhouse-api-auth-token-path "~/.adzerk-clubhouse-token-default.asc")
+  (add-hook 'clubhouse-api-story-edit-minor-mode-hook
+            (lambda ()
+              (visual-line-mode 1))))
 
-(defun ->list (vec) (append vec nil))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Simple line references
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar clubhouse-api-team-name "adzerk")
-
-(defvar clubhouse-api-default-project "Management")
-
-(defvar clubhouse-api-auth-token-path "~/.adzerk-clubhouse-token-default.asc")
-
-(defvar clubhouse-api-auth-token nil)
-
-(defun decrypt-file-contents (path)
-  "Returns the contents of file at `path`, gpg-decrypted."
-  (save-mark-and-excursion
-    (lexical-let ((temp-file (make-temp-file "decrypt-file-contents")))
-      (message temp-file)
-      (unwind-protect
-          (progn
-            (epa-decrypt-file path temp-file)
-            (with-temp-buffer
-              (insert-file-contents temp-file)
-              (buffer-string)))
-        (delete-file temp-file)))))
-
-(defun cached-clubhouse-api-auth-token ()
-  "Returns the Clubhouse API auth token. Caches the result."
-  (or clubhouse-api-auth-token
-      (setq clubhouse-api-auth-token (decrypt-file-contents clubhouse-api-auth-token-path))))
-
-(defvar clubhouse-api-base-url* "https://api.clubhouse.io/api/v2")
-
-(defun clubhouse-api-auth-url (url &optional params)
- (concat url
-         "?"
-         (url-build-query-string
-          (cons `("token" ,(cached-clubhouse-api-auth-token)) params))))
-
-(defun clubhouse-api-baseify-url (url)
- (if (s-starts-with? clubhouse-api-base-url* url) url
-   (concat clubhouse-api-base-url*
-           (if (s-starts-with? "/" url) url
-             (concat "/" url)))))
-
-(cl-defun clubhouse-api-request (method path &key data (params '()))
-  (message "%s %s %s" method path (prin1-to-string data))
-  (let* ((url-request-method method)
-         (url-request-extra-headers
-          '(("Content-Type" . "application/json")))
-         (url-request-data data)
-         (buf))
-
-    (setq url (-> path
-                  (clubhouse-api-baseify-url)
-                  (clubhouse-api-auth-url params)))
-
-    (setq buf (url-retrieve-synchronously url))
-
-    (with-current-buffer buf
-      (goto-char url-http-end-of-headers)
-      (prog1 (json-read) (kill-buffer)))))
-
-(cl-defun to-id-name-pairs
-    (seq &optional (id-attr 'id) (name-attr 'name))
-  (->> seq
-       (->list)
-       (-map (lambda (resource)
-          (cons (alist-get id-attr   resource)
-                (alist-get name-attr resource))))))
-
-(cl-defun clubhouse-api-fetch-as-id-name-pairs
-    (resource &optional
-              (id-attr 'id)
-              (name-attr 'name))
-  "Returns the given resource from clubhouse as (id . name) pairs"
-  (let ((resp-json (clubhouse-api-request "GET" resource)))
-    (-> resp-json
-        (->list)
-        (reject-archived)
-        (to-id-name-pairs id-attr name-attr))))
-
-(defun clubhouse-api-projects ()
-  (clubhouse-api-fetch-as-id-name-pairs "projects"))
-
-;; This probably needs to change to something more like org-clubhouse-stories-in-project
-(defun clubhouse-api-stories (project-id)
-  (clubhouse-api-fetch-as-id-name-pairs (format "projects/%d/stories" project-id)))
-
-(defun clubhouse-api-pair-name (x)
-  (cdr x))
-
-(defun clubhouse-api-pair-id (x)
-  (car x))
-
-(defun clubhouse-api-find-pair-by-name (name pairs)
-  (-first (lambda (pair) (string= (clubhouse-api-pair-name pair) name))
-          pairs))
-
-(defun clubhouse-api-prompt-for-project ()
-  "Returns an (id . name) pair for a project selected by the user."
-  (lexical-let* ((projects (clubhouse-api-projects))
-                 (project-name (completing-read "Select a project: "
-                                                (-map #'clubhouse-api-pair-name projects)
-                                                nil
-                                                t
-                                                nil
-                                                nil
-                                                clubhouse-api-default-project)))
-    (clubhouse-api-find-pair-by-name project-name projects)))
-
-
-(defun clubhouse-api-prompt-for-story (&optional project-id)
-  "Returns an (id . name) pair for a story selected by the user."
-  (lexical-let* ((project-id (or project-id (clubhouse-api-pair-id (clubhouse-api-prompt-for-project))))
-                 (stories (clubhouse-api-stories project-id))
-                 (story-name (->> stories
-                                  (-map #'clubhouse-api-pair-name)
-                                  (completing-read "Select a story: "))))
-    (clubhouse-api-find-pair-by-name story-name stories)))
-
-(defun clubhouse-api-edit-story ()
-  "Prompts for a story, then pops up a buffer with its description ready for editing."
-  (interactive)
-  (lexical-let* ((story-id (clubhouse-api-pair-id (clubhouse-api-prompt-for-story)))
-                 (story (clubhouse-api-request "GET" (format "stories/%d" story-id))))
-    (pop-to-buffer (format "Clubhouse Story %d: %s" story-id (alist-get 'name story)))
-    (lexical-let* ((modified? (buffer-modified-p))
-                   (confirmed? (or (not modified?)
-                                   (yes-or-no-p "Buffer has been modified. Changes will be lost. Proceed anyway? "))))
-      (when confirmed?
-        (erase-buffer)
-        (insert (alist-get 'description story))
-        (set-buffer-modified-p nil)
-        (markdown-mode)
-        (visual-line-mode 1)))))
+(defun save-line-reference ()
+  "Saves a reference to the current line (like `foo.clj(23)` to the kill ring.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
