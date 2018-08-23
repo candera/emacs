@@ -2079,9 +2079,12 @@ back to the original string."
 
 (defun sql-eval-prep-input (sql)
   "Modifies the given SQL as appropriate for the current eval style."
-  (if (eq sql-eval-mode-style :dosql)
-      (sql-to-single-line sql)
-    sql))
+  (concat "/* "
+          (current-time-string)
+          " */ "
+          (if (eq sql-eval-mode-style :dosql)
+              (sql-to-single-line sql)
+            sql)))
 
 (defun sql-eval-buffer-subset (buf beg end)
   "Send the text in the buffer from `beg` to `end` to SQL eval buffer `buf`"
@@ -2224,6 +2227,7 @@ buffer, respectively."
   "Execute SQL. This function is called by `org-babel-execute-src-block`."
   (with-temp-buffer
     (insert body)
+    (shell-execute )
     (sql-eval-buffer-subset (alist-get :eval-buffer params) (point-min) (point-max))))
 
 
