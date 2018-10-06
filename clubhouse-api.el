@@ -140,6 +140,24 @@ of dotted pairs (an alist)."
   (setq-local clubhouse-api-last-project-list
               (clubhouse-api-fetch-as-id-name-pairs "projects")))
 
+(defun clubhouse-api-project-list ()
+  "Returns the list of projects from the cache, or retrieves it if necessary."
+  (or clubhouse-api-last-project-list
+      (clubhouse-api-projects)))
+
+;; TODO: Replace this with proper caching
+(defvar-local clubhouse-api-last-epic-list nil
+  "Returns the result of the last call to `clubhouse-api-epics`")
+
+(defun clubhouse-api-epics ()
+  (setq-local clubhouse-api-last-epic-list
+              (clubhouse-api-fetch-as-id-name-pairs "epics")))
+
+(defun clubhouse-api-epic-list ()
+  "Returns the list of epics from the cache, or retrieves it if necessary."
+  (or clubhouse-api-last-epic-list
+      (clubhouse-api-epics)))
+
 (defun clubhouse-api-project-stories (project-id)
   (clubhouse-api-fetch-as-id-name-pairs (format "projects/%d/stories" project-id)))
 
@@ -184,7 +202,7 @@ of dotted pairs (an alist)."
 
 (defun clubhouse-api-prompt-for-project ()
   "Returns an (id . name) pair for a project selected by the user."
-  (lexical-let* ((projects (clubhouse-api-projects))
+  (lexical-let* ((projects (clubhouse-api-project-list))
                  (project-name (completing-read "Select a project: "
                                                 (-map #'clubhouse-api-pair-name projects)
                                                 nil
@@ -193,6 +211,17 @@ of dotted pairs (an alist)."
                                                 nil
                                                 clubhouse-api-default-project)))
     (clubhouse-api-find-pair-by-name project-name projects)))
+
+(defun clubhouse-api-prompt-for-epic ()
+  "Returns an (id . name) pair for an epic selected by the user."
+  (lexical-let* ((epics (clubhouse-api-epics))
+                 (epic-name (completing-read "Select an epic: "
+                                             (-map #'clubhouse-api-pair-name epics)
+                                             nil
+                                             t
+                                             nil
+                                             nil)))
+    (clubhouse-api-find-pair-by-name epic-name epics)))
 
 (defun clubhouse-api-prompt-for-story (&optional project-id)
   "Returns an (id . name) pair for a story selected by the user."
@@ -244,12 +273,20 @@ of dotted pairs (an alist)."
                                 project-id
                                 (clubhouse-api-pair-name
                                  (clubhouse-api-find-pair-by-id project-id
-                                                                clubhouse-api-last-project-list)))))
+                                                                (clubhouse-api-project-list))))))
     (org-set-property "StoryType" (alist-get 'story_type story))
     (org-set-property "Estimate" (lexical-let ((estimate (alist-get 'estimate story)))
                                    (if estimate
                                        (number-to-string estimate)
                                      "")))
+    (org-set-property "Epic" (lexical-let ((epic-id (alist-get 'epic_id story)))
+                               (if epic-id
+                                   (format "%d: %s"
+                                           epic-id
+                                           (clubhouse-api-pair-name
+                                            (clubhouse-api-find-pair-by-id epic-id
+                                                                           (clubhouse-api-epic-list))))
+                                 "")))
     (org-set-property "State" (->> story
                                    (alist-get 'workflow_state_id)
                                    clubhouse-api-lookup-workflow-state
@@ -285,7 +322,7 @@ of dotted pairs (an alist)."
                  ;; Changing the major mode blows away buffer locals,
                  ;; so we preseve this one
                  (last-projects (or clubhouse-api-last-project-list
-                                    (clubhouse-api-projects))))
+                                    (clubhouse-api-project-list))))
     (pop-to-buffer (format "Clubhouse Story %d: %s" story-id story-name))
     (org-mode)
     (setq-local clubhouse-api-last-project-list last-projects)
@@ -312,10 +349,14 @@ description ready for editing."
   (lexical-let* ((project (clubhouse-api-prompt-for-project))
                  (story-type (clubhouse-api-prompt-for-story-type))
                  (story-name (clubhouse-api-prompt-for-story-name))
+                 (epic (clubhouse-api-prompt-for-epic))
+                 (estimate (read-number "Estimate: "))
                  (created-story (clubhouse-api-create-story-op
                                  (clubhouse-api-pair-id project)
                                  story-name
-                                 :story_type story-type)))
+                                 :story_type story-type
+                                 :estimate estimate
+                                 :epic_id (clubhouse-api-pair-id epic))))
     (message "Story %d created" (alist-get 'id created-story))
     (clubhouse-api-edit-story* created-story)))
 
@@ -420,7 +461,7 @@ containing `stories`."
                              (map (make-sparse-keymap))
                              (open-story #'(lambda ()
                                              (interactive)
-                                             (clubhouse-api-edit-story* (clubhouse-api-get-story (alist-get 'id story))))))
+                                             (clubhouse-api-edit-story* (clubhouse-api-get-story-op (alist-get 'id story))))))
                 (define-key map (kbd "C-c C-o") open-story)
                 (define-key map (kbd "RET") open-story)
                 (define-key map (kbd "<mouse-2>") open-story)
@@ -460,6 +501,7 @@ containing `stories`."
   :keymap clubhouse-api-story-edit-minor-mode-map
   ;; Because it's a global prefix, we have to set it locally rather
   ;; than putting it in the mode map
+  (use-local-map (copy-keymap org-mode-map))
   (local-set-key (kbd "C-c C-c") 'clubhouse-api-save-story)
   (local-set-key (kbd "C-x C-s") 'clubhouse-api-save-story)
   (local-set-key (kbd "C-c C-r") 'clubhouse-api-refresh-story))
