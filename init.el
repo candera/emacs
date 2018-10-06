@@ -19,7 +19,7 @@
                                 smex ido-vertical-mode gherkin-mode
                                 command-log-mode auto-complete
                                 expand-region undo-tree haml-mode
-                                csv-mode markdown-mode arduino-mode
+                                csv-mode arduino-mode
                                 inf-clojure csharp-mode yaml-mode paredit
                                 paganini-theme))
   (unless (package-installed-p package)
@@ -1487,10 +1487,13 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(autoload 'markdown-mode "markdown-mode.el"
-  "Major mode for editing Markdown files" t)
-(setq auto-mode-alist
-      (cons '("\\.md" . markdown-mode) auto-mode-alist))
+(use-package markdown-mode
+  :ensure t
+  :mode "\\.md"
+  :config
+  (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
