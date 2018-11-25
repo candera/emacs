@@ -2703,6 +2703,18 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 (defun save-line-reference ()
   "Saves a reference to the current line (like `foo.clj(23)` to the kill ring.")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; git-link: link to a line on GitHub
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package git-link
+  :ensure t
+  :init
+  (setq git-link-use-commit t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
