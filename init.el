@@ -2617,47 +2617,52 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 ;; (use-package interleave
 ;;   :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Capture snippet
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Capture snippet
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Credit http://ul.io/nb/2018/04/30/better-code-snippets-with-org-capture/
+;; ;; Credit http://ul.io/nb/2018/04/30/better-code-snippets-with-org-capture/
 
-(which-function-mode 1)
+;; Unfortunately which-function-mode has a bug wherein
+;; `which-func-update` will totally bork exiting an ediff mode,
+;; forever displaying "selecting deleted buffer" and making Emacs
+;; impossible to use.
 
-(defun nb/org-capture-get-src-block-string (major-mode)
-  "Given a major mode symbol, return the associated org-src block
-string that will enable syntax highlighting for that language
+;; (which-function-mode 1)
 
-E.g. tuareg-mode will return 'ocaml', python-mode 'python', etc..."
+;; (defun nb/org-capture-get-src-block-string (major-mode)
+;;   "Given a major mode symbol, return the associated org-src block
+;; string that will enable syntax highlighting for that language
 
-  (let ((mm (intern (replace-regexp-in-string "-mode" "" (format "%s" major-mode)))))
-    (or (car (rassoc mm org-src-lang-modes)) (format "%s" mm))))
+;; E.g. tuareg-mode will return 'ocaml', python-mode 'python', etc..."
 
-(defun nb/org-capture-region ()
-  (interactive)
-  (let ((code-snippet (buffer-substring-no-properties (mark) (- (point) 1)))
-        (func-name (which-function))
-        (file-name (buffer-file-name))
-        (line-number (line-number-at-pos (region-beginning)))
-        (org-src-mode (nb/org-capture-get-src-block-string major-mode)))
-    (kill-new (format
-               "file:%s::%s
-In ~%s~:
-#+BEGIN_SRC %s
-%s
-#+END_SRC"
-               file-name
-               line-number
-               func-name
-               org-src-mode
-               code-snippet))))
+;;   (let ((mm (intern (replace-regexp-in-string "-mode" "" (format "%s" major-mode)))))
+;;     (or (car (rassoc mm org-src-lang-modes)) (format "%s" mm))))
 
-;; ;; Capture Template
-;; ("s" "code snippet" entry (file ,(my/org-dir-file "snippets.org"))
-;;  "* %?\n%(my/org-capture-code-snippet \"%F\")")
+;; (defun nb/org-capture-region ()
+;;   (interactive)
+;;   (let ((code-snippet (buffer-substring-no-properties (mark) (- (point) 1)))
+;;         (func-name (which-function))
+;;         (file-name (buffer-file-name))
+;;         (line-number (line-number-at-pos (region-beginning)))
+;;         (org-src-mode (nb/org-capture-get-src-block-string major-mode)))
+;;     (kill-new (format
+;;                "file:%s::%s
+;; In ~%s~:
+;; #+BEGIN_SRC %s
+;; %s
+;; #+END_SRC"
+;;                file-name
+;;                line-number
+;;                func-name
+;;                org-src-mode
+;;                code-snippet))))
+
+;; ;; ;; Capture Template
+;; ;; ("s" "code snippet" entry (file ,(my/org-dir-file "snippets.org"))
+;; ;;  "* %?\n%(my/org-capture-code-snippet \"%F\")")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
