@@ -2,6 +2,10 @@
   (if (file-exists-p path)
       (load-file path)))
 
+(defmacro comment (&rest body)
+       "Comment out one or more s-expressions."
+         nil)
+
 ;; Add the following to your init file to have packages installed by
 ;; Homebrew added to your load-path:
 (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
