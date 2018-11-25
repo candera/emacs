@@ -2603,7 +2603,8 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package web-mode
-  :ensure t)
+  :ensure t
+  :mode "\\.spark\\'")
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
