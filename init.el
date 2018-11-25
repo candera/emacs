@@ -551,14 +551,14 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   (interactive)
   (modify-frame-parameters
    nil
-   '( (font . "-outline-Courier New-bold-r-normal-normal-19-142-96-96-c-110-iso10646-1"))))
+   '( (font . "-outline-Courier-bold-r-normal-normal-19-142-96-96-c-110-iso10646-1"))))
 
 (defun set-small-font ()
   "sets the font to something readable from more than 3 inches away"
   (interactive)
   (modify-frame-parameters
    nil
-   '( (font . "-outline-Courier New-bold-r-normal-normal-12-142-96-96-c-110-iso10646-1"))))
+   '( (font . "-outline-Courier-bold-r-normal-normal-12-142-96-96-c-110-iso10646-1"))))
 
 (defun set-default-font-size (height)
   "Sets the default font size to `height`."
