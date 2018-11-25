@@ -175,16 +175,17 @@ of dotted pairs (an alist)."
       (setq-local clubhouse-api-workflow-cache
                   (->list (clubhouse-api-request "GET" "workflows")))))
 
-(defun clubhouse-api-lookup-workflow (workflow-id)
-  "Returns the workflow state given its ID."
-  (->> (clubhouse-api-workflows)
-       (-first (lambda (wf) (= workflow-id (alist-get 'id wf))))))
-
 (defun clubhouse-api-lookup-workflow-state (workflow-state-id)
   "Returns the workflow state given its ID."
   (->> (clubhouse-api-workflows)
        (-mapcat (lambda (wf) (->list (alist-get 'states wf))))
        (-first (lambda (state) (= workflow-state-id (alist-get 'id state))))))
+
+(defun clubhouse-api-lookup-workflow-state-name (workflow-state-name)
+  "Returns the workflow state given its name."
+  (->> (clubhouse-api-workflows)
+       (-mapcat (lambda (wf) (->list (alist-get 'states wf))))
+       (-first (lambda (state) (string= workflow-state-name (alist-get 'name state))))))
 
 (defun clubhouse-api-pair-name (x)
   (cdr x))
@@ -216,9 +217,9 @@ of dotted pairs (an alist)."
   "Returns an (id . name) pair for an epic selected by the user."
   (lexical-let* ((epics (clubhouse-api-epics))
                  (epic-name (completing-read "Select an epic: "
-                                             (-map #'clubhouse-api-pair-name epics)
+                                             (-insert-at 0 "[None]" (-map #'clubhouse-api-pair-name epics))
                                              nil
-                                             t
+                                             nil
                                              nil
                                              nil)))
     (clubhouse-api-find-pair-by-name epic-name epics)))
@@ -423,7 +424,9 @@ description ready for editing."
                                      :name (clubhouse-api-story-edit-get-story-name)
                                      :estimate (lexical-let ((estimate (clubhouse-api-story-edit-get-header-value "Estimate")))
                                                  (when estimate
-                                                   (string-to-number estimate))))))
+                                                   (string-to-number estimate)))
+                                     :workflow_state_id (lexical-let ((workflow-state-name (clubhouse-api-story-edit-get-header-value "State")))
+                                                          (alist-get 'id (clubhouse-api-lookup-workflow-state-name workflow-state-name))))))
         (clubhouse-api-update-story-properties updated-story)
         (set-buffer-modified-p nil)
         (message "Story successfully updated.")))))
