@@ -2715,6 +2715,32 @@ https://github.com/jaypei/emacs-neotree/pull/110"
   (setq git-link-use-commit t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; visible-mark: make mark visible in buffers
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(comment
+ (use-package visible-mark
+   :ensure t
+   :init
+   (defface visible-mark-active ;; put this before (require 'visible-mark)
+     '((((type tty) (class mono)))
+       (t (:box "magenta"))) "")
+   (defface custom-visible-mark-face1
+     '((((type tty) (class mono)))
+       (t (:box "light red")))
+     "Example face which can be customized and added to subsequent face lists.")
+   (defface custom-visible-mark-face2
+     '((((type tty) (class mono)))
+       (t (:box "light green")))
+     "Example face which can be customized and added to subsequent face lists.")
+
+   :config
+   (global-visible-mark-mode 1)
+   (setq visible-mark-max 2)
+   (setq visible-mark-faces `(custom-visible-mark-face1 custom-visible-mark-face2))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
