@@ -1977,7 +1977,10 @@ back to the original string."
                              (do-watch . '1)
                              (case-tpl . '1)
                              (cond-tpl . 'defun)
-                             (formula-of . 'defun)))
+                             (formula-of . 'defun)
+                             (GET . 'defun)
+                             (PUT . 'defun)
+                             (POST . 'defun)))
                (put-clojure-indent (car pair)
                                    (car (last pair))))))
 
