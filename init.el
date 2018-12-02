@@ -2499,7 +2499,6 @@ current buffer.  Intended for use with svg files."
 (el-get-bundle kriyative/highlight-focus)
 
 (use-package highlight-focus
-  :load-path "highlight-focus"
   :config
   ;; set the background of the mode-line
   (setq highlight-focus:face 'default
