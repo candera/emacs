@@ -2762,6 +2762,18 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 
 ;; TODO: disable projectile in tramp buffers if things are still slow. Somehow.
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Paradox: (hopefully) better package UI
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package paradox
+  :ensure t
+
+  :config
+  (paradox-enable))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
