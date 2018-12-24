@@ -1670,6 +1670,9 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package ivy
+  :ensure t)
+
 (use-package counsel
   :ensure t)
 
@@ -1710,7 +1713,11 @@ back to the original string."
   (projectile-mode 1)
   (projectile-load-known-projects)
   (setq projectile-tags-command "/usr/local/bin/ctags -Re -f \"%s\" %s")
-  (setq projectile-switch-project-action 'projectile-commander))
+  (setq projectile-switch-project-action 'projectile-commander)
+  (setq projectile-current-project-on-switch 'keep)
+
+  :init
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
 
 ;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
 ;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
@@ -2739,6 +2746,21 @@ https://github.com/jaypei/emacs-neotree/pull/110"
    (global-visible-mark-mode 1)
    (setq visible-mark-max 2)
    (setq visible-mark-faces `(custom-visible-mark-face1 custom-visible-mark-face2))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Make Tramp faster
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq remote-file-name-inhibit-cache nil)
+(setq vc-ignore-dir-regexp
+      (format "%s\\|%s"
+                    vc-ignore-dir-regexp
+                    tramp-file-name-regexp))
+(setq tramp-verbose 1)
+
+;; TODO: disable projectile in tramp buffers if things are still slow. Somehow.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
