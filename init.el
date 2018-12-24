@@ -2758,7 +2758,7 @@ https://github.com/jaypei/emacs-neotree/pull/110"
       (format "%s\\|%s"
                     vc-ignore-dir-regexp
                     tramp-file-name-regexp))
-(setq tramp-verbose 1)
+(setq tramp-verbose 3)
 
 ;; TODO: disable projectile in tramp buffers if things are still slow. Somehow.
 
