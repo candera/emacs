@@ -15,19 +15,9 @@
 (setq package-archives
  (append package-archives
          '(("melpa" . "http://melpa.org/packages/")
-           ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")
+           ("melpa-stable" . "http://stable.melpa.org/packages/")
            ("org" . "http://orgmode.org/elpa/"))))
 (package-initialize)
-
-(dolist (package '(clojure-mode magit cider
-                                smex ido-vertical-mode gherkin-mode
-                                command-log-mode auto-complete
-                                expand-region undo-tree haml-mode
-                                csv-mode arduino-mode
-                                inf-clojure csharp-mode yaml-mode paredit
-                                paganini-theme))
-  (unless (package-installed-p package)
-    (package-install package)))
 
 ;; This would be great if it didn't just cause cider to completely disappear
 ;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
@@ -626,6 +616,9 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; ;; Make ido stop prompting me about whether I want to create a new buffer
 ;; (setq ido-create-new-buffer 'always)
 
+(use-package ido-vertical-mode
+  :ensure t)
+
 (require 'ido-vertical-mode)
 (ido-mode 1)
 (ido-vertical-mode 1)
@@ -673,8 +666,10 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'yaml-mode)
-(add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+(use-package yaml-mode
+  :ensure t
+  :mode "\\.yml$")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -710,13 +705,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(autoload 'paredit-mode "paredit"
-  "Minor mode for pseudo-structurally editing Lisp code."
-  t)
-(add-hook 'lisp-mode-hook '(lambda () (paredit-mode +1)))
-(add-hook 'emacs-lisp-mode-hook '(lambda () (paredit-mode +1)))
-
-(show-paren-mode t)
+(use-package paredit
+  :ensure t
+  :hook (lisp-mode-hook . (lambda () (paredit-mode +1)))
+  :hook (emacs-lisp-mode-hook . (lambda () (paredit-mode +1)))
+  :config
+  (show-paren-mode t))
 
 ;; (load "paredit.el")
 
@@ -1505,6 +1499,9 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package magit
+  :ensure t)
+
 (require 'magit)
 
 (with-eval-after-load 'info
@@ -1655,14 +1652,14 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'smex)
-(smex-initialize)
-
-;; (global-set-key (kbd "M-x") 'smex)
-;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-;; This is your old M-x.
-(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
-
+(use-package smex
+  :ensure t
+  :config
+  (smex-initialize)
+  ;; (global-set-key (kbd "M-x") 'smex)
+  ;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+  ;; This is your old M-x.
+  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1729,8 +1726,10 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'expand-region)
-(global-set-key (kbd "C-=") 'er/expand-region)
+(use-package expand-region
+  :ensure t
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1739,19 +1738,21 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'auto-complete-config)
-(ac-config-default)
+(use-package auto-complete
+  :ensure t
+  :config
+  (ac-config-default)
+  ;; Turn off automatic start of auto-complete
+  (setq ac-auto-start nil)
 
-;; Turn off automatic start of auto-complete
-(setq ac-auto-start nil)
-
-(add-hook 'auto-complete-mode-hook
+  (add-hook 'auto-complete-mode-hook
           (lambda ()
             (local-set-key (kbd "M-/") 'auto-complete)
             (define-key ac-completing-map (kbd "C-n") 'ac-next)
             (define-key ac-completing-map (kbd "C-p") 'ac-previous)
             (define-key ac-completing-map (kbd "C-g") 'ac-stop)
-            (define-key ac-completing-map (kbd "ESC") 'ac-stop)))
+            (define-key ac-completing-map (kbd "ESC") 'ac-stop))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1760,7 +1761,8 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'command-log-mode)
+(use-package command-log-mode
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1769,8 +1771,10 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'undo-tree)
-(global-undo-tree-mode 1)
+(use-package undo-tree
+  :ensure t
+  :config
+  (global-undo-tree-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1791,12 +1795,13 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'haml-mode)
-
-(add-hook 'haml-mode-hook
-          (lambda ()
-            (setq indent-tabs-mode nil)
-            (define-key haml-mode-map "\C-m" 'newline-and-indent)))
+(use-package haml-mode
+  :ensure t
+  :config
+  (add-hook 'haml-mode-hook
+            (lambda ()
+              (setq indent-tabs-mode nil)
+              (define-key haml-mode-map "\C-m" 'newline-and-indent))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1825,15 +1830,18 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
-(autoload 'csv-mode "csv-mode"
-  "Major mode for editing comma-separated value files." t)
+(use-package csv-mode
+  :ensure t
+  :mode "\\.[Cc][Ss][Vv]\\'")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; inf-clojure
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package inf-clojure
+  :ensure t)
 
 (add-hook 'inf-clojure-mode-hook
           (lambda ()
@@ -2040,17 +2048,18 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Lets me use tags to navigate csharp files
-(require 'csharp-mode)
-(require 'semantic/symref/grep)
-(setq semantic-symref-filepattern-alist
-      (append semantic-symref-filepattern-alist
-              '((csharp-mode "*.cs" "*.CS"))))
+(use-package csharp-mode
+  :ensure t
+  :config
+  ;; Lets me use tags to navigate csharp files
+  (require 'semantic/symref/grep)
+  (setq semantic-symref-filepattern-alist
+        (append semantic-symref-filepattern-alist
+                '((csharp-mode "*.cs" "*.CS"))))
 
-(add-hook 'csharp-mode-hook
-          (lambda ()
-            ;; (display-line-numbers-mode 1)
-            (setq c-basic-offset 2)))
+  :hook (csharp-mode-hook . (lambda ()
+                              ;; (display-line-numbers-mode 1)
+                              (setq c-basic-offset 2))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; java-mode
@@ -2676,8 +2685,11 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(load-theme 'paganini t)
-(set-default-font-size 180)
+(use-package paganini-theme
+  :ensure t
+  :config
+  (load-theme 'paganini t)
+  (set-default-font-size 180))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
