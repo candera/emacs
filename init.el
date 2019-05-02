@@ -1859,12 +1859,14 @@ back to the original string."
   defaults to fill in correctly, use a .dir-locals.el that looks
   like this:
 
-((clojure-mode
-  (inf-clojure-buffer . \"requestinator-repl\")
-  (use-inf-clojure-program . \"lein repl\")
-  (use-inf-clojure . t)))
+  ((clojure-mode
+    (inf-clojure-buffer . \"requestinator-repl\")
+    (use-inf-clojure-program . \"lein repl\")
+    (use-inf-clojure . t)))
 "
-  (interactive (lexical-let* ((dir (read-directory-name "Project directory: "
+  (interactive (lexical-let* ((program (or use-inf-clojure-program "clojure"))
+                              (buffer (or inf-clojure-buffer "*inf-clojure*"))
+                              (dir (read-directory-name "Project directory: "
                                                         (locate-dominating-file
                                                           default-directory
                                                           ".git")
@@ -1872,19 +1874,8 @@ back to the original string."
                                                         t))
                               (_   (switch-to-buffer-other-window "*inf-clojure*"))
                               (_   (cd dir))
-                              (_   (hack-dir-local-variables-non-file-buffer))
-                              (dir-vars (rest
-                                         (assoc 'clojure-mode
-                                                (assoc-default dir
-                                                               dir-locals-class-alist
-                                                               #'(lambda (i k)
-                                                                   (file-equal-p k (symbol-name i)))))))
-                              (cmd (read-string "Run Clojure: "
-                                                (assoc-default 'use-inf-clojure-program
-                                                               dir-vars)))
-                              (name (read-buffer "REPL buffer name: "
-                                                 (assoc-default 'inf-clojure-buffer
-                                                                dir-vars))))
+                              (cmd (read-string "Run Clojure: " program))
+                              (name (read-buffer "REPL buffer name: " buffer)))
                  (when (get-buffer name)
                     (when (y-or-n-p "REPL buffer exists. Delete existing?")
                        (kill-buffer name)))
@@ -1969,6 +1960,8 @@ back to the original string."
 (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq scroll-step 1) ;; keyboard scroll one line at a time
+(setq compilation-scroll-output 'first-error) ;; Can also be `t` for
+                                              ;; scrolling to the end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2141,7 +2134,7 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                 sql-eval-mode-shell-buffer
-              (read-buffer "Buffer: " "staging" t))))
+              (read-buffer "Buffer: " "sql-qa" t))))
     (if (use-region-p)
         (sql-eval-buffer-subset buf
                                 (region-beginning)
@@ -2155,7 +2148,7 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                  sql-eval-mode-shell-buffer
-               (read-buffer "Buffer: " "staging" t))))
+               (read-buffer "Buffer: " "sql-qa" t))))
     (save-excursion
       (save-match-data
         (lexical-let* ((p (point))
@@ -2205,12 +2198,15 @@ to `sql-eval-interpreter` for interpreter."
   (let* ((interpreter (if (null interpreter)
                           sql-eval-interpreter
                         (read-string "Interpreter: ")))
-         (name (or name (read-buffer "Buffer: " nil nil)))
-         (envs (or envs (read-string "Envs: ")))
+         (name (or name (read-buffer "Buffer (sql-qa): " "sql-qa")))
+         (zone (read-string "Zone (qa): " nil nil "qa"))
+         (deployment (read-string "Deployment (default): " nil nil "default"))
+         (user (read-string "User (prod-user): " nil nil "prod-user"))
          (process-connection-type nil)
          (temp-name (symbol-name (gensym)))
          (process (make-comint temp-name "bash" nil "-i"))
-         (starred-name (concat "*" temp-name "*")))
+         (starred-name (concat "*" temp-name "*"))
+         (temp-file (make-temp-file "encrypt" nil nil "throwaway")))
     (switch-to-buffer-other-window starred-name)
     (rename-buffer name)
     ;; Somehow inf-clojure is setting this variable in my SQL Eval
@@ -2220,10 +2216,19 @@ to `sql-eval-interpreter` for interpreter."
     ;; This is a hack to get gpg-agent to have the keys we need. I
     ;; haven't been able to figure out how to get zerkenv to do it
     ;; correctly on its own when run under emacs
-    ;; (epa-decrypt-file "~/.adzerk-aws-creds.asc" "/dev/null")
+    (epa-decrypt-file "~/dummy.asc" "/dev/null")
+    ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
+    (sleep-for 0.25)
     (process-send-string process "zerk\n")
-    (process-send-string process (concat  "zerkload " envs "\n"))
+    (sleep-for 0.25)
+    (process-send-string process (format "sql-env --zone %s --deployment-name %s %s\n"
+                                         zone
+                                         deployment
+                                         (if (string= "prod-user" user)
+                                             ""
+                                           (concat "--user " user))))
     ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
+    (sleep-for 0.25)
     (process-send-string process (concat interpreter "\n"))))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
@@ -2381,6 +2386,16 @@ current buffer.  Intended for use with svg files."
     (switch-to-buffer buffer-name)
     (image-mode)
     (other-window 1)))
+
+(dir-locals-set-class-variables
+ 'engineapi
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 51336")
+                  (inf-clojure-buffer . "engineapi-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/engineapi/" 'engineapi)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2772,6 +2787,19 @@ https://github.com/jaypei/emacs-neotree/pull/110"
                     tramp-file-name-regexp))
 (setq tramp-verbose 3)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; ediff
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package ediff
+  :custom
+  (ediff-window-setup-function 'ediff-setup-windows-plain) ; No separate frame
+  (ediff-diff-options "-w")
+  (ediff-split-window-function 'split-window-horizontally) ; Default to horizontal split
+  )
+
 ;; TODO: disable projectile in tramp buffers if things are still slow. Somehow.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2785,6 +2813,35 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 
   :config
   (paradox-enable))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; copy-as-format: copy regions of emacs buffers to the kill ring in
+;; various formats.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package copy-as-format
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; github-review: support for reviewing pull requests from within
+;; emacs.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package github-review
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; forge: pull request support for magit
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package forge
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
