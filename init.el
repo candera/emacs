@@ -1200,6 +1200,9 @@ always last."
 ;;(put-clojure-indent 'doseq> 1)          ; Like 'let'
 ;;(put-clojure-indent 'for> 1)            ; Like 'let'
 
+;; And for core.match
+(put-clojure-indent 'match 1) ; Like let
+
 ;; clojure-fill-docstring got changed rather radically in a newer
 ;; version of clojure-mode than the one I use. I prefer the one I
 ;; wrote, so I override it here. I also made a few changes, like
@@ -1840,8 +1843,13 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package inf-clojure
-  :ensure t)
+;; The mainline version has a bug (#152) where it collapses
+;; consecutive spaces. Although the bug itself bonkers, the maintainer
+;; is too busy to investigate fully to fix it. Easier just to use my
+;; own fork.
+(el-get-bundle candera/inf-clojure)
+
+(use-package inf-clojure)
 
 (add-hook 'inf-clojure-mode-hook
           (lambda ()
@@ -1905,13 +1913,15 @@ back to the original string."
 (define-key inf-clojure-mode-map (kbd "C-c C-c") 'comint-prevent-idiocy)
 (define-key inf-clojure-mode-map (kbd "C-c C-d") 'comint-prevent-idiocy)
 
-(defun inf-clojure-refresh ()
+(defun inf-clojure-refresh (start?)
   "Runs `(refresh)` in the attached REPL."
-  (interactive)
+  (interactive "P")
   (let ((cur (current-buffer)))
     (pop-to-buffer inf-clojure-buffer)
     (goto-char (point-max))
-    (insert "(require 'clojure.tools.namespace.repl) (if-let [r (resolve 'user/reset)] (r) (clojure.tools.namespace.repl/refresh))")
+    (insert (concat "(require 'clojure.tools.namespace.repl) (if-let [r (resolve 'user/reset)] (r) (clojure.tools.namespace.repl/refresh))"
+                    (when start?
+                      "(start)")))
     (comint-send-input)
     (pop-to-buffer cur)))
 
@@ -2396,6 +2406,16 @@ current buffer.  Intended for use with svg files."
 
 (dir-locals-set-directory-class
  "~/adzerk/engineapi/" 'engineapi)
+
+(dir-locals-set-class-variables
+ 'vmt
+ '((clojure-mode
+    (use-inf-clojure-program . "nc localhost 8728")
+    (inf-clojure-buffer . "vmt-repl")
+    (use-inf-clojure . t))))
+
+(dir-locals-set-directory-class
+ "~/projects/vmt/" 'vmt)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
