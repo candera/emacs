@@ -127,7 +127,7 @@
 
 (require 'uniquify)
 (setq
- uniquify-buffer-name-style 'post-forward
+ uniquify-buffer-name-style 'forward ;; 'post-forward
  uniquify-separator ":")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1290,6 +1290,9 @@ back to the original string."
                                            (goto-char (1+ start))
                                            (insert contents)))))
       (insert contents)
+      (save-mark-and-excursion
+        (mark-whole-buffer)
+        (replace-string "\\n" "\n"))
       (normal-mode))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2398,14 +2401,14 @@ current buffer.  Intended for use with svg files."
     (other-window 1)))
 
 (dir-locals-set-class-variables
- 'engineapi
+ 'pubconsumer
  '((clojure-mode .
                  ((use-inf-clojure-program . "nc localhost 51336")
-                  (inf-clojure-buffer . "engineapi-repl")
+                  (inf-clojure-buffer . "pubconsumer-repl")
                   (use-inf-clojure . t)))))
 
 (dir-locals-set-directory-class
- "~/adzerk/engineapi/" 'engineapi)
+ "~/adzerk/pubconsumer/" 'pubconsumer)
 
 (dir-locals-set-class-variables
  'vmt
@@ -2416,6 +2419,46 @@ current buffer.  Intended for use with svg files."
 
 (dir-locals-set-directory-class
  "~/projects/vmt/" 'vmt)
+
+(dir-locals-set-class-variables
+ 'vmtfx
+ '((clojure-mode
+    (use-inf-clojure-program . "nc localhost 51363")
+    (inf-clojure-buffer . "vmtfx-repl")
+    (use-inf-clojure . t))))
+
+(dir-locals-set-directory-class
+ "~/projects/vmtfx/" 'vmtfx)
+
+(dir-locals-set-class-variables
+ 'publisher
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 7590")
+                  (inf-clojure-buffer . "publisher-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/publisher/" 'publisher)
+
+(dir-locals-set-class-variables
+ 'api-proxy
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 5542")
+                  (inf-clojure-buffer . "api-proxy-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/api-proxy/" 'api-proxy)
+
+(dir-locals-set-class-variables
+ 'integration-tests
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 5272")
+                  (inf-clojure-buffer . "integration-tests-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/integration-tests/" 'integration-tests)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2862,6 +2905,141 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 
 (use-package forge
   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; multiple-cursors
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package multiple-cursors
+  :ensure t
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; ggtags
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package ggtags
+;;   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; ejc-sql
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Complexity alert! Requires nREPL, Cider, Lein....
+;; (use-package ejc-sql
+;;   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; camp-letterize
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; https://concordia.campintouch.com/v2/login/login.aspx?ReturnUrl=%2f
+
+(defun camp-letterize ()
+  "Formats a letter to the kids at camp in a way that's
+compatible with the Concordia web sysstem."
+  (interactive)
+  (beginning-of-buffer)
+  (search-forward "-----------")
+  (next-line)
+  (beginning-of-line)
+  (set-mark (point))
+  (search-forward "----------")
+  (beginning-of-line)
+  (lexical-let ((end-marker (point)))
+    (kill-ring-save (mark) (point))
+    (lexical-let ((buffer-name (format "camp-letter-%s.txt" (format-time-string "%F")))
+                  (line-count (count-lines (mark) (point)))
+                  (chunk-size 45))
+      (switch-to-buffer buffer-name)
+      (yank)
+      (beginning-of-buffer)
+      (lexical-let ((page-number 1))
+        (while (< (point) (point-max))
+          (ignore-errors
+            (next-line chunk-size)
+            (re-search-backward "^$")
+            (setq page-number (1+ page-number))
+            (insert (format "\n[Continued in part %d]\n\n[Continued from part %d]\n"
+                            page-number
+                            page-number)))))
+      (set-fill-column 10000)
+      (beginning-of-buffer)
+      (set-mark (point))
+      (end-of-buffer)
+      (fill-paragraph nil t)
+      (beginning-of-buffer)
+      (set-mark (point))
+      (end-of-buffer)
+      (kill-ring-save (mark) (point))
+      (message "Buffer saved to kill ring")
+      (browse-url "https://concordia.campintouch.com/Email07/"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Telega - Emacs Telegram client
+;;
+;; https://github.com/zevlg/telega.el
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (require 'cursor-sensor)
+;; (setq load-path (append '("~/projects/telega.el" load-path)))
+
+;; (require 'telega)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; vterm
+;; Terminal emulator for emacs via libvterm
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package vterm
+  :ensure t
+  :config
+  (make-variable-buffer-local 'global-hl-line-mode)
+  (add-hook 'vterm-mode-hook
+            (lambda ()
+              (setq global-hl-line-mode nil))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; gcode-mode
+;;
+;; http://pixpopuli.blogspot.com/2011/01/syntax-highlighting-for-cnc-g-code.html
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'generic-x)
+
+(define-generic-mode gcode-generic-mode
+  '(";" ("(" . ")"))
+  (apply 'append
+         (mapcar #'(lambda (s) (list (upcase s) (downcase s) (capitalize s)))
+                 '("sub" "endsub" "if" "do" "while" "endwhile" "call" "endif"
+                   "sqrt" "return" "mod" "eq" "ne" "gt" "ge" "lt" "le" "and"
+                   "or" "xor" "atan" "abs" "acos" "asin" "cos" "exp"
+                   "fix" "fup" "round" "ln" "sin" "tan" "repeat" "endrepeat")))
+  '(; ("\\(;.*\\)" (1 font-lock-comment-face))
+    ("\\(#<_?[A-Za-z0-9_]+>\\)" (1 font-lock-type-face))
+    ("\\([NnGgMmFfSsTtOo]\\)" (1 font-lock-function-name-face))
+    ("\\([XxYyZzAaBbCcUuVvWwIiJjKkPpQqRr]\\)" (1 font-lock-string-face))
+    ("\\([\-+]?[0-9]*\\.[0-9]+\\)" (1 font-lock-constant-face))
+    ("\\(#[0-9]+\\)" (1 font-lock-type-face))
+    ("\\([0-9]+\\)" (1 font-lock-constant-face)))
+  '("\\.ngc\\'" "\\.gcode\\'" )
+  nil
+  "Generic mode for g-code files.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

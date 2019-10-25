@@ -46,6 +46,11 @@
           (auto-fill-mode 1)
           (setq show-trailing-whitespace t))))))
 
+(defun find-random-log-file ()
+  (interactive)
+  (find-yesterday-log-file (random (days-between (concat (format-time-string "%F") "T00:00")
+                                                 "1993-07-10T00:00"))))
+
 ;; (defun days-ago (n)
 ;;   "Returns a value similar to current-time, but for n days ago"
 ;;   (interactive)
