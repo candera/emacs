@@ -45,8 +45,8 @@ if [ "$1" == "--with-initial-setup" ]; then
     fi
 
     echo '(load "~/.emacs.d/custom/init.el")' > ~/.emacs.d/init.el
+
+    emacs --eval '(package-install 'use-package)'
 fi
 
-pushd org-mode
-make
-popd
+

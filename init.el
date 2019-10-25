@@ -19,6 +19,9 @@
            ("org" . "http://orgmode.org/elpa/"))))
 (package-initialize)
 
+(use-package el-get
+  :ensure t)
+
 ;; This would be great if it didn't just cause cider to completely disappear
 ;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
 
@@ -1086,8 +1089,8 @@ always last."
 (require 'ob)
 (require 'ob-tangle)
 (require 'ob-clojure)
-(setq org-babel-clojure-backend 'cider)
-(require 'cider)
+;;(setq org-babel-clojure-backend 'cider)
+;;(require 'cider)
 
 ;; Don't make me confirm evaluation every single time
 (setq org-confirm-babel-evaluate nil)
@@ -1106,6 +1109,9 @@ always last."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Require clojure-mode to load and associate it to all .clj files.
+
+(use-package clojure-mode
+  :ensure t)
 
 (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
@@ -1153,7 +1159,8 @@ always last."
               (when use-inf-clojure
                 (inf-clojure-minor-mode 1)
                 (eldoc-mode 1)
-                (cider-mode 0)))
+                ;; (cider-mode 0)
+                ))
             nil
             t)
   ;; (highlight-parentheses-mode 1)
@@ -1325,28 +1332,28 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'cider)
+;; (require 'cider)
 
-;; Don't use on the Pi, due to excessive CPU
-(unless (string= "raspberrypi" system-name)
-  (add-hook 'cider-mode-hook
-            (lambda ()
-              (eldoc-mode)
-              (cider-eldoc-setup)
-              ;; Suppress some really stupid shit that cider is doing
-              ;; around background colors. I think it's assuming
-              ;; there's a theme. Or it could be the problem that when
-              ;; cider loads, the background color is still light.
-              ;; (setq cider-stacktrace-frames-background-color
-              ;;       (cider-scale-background-color))
-              )))
+;; ;; Don't use on the Pi, due to excessive CPU
+;; (unless (string= "raspberrypi" system-name)
+;;   (add-hook 'cider-mode-hook
+;;             (lambda ()
+;;               (eldoc-mode)
+;;               (cider-eldoc-setup)
+;;               ;; Suppress some really stupid shit that cider is doing
+;;               ;; around background colors. I think it's assuming
+;;               ;; there's a theme. Or it could be the problem that when
+;;               ;; cider loads, the background color is still light.
+;;               ;; (setq cider-stacktrace-frames-background-color
+;;               ;;       (cider-scale-background-color))
+;;               )))
 
-(add-hook 'cider-repl-mode-hook
-          (lambda ()
-            (paredit-mode 1)
-            ;; For some reason this isn't defined correctly
-            (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)
-            (define-key cider-repl-mode-map (kbd "}") #'paredit-close-curly)))
+;; (add-hook 'cider-repl-mode-hook
+;;           (lambda ()
+;;             (paredit-mode 1)
+;;             ;; For some reason this isn't defined correctly
+;;             (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)
+;;             (define-key cider-repl-mode-map (kbd "}") #'paredit-close-curly)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1635,6 +1642,9 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package helm-ag
+  :ensure t)
+
 ;; Even though it breaks sometimes, it's still better than counsel-ag
 ;; because it uses a separate buffer.
 (require 'helm-ag)
@@ -1826,6 +1836,9 @@ back to the original string."
 ;; gherkin-mode
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package gherkin-mode
+  :ensure t)
 
 (require 'gherkin-mode)
 (add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
