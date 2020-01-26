@@ -3054,6 +3054,51 @@ compatible with the Concordia web sysstem."
   nil
   "Generic mode for g-code files.")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; A better json-pretty-print
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun candera-json-pretty-print-buffer ()
+  "Pretty prints the entire buffer"
+  (interactive)
+  (shell-command-on-region (point-min) (point-max) "jq ." (current-buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; edit-region-in-other-buffer
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun edit-region-in-other-buffer (edit-mode)
+  "Opens a temporary buffer and populates it with the contents of
+the region. Hitting C-c C-c in that buffer will save it
+back to the original string."
+  (interactive "amode: ")
+  (save-mark-and-excursion
+    (lexical-let* ((orig (current-buffer))
+                   (start (region-beginning))
+                   (end (region-end))
+                   (contents (buffer-substring-no-properties start end)))
+      (switch-to-buffer (make-temp-name "edit-string"))
+      (eval (list edit-mode))
+      (use-local-map (if (current-local-map)
+                         (copy-keymap (current-local-map))
+                       (make-sparse-keymap)))
+      (local-set-key (kbd "C-c C-c") (lambda ()
+                                       (interactive)
+                                       (save-mark-and-excursion
+                                         (lexical-let* ((contents (buffer-substring-no-properties
+                                                                   (point-min)
+                                                                   (point-max))))
+                                           (switch-to-buffer orig)
+                                           (kill-region start end)
+                                           (goto-char start)
+                                           (insert contents)))))
+      (insert contents))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
