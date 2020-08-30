@@ -17,7 +17,8 @@
          '(("melpa" . "http://melpa.org/packages/")
            ("melpa-stable" . "http://stable.melpa.org/packages/")
            ("org" . "http://orgmode.org/elpa/"))))
-(package-initialize)
+(when (< emacs-major-version 27)
+  (package-initialize))
 
 (use-package el-get
   :ensure t)
@@ -1630,11 +1631,11 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package helm-projectile
-  :ensure t)
+;; (use-package helm-projectile
+;;   :ensure t)
 
-(require 'helm-projectile)
-(global-set-key (kbd "C-x M-f") 'helm-projectile-find-file)
+;; (require 'helm-projectile)
+;; (global-set-key (kbd "C-x M-f") 'helm-projectile-find-file)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1642,13 +1643,13 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package helm-ag
-  :ensure t)
+;; (use-package helm-ag
+;;   :ensure t)
 
-;; Even though it breaks sometimes, it's still better than counsel-ag
-;; because it uses a separate buffer.
-(require 'helm-ag)
-(global-set-key (kbd "C-x M-s") 'helm-do-ag-project-root)
+;; ;; Even though it breaks sometimes, it's still better than counsel-ag
+;; ;; because it uses a separate buffer.
+;; (require 'helm-ag)
+;; (global-set-key (kbd "C-x M-s") 'helm-do-ag-project-root)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1727,10 +1728,12 @@ back to the original string."
   (projectile-load-known-projects)
   (setq projectile-tags-command "/usr/local/bin/ctags -Re -f \"%s\" %s")
   (setq projectile-switch-project-action 'projectile-commander)
-  (setq projectile-current-project-on-switch 'keep)
+  (setq projectile-current-project-on-switch 'keep))
 
-  :init
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+(require 'projectile)
+
+(projectile-mode +1)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 
 ;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
 ;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
@@ -2160,7 +2163,7 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                 sql-eval-mode-shell-buffer
-              (read-buffer "Buffer: " "sql-qa" t))))
+              (read-buffer "Buffer: " "sql-mdev" t))))
     (if (use-region-p)
         (sql-eval-buffer-subset buf
                                 (region-beginning)
@@ -2174,7 +2177,7 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                  sql-eval-mode-shell-buffer
-               (read-buffer "Buffer: " "sql-qa" t))))
+               (read-buffer "Buffer: " "sql-mdev" t))))
     (save-excursion
       (save-match-data
         (lexical-let* ((p (point))
@@ -2224,8 +2227,8 @@ to `sql-eval-interpreter` for interpreter."
   (let* ((interpreter (if (null interpreter)
                           sql-eval-interpreter
                         (read-string "Interpreter: ")))
-         (name (or name (read-buffer "Buffer (sql-qa): " "sql-qa")))
-         (zone (read-string "Zone (qa): " nil nil "qa"))
+         (name (or name (read-buffer "Buffer (sql-mdev): " "sql-mdev")))
+         (zone (read-string "Zone (mdev): " nil nil "mdev"))
          (deployment (read-string "Deployment (default): " nil nil "default"))
          (user (read-string "User (prod-user): " nil nil "prod-user"))
          (process-connection-type nil)
@@ -2456,7 +2459,7 @@ current buffer.  Intended for use with svg files."
 (dir-locals-set-class-variables
  'api-proxy
  '((clojure-mode .
-                 ((use-inf-clojure-program . "nc localhost 5542")
+                 ((use-inf-clojure-program . "nc localhost 5555")
                   (inf-clojure-buffer . "api-proxy-repl")
                   (use-inf-clojure . t)))))
 
@@ -2571,7 +2574,9 @@ current buffer.  Intended for use with svg files."
 
 (defvar dock-mode-timer
   (when (or (string= system-name "valinor")
-            (string= system-name "valinor.local"))
+            (string= system-name "valinor.local")
+            (string= system-name "brightmoon")
+            (string= system-name "brightmoon.local"))
     (run-with-timer
      0
      5
@@ -2780,7 +2785,7 @@ https://github.com/jaypei/emacs-neotree/pull/110"
   :ensure t
   :config
   (load-theme 'paganini t)
-  (set-default-font-size 180))
+  (set-default-font-size 240))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3098,6 +3103,28 @@ back to the original string."
                                            (insert contents)))))
       (insert contents))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; lilypond-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq load-path (append '("/Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp/")
+                        load-path))
+;; Copied from /Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp/lilypond-init.el
+(autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
+(add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
+(add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
+(add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; hyperbole
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package hyperbole
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
