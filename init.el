@@ -2088,7 +2088,8 @@ back to the original string."
 (add-hook 'java-mode-hook (lambda ()
                             (setq c-basic-offset 2
                                   tab-width 2
-                                  indent-tabs-mode nil)))
+                                  indent-tabs-mode nil
+                                  c-default-style '((java-mode . "linux")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3017,13 +3018,13 @@ compatible with the Concordia web sysstem."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package vterm
-  :ensure t
-  :config
-  (make-variable-buffer-local 'global-hl-line-mode)
-  (add-hook 'vterm-mode-hook
-            (lambda ()
-              (setq global-hl-line-mode nil))))
+;; (use-package vterm
+;;   :ensure t
+;;   :config
+;;   (make-variable-buffer-local 'global-hl-line-mode)
+;;   (add-hook 'vterm-mode-hook
+;;             (lambda ()
+;;               (setq global-hl-line-mode nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
