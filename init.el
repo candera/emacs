@@ -543,8 +543,13 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun turn-on-paredit-mode ()
+  (interactive)
+  (paredit-mode 1))
+
 (unless (string= "raspberrypi" system-name)
-  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode))
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-paredit-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
