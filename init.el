@@ -2316,6 +2316,25 @@ buffer, respectively."
     (shell-execute )
     (sql-eval-buffer-subset (alist-get :eval-buffer params) (point-min) (point-max))))
 
+(defun buffer-contains (search)
+  "Returns true if the buffer contains the regexp `search`, nil otherwise."
+  (goto-char (point-min))
+  (re-search-forward search nil t))
+
+(defun org-babel-execute:sql (body params)
+  "Execute SQL. This function is called by `org-babel-execute-src-block`."
+  (save-excursion
+    (org-babel-mark-block)
+    (lexical-let ((sql (buffer-substring (mark) (point))))
+      (with-temp-buffer
+        (lexical-let ((ns (open-network-stream "SQL" (current-buffer) "localhost" 7788)))
+          (process-send-string ns sql)
+          (process-send-string ns "\nGO\n")
+          (while (not (buffer-contains "^:end$"))
+            (accept-process-output ns 0.1))
+          (delete-process ns)
+          (read (buffer-substring-no-properties (point-min) (point-max)))
+)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
