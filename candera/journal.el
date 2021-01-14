@@ -5,6 +5,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar *journal-roots* '()) ; new entries must end with slash
 
+(defun days-to-date (date)
+  "Returns the number of days until a date. Input format is 2020-10-16"
+  (interactive "M")
+  (truncate
+   (/ (- (float-time (date-to-time (format "%sT00:00" date)))
+         (float-time (time-n-days-ago 0)))
+      (* 60 60 24))))
+
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
   (interactive "p")
@@ -31,7 +39,9 @@
                             (day-of-month-ordinal
                              (string-to-number
                               (format-time-string "%e" logfile-date)))
-                            (format-time-string ", %Y." logfile-date)))
+                            (format-time-string ", %Y." logfile-date)
+                            ;; (format "%d days remaining." days-to-freedom)
+                            ))
             ;; Auto save over SSH is a PITA. This will still auto-save
             ;; on idle.
             (when (or (numberp (string-match "/ssh:" new-logfile-filename))
