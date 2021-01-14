@@ -2626,14 +2626,13 @@ current buffer.  Intended for use with svg files."
      0
      5
      (lambda ()
-       (lexical-let ((currently-undocked (= 1920 (display-pixel-width))))
+       (lexical-let ((currently-undocked (not (= 5232 (display-pixel-width)))))
          (when (and (not (eq dock-mode 'undocked))
                     currently-undocked)
            (undocked-laptop-mode))
          (when (and (not (eq dock-mode 'docked))
                     (not currently-undocked))
            (docked-laptop-mode)))))))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2848,7 +2847,7 @@ https://github.com/jaypei/emacs-neotree/pull/110"
   :config
   (setq clubhouse-api-team-name "adzerk")
   (setq clubhouse-api-default-project "Management")
-  (setq clubhouse-api-auth-token-path "~/.adzerk-clubhouse-token-default.asc")
+  (setq clubhouse-api-auth-token-path "~/.adzerk/secrets/candera/CLUBHOUSE_API_TOKEN.asc")
   (add-hook 'clubhouse-api-story-edit-minor-mode-hook
             (lambda ()
               (visual-line-mode 1))))
