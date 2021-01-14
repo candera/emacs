@@ -3170,6 +3170,17 @@ back to the original string."
 (use-package hyperbole
   :ensure t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; which-key
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode 1))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Varibles set by "customize" wind up here
