@@ -385,6 +385,7 @@ description ready for editing."
       (clubhouse-api-goto-description)
       (forward-line)
       (re-search-forward  "^#\\+BEGIN_SRC markdown")
+      (beginning-of-line)
       (second (org-babel-get-src-block-info)))))
 
 (defun clubhouse-api-story-edit-get-story-name ()

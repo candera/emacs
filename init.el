@@ -20,65 +20,70 @@
 (when (< emacs-major-version 27)
   (package-initialize))
 
-;; At some point, things started breaking on absence of this symbol,
-;; probably because it got added to emacs 27. But emacs 27 isn't
-;; working so great for me at the moment.
-(unless (fboundp 'flatten-tree)
-  (defun flatten-tree (tree)
-    "Take TREE and \"flatten\" it.
-This always returns a list containing all the terminal nodes, or
-\"leaves\", of TREE.  Dotted pairs are flattened as well, and nil
-elements are removed.
-\(flatten-tree \\='(1 (2 . 3) nil (4 5 (6)) 7))
-=> (1 2 3 4 5 6 7)
-TREE can be anything that can be made into a list.  For each
-element in TREE, if it is a cons cell return its car
-recursively.  Otherwise return the element."
-    (let (elems)
-      (setq tree (list tree))
-      (while (let ((elem (pop tree)))
-               (cond ((consp elem)
-                      (setq tree (cons (car elem) (cons (cdr elem) tree))))
-                     (elem
-                      (push elem elems)))
-               tree))
-      (nreverse elems)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;; Technically, `flatten-list' is a misnomer, but we provide it here
-  ;; for discoverability:
-  (defalias 'flatten-list 'flatten-tree))
+;; cl is deprecated as of Emacs 27
+(require 'cl-lib)
+
+;; ;; At some point, things started breaking on absence of this symbol,
+;; ;; probably because it got added to emacs 27. But emacs 27 isn't
+;; ;; working so great for me at the moment.
+;; (unless (fboundp 'flatten-tree)
+;;   (defun flatten-tree (tree)
+;;     "Take TREE and \"flatten\" it.
+;; This always returns a list containing all the terminal nodes, or
+;; \"leaves\", of TREE.  Dotted pairs are flattened as well, and nil
+;; elements are removed.
+;; \(flatten-tree \\='(1 (2 . 3) nil (4 5 (6)) 7))
+;; => (1 2 3 4 5 6 7)
+;; TREE can be anything that can be made into a list.  For each
+;; element in TREE, if it is a cons cell return its car
+;; recursively.  Otherwise return the element."
+;;     (let (elems)
+;;       (setq tree (list tree))
+;;       (while (let ((elem (pop tree)))
+;;                (cond ((consp elem)
+;;                       (setq tree (cons (car elem) (cons (cdr elem) tree))))
+;;                      (elem
+;;                       (push elem elems)))
+;;                tree))
+;;       (nreverse elems)))
+
+;;   ;; Technically, `flatten-list' is a misnomer, but we provide it here
+;;   ;; for discoverability:
+;;   (defalias 'flatten-list 'flatten-tree))
 
 (use-package el-get
   :ensure t)
 
-;; This would be great if it didn't just cause cider to completely disappear
-;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
+;; ;; This would be great if it didn't just cause cider to completely disappear
+;; ;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
 
-;; Someone broke org-mobile. We have to load from a fixed copy.
-;; (setq load-path (append '("~/.emacs.d/custom/org-mode/lisp"
-;;                           "~/.emacs.d/custom/org-mode/contrib/lisp")
-;;                         load-path))
+;; ;; Someone broke org-mobile. We have to load from a fixed copy.
+;; ;; (setq load-path (append '("~/.emacs.d/custom/org-mode/lisp"
+;; ;;                           "~/.emacs.d/custom/org-mode/contrib/lisp")
+;; ;;                         load-path))
 
-;; Fix garbage collection so that it doesn't happen when the
-;; minibuffer is open. See
-;; http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/
+;; ;; Fix garbage collection so that it doesn't happen when the
+;; ;; minibuffer is open. See
+;; ;; http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/
 
-(defun my-minibuffer-setup-hook ()
-  (setq gc-cons-threshold most-positive-fixnum))
+;; (defun my-minibuffer-setup-hook ()
+;;   (setq gc-cons-threshold most-positive-fixnum))
 
-(defun my-minibuffer-exit-hook ()
-  (setq gc-cons-threshold 800000))
+;; (defun my-minibuffer-exit-hook ()
+;;   (setq gc-cons-threshold 800000))
 
-(add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
-(add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)
+;; (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
+;; (add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Load nxhtml-mode (with MuMaMo)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Load nxhtml-mode (with MuMaMo)
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (load "~/.emacs.d/custom/nxhtml/autostart.el")
+;; ;; (load "~/.emacs.d/custom/nxhtml/autostart.el")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -116,19 +121,19 @@ recursively.  Otherwise return the element."
 
 (setq load-path (append custom-load-paths load-path))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Stuff we want to load right away
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Stuff we want to load right away
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'font-lock)
+;; (require 'font-lock)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Save some buffers whenever emacs is idle
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Save some buffers whenever emacs is idle
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar idle-save-buffer-list '())
 (defvar idle-save-buffer-time 10)
@@ -150,17 +155,17 @@ recursively.  Otherwise return the element."
          ;; Buffer has been killed toss it out of the list
          (setq idle-save-buffer-list (remove b idle-save-buffer-list)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Change the way emacs handles buffer
-;; names for files with the same name.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Change the way emacs handles buffer
+;; ;; names for files with the same name.
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'uniquify)
-(setq
- uniquify-buffer-name-style 'forward ;; 'post-forward
- uniquify-separator ":")
+;; (require 'uniquify)
+;; (setq
+;;  uniquify-buffer-name-style 'forward ;; 'post-forward
+;;  uniquify-separator ":")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -171,44 +176,44 @@ recursively.  Otherwise return the element."
 ;; Display line numbers
 (global-display-line-numbers-mode t)
 
-;; Enable CUA-style undo, cut, copy, paste, and selection
-;;(cua-mode t)
-
-;; For the love of all that is holy, unify the emacs kill ring and the
-;; clipboard
-(setq x-select-enable-clipboard t)
-
-;; And don't allow tabs to be inserted
-(setq-default indent-tabs-mode nil)
-
-;; Enable ido-mode
-(ido-mode 1)
-
-;; And add a space after the line number in text-only terminals
-;; (unless window-system (setq linum-format "%d "))
-
-;; Enable line highlighting
+;; Highlight current line
 (global-hl-line-mode 1)
 
-(defun scroll-other-window-up-one ()
-  "Scrolls other window towards top of buffer by one line"
-  (interactive)
-  (scroll-other-window-down 1))
+;; ;; Enable CUA-style undo, cut, copy, paste, and selection
+;; ;;(cua-mode t)
 
-(defun scroll-other-window-down-one ()
-  "Scrolls other window towards bottom of buffer by one line"
-  (interactive)
-  (scroll-other-window-down -1))
+;; ;; For the love of all that is holy, unify the emacs kill ring and the
+;; ;; clipboard
+;; (setq x-select-enable-clipboard t)
 
-(defun scroll-window-up-one ()
-  "Scrolls other window towards top of buffer by one line"
-  (interactive)
-  (scroll-down 1))
+;; ;; And don't allow tabs to be inserted
+;; (setq-default indent-tabs-mode nil)
 
-(defun scroll-window-down-one ()
-  "Scrolls other window towards bottom of buffer by one line"
-  (interactive)
-  (scroll-down -1))
+;; ;; Enable ido-mode
+;; (ido-mode 1)
+
+;; ;; And add a space after the line number in text-only terminals
+;; ;; (unless window-system (setq linum-format "%d "))
+
+;; (defun scroll-other-window-up-one ()
+;;   "Scrolls other window towards top of buffer by one line"
+;;   (interactive)
+;;   (scroll-other-window-down 1))
+
+;; (defun scroll-other-window-down-one ()
+;;   "Scrolls other window towards bottom of buffer by one line"
+;;   (interactive)
+;;   (scroll-other-window-down -1))
+
+;; (defun scroll-window-up-one ()
+;;   "Scrolls other window towards top of buffer by one line"
+;;   (interactive)
+;;   (scroll-down 1))
+
+;; (defun scroll-window-down-one ()
+;;   "Scrolls other window towards bottom of buffer by one line"
+;;   (interactive)
+;;   (scroll-down -1))
 
 ;;; I like this function because I run emacs maximized on a wide
 ;;; monitor, and it always looks weird to me to edit text way off to
@@ -303,11 +308,18 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "M-`") 'other-frame)
 (global-set-key (kbd "M-[") 'previous-buffer)
 (global-set-key (kbd "M-]") 'next-buffer)
+(global-set-key (kbd "C-c d") 'sdcv-search)
 
-;; Aliases for super-keys I confuse with the meta equivalent.
-(global-set-key (kbd "s-N") 'other-window)
-(global-set-key (kbd "s-y") 'yank-pop)
-(global-set-key (kbd "s-b") 'backward-word)
+;; Auto-complete customization. Might want to make this mode-specific
+(global-set-key (kbd "M-/") 'auto-complete)
+(require 'auto-complete)
+(define-key ac-completing-map (kbd "C-n") 'ac-next)
+(define-key ac-completing-map (kbd "C-p") 'ac-previous)
+
+;; ;; Aliases for super-keys I confuse with the meta equivalent.
+;; (global-set-key (kbd "s-N") 'other-window)
+;; (global-set-key (kbd "s-y") 'yank-pop)
+;; (global-set-key (kbd "s-b") 'backward-word)
 
 ;; Flips the left and right windows. Taken from
 ;; http://whattheemacsd.com//buffer-defuns.el-02.html
@@ -319,18 +331,15 @@ width to 60% frame width, or 85, whichever is larger."
         (t
          (setq i 1)
          (setq numWindows (count-windows))
-(while  (
-< i numWindows)
-           (let* (
-                  (w1 (elt (window-list) i))
+	 (while  (< i numWindows)
+           (let* ((w1 (elt (window-list) i))
                   (w2 (elt (window-list) (+ (% i numWindows) 1)))
 
                   (b1 (window-buffer w1))
                   (b2 (window-buffer w2))
 
                   (s1 (window-start w1))
-                  (s2 (window-start w2))
-                  )
+                  (s2 (window-start w2)))
              (set-window-buffer w1  b2)
              (set-window-buffer w2 b1)
              (set-window-start w1 s2)
@@ -366,15 +375,15 @@ width to 60% frame width, or 85, whichever is larger."
 ;; A single space ends a sentence
 (setq sentence-end-double-space nil)
 
-;; Use forward slashes between directory elements
-;; TODO: This symbol has been deprecated. Change if there's a problem
-(setq directory-sep-char ?\/)
+;; ;; Use forward slashes between directory elements
+;; ;; TODO: This symbol has been deprecated. Change if there's a problem
+;; (setq directory-sep-char ?\/)
 
-;; Don't blink the cursor
-(setq blink-cursor nil)
+;; ;; Don't blink the cursor
+;; (setq blink-cursor nil)
 
-;; Move the mouse pointer out of the way when the cursor is near it
-(mouse-avoidance-mode 'cat-and-mouse)
+;; ;; Move the mouse pointer out of the way when the cursor is near it
+;; (mouse-avoidance-mode 'cat-and-mouse)
 
 ;; Turn off the menu bar and the tool bar, since I never use them.
 ;; Except under OS X, where they don't take up space
@@ -385,26 +394,26 @@ width to 60% frame width, or 85, whichever is larger."
 (if (fboundp 'tool-bar-mode)
     (tool-bar-mode -1))
 
-;; Set up some keybindings that I like
-(global-set-key (quote [C-M-down]) 'scroll-other-window-down-one)
-(global-set-key (quote [C-M-up])   'scroll-other-window-up-one)
-(global-set-key (quote [C-up]) 'scroll-window-up-one)
-(global-set-key (quote [C-down]) 'scroll-window-down-one)
+;; ;; Set up some keybindings that I like
+;; (global-set-key (quote [C-M-down]) 'scroll-other-window-down-one)
+;; (global-set-key (quote [C-M-up])   'scroll-other-window-up-one)
+;; (global-set-key (quote [C-up]) 'scroll-window-up-one)
+;; (global-set-key (quote [C-down]) 'scroll-window-down-one)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
-(global-set-key (quote [C-tab]) 'other-window)
+;; (global-set-key (quote [C-tab]) 'other-window)
 
-(global-set-key [f12] 'eshell)
-;;(global-set-key [f11] (lambda () (interactive) (switch-to-buffer "*nrepl*")))
-(global-set-key [f4] 'call-last-kbd-macro)
-(global-set-key [f8] 'next-error)
-(column-number-mode ())
+;; (global-set-key [f12] 'eshell)
+;; ;;(global-set-key [f11] (lambda () (interactive) (switch-to-buffer "*nrepl*")))
+;; (global-set-key [f4] 'call-last-kbd-macro)
+;; (global-set-key [f8] 'next-error)
+;; (column-number-mode ())
 
-(setq default-major-mode 'text-mode)
-(setq display-time-day-and-date 'true)
-;; display-time has the wonderful effect of causing my emacs to
-;; totally hang for the first five seconds of every minute on windows.
-;;(display-time)
+;; (setq default-major-mode 'text-mode)
+;; (setq display-time-day-and-date 'true)
+;; ;; display-time has the wonderful effect of causing my emacs to
+;; ;; totally hang for the first five seconds of every minute on windows.
+;; ;;(display-time)
 
 ;; text-mode-hook runs even in modes derived from text-mode, like
 ;; javascript-mode, where having flyspell turned on is not exactly
@@ -431,22 +440,22 @@ Result depends on syntax table's comment character."
     (message "%s" result)
     result))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Calendar customization
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Calendar customization
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; 38.8526° N, 77.3044° W
-(setq calendar-latitude 38.9)
-(setq calendar-longitude -77.3)
-(setq calendar-location-name "Fairfax, VA")
+;; ;;; 38.8526° N, 77.3044° W
+;; (setq calendar-latitude 38.9)
+;; (setq calendar-longitude -77.3)
+;; (setq calendar-location-name "Fairfax, VA")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Whitespace cleanup and display
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Whitespace cleanup and display
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Friends don't let friends save source code with tabs in it
 (defun detabify-buffer ()
@@ -485,63 +494,63 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (global-set-key (kbd "C-x t") 'clean-up-whitespace)
 
-(defface extra-whitespace-face
-   '((t (:background "pale green")))
-   "Used for tabs and such.")
+;; (defface extra-whitespace-face
+;;    '((t (:background "pale green")))
+;;    "Used for tabs and such.")
 
-(defvar extra-whitespace-keywords
-  '(("\t" . 'extra-whitespace-face)))
+;; (defvar extra-whitespace-keywords
+;;   '(("\t" . 'extra-whitespace-face)))
 
-(defun setup-highlight-whitespace ()
-  (font-lock-add-keywords nil extra-whitespace-keywords)
-  (setq show-trailing-whitespace t))
+;; (defun setup-highlight-whitespace ()
+;;   (font-lock-add-keywords nil extra-whitespace-keywords)
+;;   (setq show-trailing-whitespace t))
 
-(defun stop-highlighting-whitespace ()
-  (interactive)
-  (font-lock-remove-keywords nil extra-whitespace-keywords)
-  (setq show-trailing-whitespace nil))
+;; (defun stop-highlighting-whitespace ()
+;;   (interactive)
+;;   (font-lock-remove-keywords nil extra-whitespace-keywords)
+;;   (setq show-trailing-whitespace nil))
 
-(add-hook 'emacs-lisp-mode-hook 'setup-highlight-whitespace)
-(add-hook 'text-mode-hook 'setup-highlight-whitespace)
-(add-hook 'lisp-mode-hook 'setup-highlight-whitespace)
-(add-hook 'ruby-mode 'setup-highlight-whitespace)
+;; (add-hook 'emacs-lisp-mode-hook 'setup-highlight-whitespace)
+;; (add-hook 'text-mode-hook 'setup-highlight-whitespace)
+;; (add-hook 'lisp-mode-hook 'setup-highlight-whitespace)
+;; (add-hook 'ruby-mode 'setup-highlight-whitespace)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set M-. to do something useful
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set M-. to do something useful
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ctags command: ctags -R -e . --language-force=Clojure
+;; ;; ctags command: ctags -R -e . --language-force=Clojure
 
-(global-set-key (kbd "M-.") 'projectile-find-tag)
-;; (global-set-key (kbd "M-.") 'xref-find-definitions)
-;;(global-set-key (kbd "M-.") 'imenu)
-;; (global-set-key (kbd "M-,") 'dumb-jump-back)
+;; (global-set-key (kbd "M-.") 'projectile-find-tag)
+;; ;; (global-set-key (kbd "M-.") 'xref-find-definitions)
+;; ;;(global-set-key (kbd "M-.") 'imenu)
+;; ;; (global-set-key (kbd "M-,") 'dumb-jump-back)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set M-' to do completion
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set M-' to do completion
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(global-set-key (kbd "M-'") 'completion-at-point)
+;; (global-set-key (kbd "M-'") 'completion-at-point)
 
-;; (add-hook 'slime-mode-hook
-;;           (lambda ()
-;;             (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)
-;;             (define-key slime-mode-map (kbd "C-c M-q") nil)))
+;; ;; (add-hook 'slime-mode-hook
+;; ;;           (lambda ()
+;; ;;             (define-key slime-mode-map (kbd "M-'") 'slime-complete-symbol)
+;; ;;             (define-key slime-mode-map (kbd "C-c M-q") nil)))
 
-;; (add-hook 'slime-repl-mode-hook
-;;           (lambda ()
-;;             (define-key slime-repl-mode-map (kbd "M-'") 'slime-complete-symbol)))
+;; ;; (add-hook 'slime-repl-mode-hook
+;; ;;           (lambda ()
+;; ;;             (define-key slime-repl-mode-map (kbd "M-'") 'slime-complete-symbol)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up emacs-lisp-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up emacs-lisp-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun turn-on-paredit-mode ()
   (interactive)
@@ -549,124 +558,125 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (unless (string= "raspberrypi" system-name)
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-  (add-hook 'emacs-lisp-mode-hook 'turn-on-paredit-mode))
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-paredit-mode)
+  (add-hook 'emacs-lisp-mode-hook (lambda () (auto-complete-mode 1))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Work around a bug in Ubuntu 10.10
-(setq flyspell-issue-welcome-flag nil)
+;; ;; Work around a bug in Ubuntu 10.10
+;; (setq flyspell-issue-welcome-flag nil)
 
-;; Turn on font-lock by default in all modes
-(global-font-lock-mode t)
+;; ;; Turn on font-lock by default in all modes
+;; (global-font-lock-mode t)
 
-;; Highlight region between point and mark
-(transient-mark-mode t)
+;; ;; Highlight region between point and mark
+;; (transient-mark-mode t)
 
-(defun insert-new-line-above ()
-  "Insert a new, blank line above the point"
-  (interactive)
-  (progn
-    (move-to-column 0)
-    (newline)
-    (previous-line 1)
-    (indent-according-to-mode)))
+;; (defun insert-new-line-above ()
+;;   "Insert a new, blank line above the point"
+;;   (interactive)
+;;   (progn
+;;     (move-to-column 0)
+;;     (newline)
+;;     (previous-line 1)
+;;     (indent-according-to-mode)))
 
-(global-set-key [\C-return] 'insert-new-line-above)
+;; (global-set-key [\C-return] 'insert-new-line-above)
 
-(defun set-big-font ()
-  "sets the font to something readable from more than 3 inches away"
-  (interactive)
-  (modify-frame-parameters
-   nil
-   '( (font . "-outline-Courier-bold-r-normal-normal-19-142-96-96-c-110-iso10646-1"))))
+;; (defun set-big-font ()
+;;   "sets the font to something readable from more than 3 inches away"
+;;   (interactive)
+;;   (modify-frame-parameters
+;;    nil
+;;    '( (font . "-outline-Courier-bold-r-normal-normal-19-142-96-96-c-110-iso10646-1"))))
 
-(defun set-small-font ()
-  "sets the font to something readable from more than 3 inches away"
-  (interactive)
-  (modify-frame-parameters
-   nil
-   '( (font . "-outline-Courier-bold-r-normal-normal-12-142-96-96-c-110-iso10646-1"))))
+;; (defun set-small-font ()
+;;   "sets the font to something readable from more than 3 inches away"
+;;   (interactive)
+;;   (modify-frame-parameters
+;;    nil
+;;    '( (font . "-outline-Courier-bold-r-normal-normal-12-142-96-96-c-110-iso10646-1"))))
 
 (defun set-default-font-size (height)
   "Sets the default font size to `height`."
   (interactive "nFont size: ")
   (set-face-attribute 'default nil :height height))
 
-(defun set-default-frame-properties ()
-  "Sets the frame properties back to the defaults"
-  (interactive)
-  (modify-frame-parameters
-   nil
-   default-frame-alist))
+;; (defun set-default-frame-properties ()
+;;   "Sets the frame properties back to the defaults"
+;;   (interactive)
+;;   (modify-frame-parameters
+;;    nil
+;;    default-frame-alist))
 
-(defun insert-current-time ()
-  "Inserts the current time at point"
-  (interactive)
-  (insert (format-time-string "%Y/%m/%d %H:%M:%S")))
+;; (defun insert-current-time ()
+;;   "Inserts the current time at point"
+;;   (interactive)
+;;   (insert (format-time-string "%Y/%m/%d %H:%M:%S")))
 
-(global-set-key "\C-c\C-t" 'insert-current-time)
+;; (global-set-key "\C-c\C-t" 'insert-current-time)
 
-;; Turn on parathesis highlighting in .el files
-;(add-hook 'emacs-lisp-mode-hook
-;         (lambda () (highlight-parentheses-mode 1)))
-
-
-;; Tell emacs to wrap lines in vertically split windows
-;; Much as I would like to leave this set to nil, it seems to cause all sorts of problems.
-;;(setq truncate-partial-width-windows nil)
-(setq truncate-lines t)
-
-;; Except in inferior-lisp, where it screws things up
-;; (add-hook 'inferior-lisp-mode-hook
-;;           (lambda ()
-;;              (setq truncate-lines t)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up ido
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; ;; Make ido-mode list things vertically
-;; (setq ido-decorations
-;;       (quote
-;;        ("\n-> "           ; Opening bracket around prospect list
-;;         ""                ; Closing bracket around prospect list
-;;         "\n   "           ; separator between prospects
-;;         "\n   ..."        ; appears at end of truncated list of prospects
-;;         "["               ; opening bracket around common match string
-;;         "]"               ; closing bracket around common match string
-;;         " [No match]"     ; displayed when there is no match
-;;         " [Matched]"      ; displayed if there is a single match
-;;         " [Not readable]" ; current diretory is not readable
-;;         " [Too big]"      ; directory too big
-;;         " [Confirm]")))   ; confirm creation of new file or buffer
-
-;; ;; And let us use standard navagation keys that make sense vertically
-;; (add-hook 'ido-setup-hook
-;;           (lambda ()
-;;             (define-key ido-completion-map [down] 'ido-next-match)
-;;             (define-key ido-completion-map [up] 'ido-prev-match)
-;;             (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-;;             (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
-
-;; ;; Make ido stop prompting me about whether I want to create a new buffer
-;; (setq ido-create-new-buffer 'always)
-
-(use-package ido-vertical-mode
-  :ensure t)
-
-(require 'ido-vertical-mode)
-(ido-mode 1)
-(ido-vertical-mode 1)
-(setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
+;; ;; Turn on parathesis highlighting in .el files
+;; ;(add-hook 'emacs-lisp-mode-hook
+;; ;         (lambda () (highlight-parentheses-mode 1)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up dired-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; Tell emacs to wrap lines in vertically split windows
+;; ;; Much as I would like to leave this set to nil, it seems to cause all sorts of problems.
+;; ;;(setq truncate-partial-width-windows nil)
+;; (setq truncate-lines t)
+
+;; ;; Except in inferior-lisp, where it screws things up
+;; ;; (add-hook 'inferior-lisp-mode-hook
+;; ;;           (lambda ()
+;; ;;              (setq truncate-lines t)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up ido
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; ;; Make ido-mode list things vertically
+;; ;; (setq ido-decorations
+;; ;;       (quote
+;; ;;        ("\n-> "           ; Opening bracket around prospect list
+;; ;;         ""                ; Closing bracket around prospect list
+;; ;;         "\n   "           ; separator between prospects
+;; ;;         "\n   ..."        ; appears at end of truncated list of prospects
+;; ;;         "["               ; opening bracket around common match string
+;; ;;         "]"               ; closing bracket around common match string
+;; ;;         " [No match]"     ; displayed when there is no match
+;; ;;         " [Matched]"      ; displayed if there is a single match
+;; ;;         " [Not readable]" ; current diretory is not readable
+;; ;;         " [Too big]"      ; directory too big
+;; ;;         " [Confirm]")))   ; confirm creation of new file or buffer
+
+;; ;; ;; And let us use standard navagation keys that make sense vertically
+;; ;; (add-hook 'ido-setup-hook
+;; ;;           (lambda ()
+;; ;;             (define-key ido-completion-map [down] 'ido-next-match)
+;; ;;             (define-key ido-completion-map [up] 'ido-prev-match)
+;; ;;             (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+;; ;;             (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)))
+
+;; ;; ;; Make ido stop prompting me about whether I want to create a new buffer
+;; ;; (setq ido-create-new-buffer 'always)
+
+;; (use-package ido-vertical-mode
+;;   :ensure t)
+
+;; (require 'ido-vertical-mode)
+;; (ido-mode 1)
+;; (ido-vertical-mode 1)
+;; (setq ido-vertical-define-keys 'C-n-C-p-up-down-left-right)
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up dired-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun dired-insert-this-directory-recursively (include-hidden)
   "Recursively insert the subdirectories of the current dired directory."
@@ -675,26 +685,51 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                                            "-lR"
                                          "-alR")))
 
+(defun dired-recursive-copy-marked-files-async (target-dir)
+  "Recursively moves marked files."
+  (interactive "DTarget directory: ")
+  (dired-do-shell-command (format "gcp ? --parents '%s'" target-dir)))
+
+;; (defun mrc-dired-do-command (command)
+;;   "Run COMMAND on marked files. Any files not already open will be opened.
+;; After this command has been run, any buffers it's modified will remain
+;; open and unsaved."
+;;   (interactive "CRun on marked files M-x ")
+;;   (save-window-excursion
+;;     (mapc (lambda (filename)
+;;             ;; (find-file filename)
+;;             (call-interactively command))
+;;           (dired-get-marked-files))))
+
+;; (defun emms-dired-play-file ()
+;;   "Plays the file at point using emms."
+;;   (interactive)
+;;   (emms-play-file (dired-get-filename)))
+
 (add-hook 'dired-mode-hook
           (lambda ()
-            (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)))
+            (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)
+            ;; (define-key dired-mode-map (kbd "M-p") 'emms-dired-play-file)
+	    ))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Associate javascript mode with .js files
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq dired-dwim-target t)
 
-(add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
-(autoload 'javascript-mode "javascript" nil t)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Associate javascript mode with .js files
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Associate ruby mode with ruby files
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
+;; (autoload 'javascript-mode "javascript" nil t)
 
-(add-to-list 'auto-mode-alist '("Rakefile$\\|Gemfile$\\|\\.rake$\\|Capfile$\\|\\.watchr$\\|Guardfile$\\|\\.ru$\\|\\.gemspec$" . ruby-mode))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Associate ruby mode with ruby files
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (add-to-list 'auto-mode-alist '("Rakefile$\\|Gemfile$\\|\\.rake$\\|Capfile$\\|\\.watchr$\\|Guardfile$\\|\\.ru$\\|\\.gemspec$" . ruby-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -708,170 +743,170 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   :mode "\\.yml$")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set M-. to be imenu where SLIME isn't available
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set M-. to be imenu where SLIME isn't available
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (add-hook 'ruby-mode-hook (lambda () (define-key ruby-mode-map (kbd "M-.") 'imenu)))
-;; (define-key emacs-lisp-mode-map (kbd "M-.") 'imenu)
-;; (add-hook 'javascript-mode-hook (lambda () (define-key js-mode-map (kbd "M-.") 'imenu)))
+;; ;; (add-hook 'ruby-mode-hook (lambda () (define-key ruby-mode-map (kbd "M-.") 'imenu)))
+;; ;; (define-key emacs-lisp-mode-map (kbd "M-.") 'imenu)
+;; ;; (add-hook 'javascript-mode-hook (lambda () (define-key js-mode-map (kbd "M-.") 'imenu)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up simple refactoring support
-;; (only symbol renaming at this point)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(require 'refactor)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up simple refactoring support
+;; ;; (only symbol renaming at this point)
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;(require 'refactor)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up lisp-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up lisp-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'auto-mode-alist '("\\.lisp$" . lisp-mode))
+;; (add-to-list 'auto-mode-alist '("\\.lisp$" . lisp-mode))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Support paredit for better paren
-;;; editing in Lisp mode
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;
+;; ;;; Support paredit for better paren
+;; ;;; editing in Lisp mode
+;; ;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package paredit
   :ensure t
+  :hook (emacs-lisp-mode-hook . (lambda () (paredit-mode +1)))
   :hook (lisp-mode-hook . (lambda () (paredit-mode +1)))
   :hook (emacs-lisp-mode-hook . (lambda () (paredit-mode +1)))
+  :hook (clojure-mode-hook . (lambda () (paredit-mode +1)))
   :config
   (show-paren-mode t))
 
-;; (load "paredit.el")
+(define-key paredit-mode-map (kbd "M-)")
+  'paredit-close-parenthesis-and-newline)
 
-;; (define-key paredit-mode-map (kbd "M-)")
-;;   'paredit-close-parenthesis-and-newline)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;
+;; ;;; Support for SLIME
+;; ;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Support for SLIME
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/")  ; your SLIME directory
-;; (add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/contrib")  ; your SLIME contrib directory
+;; ;; (add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/")  ; your SLIME directory
+;; ;; (add-to-list 'load-path "~/.emacs.d/custom/slime-2010-05-19/contrib")  ; your SLIME contrib directory
 
 
-;; ;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/")  ; your SLIME directory
-;; ;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/contrib")  ; your SLIME contrib directory
-;; ;; (setq
-;; ;;   ; inferior-lisp-program "C:/bin/clisp-2.45/clisp -K full"  ; your Lisp system
-;; ;;   ;inferior-lisp-program "C:/bin/sbcl-1.0.14.22/sbcl --core C:/bin/sbcl-1.0.14.22/sbcl.core"  ; your Lisp system
-;; ;;   slime-complete-symbol-function 'slime-fuzzy-complete-symbol  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
-;; ;;   ;slime-complete-symbol-function 'slime-complete-symbol  ; standard symbol completion
-;; ;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
-;; ;;  )
+;; ;; ;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/")  ; your SLIME directory
+;; ;; ;;(add-to-list 'load-path "~/emacs/slime-2008-11-03/contrib")  ; your SLIME contrib directory
+;; ;; ;; (setq
+;; ;; ;;   ; inferior-lisp-program "C:/bin/clisp-2.45/clisp -K full"  ; your Lisp system
+;; ;; ;;   ;inferior-lisp-program "C:/bin/sbcl-1.0.14.22/sbcl --core C:/bin/sbcl-1.0.14.22/sbcl.core"  ; your Lisp system
+;; ;; ;;   slime-complete-symbol-function 'slime-fuzzy-complete-symbol  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
+;; ;; ;;   ;slime-complete-symbol-function 'slime-complete-symbol  ; standard symbol completion
+;; ;; ;;   lisp-indent-function 'common-lisp-indent-function            ; How would you like to indent?
+;; ;; ;;  )
 
-;; (require 'slime-autoloads)
-;; (slime-setup '(slime-repl slime-editing-commands slime-fuzzy slime-presentations slime-scratch))
-;; ;(slime-setup '(slime-fancy))
+;; ;; (require 'slime-autoloads)
+;; ;; (slime-setup '(slime-repl slime-editing-commands slime-fuzzy slime-presentations slime-scratch))
+;; ;; ;(slime-setup '(slime-fancy))
 
-;; ;(setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
+;; ;; ;(setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)  ; fuzzy symbol completion (requires slime-fuzzy from contrib)
 
-;; (if (functionp 'slime-local-setup)
-;;     (slime-local-setup))
+;; ;; (if (functionp 'slime-local-setup)
+;; ;;     (slime-local-setup))
 
-;; ;; Turn off the annoying SLIME version mismatch message
+;; ;; ;; Turn off the annoying SLIME version mismatch message
 
-;; (eval-after-load 'slime '(setq slime-protocol-version 'ignore))
+;; ;; (eval-after-load 'slime '(setq slime-protocol-version 'ignore))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Autocomplete for SLIME
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Autocomplete for SLIME
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'ac-slime)
-;; (add-hook 'slime-mode-hook 'set-up-slime-ac)
-;; (add-hook 'slime-repl-mode-hook 'set-up-slime-ac)
+;; ;; (require 'ac-slime)
+;; ;; (add-hook 'slime-mode-hook 'set-up-slime-ac)
+;; ;; (add-hook 'slime-repl-mode-hook 'set-up-slime-ac)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Allow input to be sent to somewhere other than inferior-lisp
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Allow input to be sent to somewhere other than inferior-lisp
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun shell-send-input (input &optional buf)
-  "Send INPUT into the *shell* buffer (or `buf` if specified) and leave it visible."
-  (save-selected-window
-    (switch-to-buffer-other-window (or buf "*shell*"))
-    (goto-char (point-max))
-    (insert input)
-    (comint-send-input)))
+;; (defun shell-send-input (input &optional buf)
+;;   "Send INPUT into the *shell* buffer (or `buf` if specified) and leave it visible."
+;;   (save-selected-window
+;;     (switch-to-buffer-other-window (or buf "*shell*"))
+;;     (goto-char (point-max))
+;;     (insert input)
+;;     (comint-send-input)))
 
-(defun defun-at-point ()
-  "Return the text of the defun at point."
-  (apply #'buffer-substring-no-properties
-         (region-for-defun-at-point)))
+;; (defun defun-at-point ()
+;;   "Return the text of the defun at point."
+;;   (apply #'buffer-substring-no-properties
+;;          (region-for-defun-at-point)))
 
-(defun region-for-defun-at-point ()
-  "Return the start and end position of defun at point."
-  (save-excursion
-    (save-match-data
-      (end-of-defun)
-      (let ((end (point)))
-        (beginning-of-defun)
-        (list (point) end)))))
+;; (defun region-for-defun-at-point ()
+;;   "Return the start and end position of defun at point."
+;;   (save-excursion
+;;     (save-match-data
+;;       (end-of-defun)
+;;       (let ((end (point)))
+;;         (beginning-of-defun)
+;;         (list (point) end)))))
 
-(defun expression-preceding-point ()
-  "Return the expression preceding point as a string."
-  (buffer-substring-no-properties
-   (save-excursion (backward-sexp) (point))
-   (point)))
+;; (defun expression-preceding-point ()
+;;   "Return the expression preceding point as a string."
+;;   (buffer-substring-no-properties
+;;    (save-excursion (backward-sexp) (point))
+;;    (point)))
 
-(defun shell-eval-last-expression ()
-  "Send the expression preceding point to the *shell* buffer."
-  (interactive)
-  (shell-send-input (expression-preceding-point)))
+;; (defun shell-eval-last-expression ()
+;;   "Send the expression preceding point to the *shell* buffer."
+;;   (interactive)
+;;   (shell-send-input (expression-preceding-point)))
 
-(defun shell-eval-defun ()
-  "Send the current toplevel expression to the *shell* buffer."
-  (interactive)
-  (shell-send-input (defun-at-point)))
+;; (defun shell-eval-defun ()
+;;   "Send the current toplevel expression to the *shell* buffer."
+;;   (interactive)
+;;   (shell-send-input (defun-at-point)))
 
-(defun shell-eval-region ()
-  "Send the contents of the region to the *shell* buffer."
-  (interactive)
-  (if (use-region-p)
-    (shell-send-input (buffer-substring-no-properties
-                       (region-beginning)
-                       (region-end)))
-    (error "The region is not active - nothing to evaluate")))
+;; (defun shell-eval-region ()
+;;   "Send the contents of the region to the *shell* buffer."
+;;   (interactive)
+;;   (if (use-region-p)
+;;     (shell-send-input (buffer-substring-no-properties
+;;                        (region-beginning)
+;;                        (region-end)))
+;;     (error "The region is not active - nothing to evaluate")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; OMFG: cider requires org-mode, which will pull in the default
-;; version built in to Emacs if I don't set it up before
-;; clojure-mode/cider.
-;;
-;; Set up later version of org-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; OMFG: cider requires org-mode, which will pull in the default
+;; ;; version built in to Emacs if I don't set it up before
+;; ;; clojure-mode/cider.
+;; ;;
+;; ;; Set up later version of org-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package org :ensure t)
+;; (use-package org :ensure t)
 
-(require 'org)
-(require 'org-install)
+;; (require 'org)
+;; (require 'org-install)
 
-(define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
+;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
 
-(global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
-(global-set-key (kbd "C-c l") 'org-store-link)
+;; (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
+;; (global-set-key (kbd "C-c l") 'org-store-link)
 
-;; Bizarrely, org-clock defaults to showing the current year only
-(setq org-clock-display-default-range 'untilnow)
+;; ;; Bizarrely, org-clock defaults to showing the current year only
+;; (setq org-clock-display-default-range 'untilnow)
 
 (add-hook 'org-mode-hook (lambda ()
                            (turn-on-flyspell)
@@ -903,53 +938,73 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
 (setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
 
-;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
-;; that it might crash. So I set this variable, which gets me the same
-;; effect.
-(setq org-hide-leading-stars t)
+;; Skip items with the noagenda tag
+(defun org-init-skip-tags ()
+  "Skip the \"noagenda\" tags."
+  (let ((tags (org-get-tags-at (point))))
+    (when (member "noagenda" tags)
+      (save-excursion
+        (or
+         (ignore-errors (org-forward-element)
+                        (point))
+         (point-max))))))
+(setq org-agenda-skip-function-global 'org-init-skip-tags)
 
-;; Let me refile by path, and to deeper nesting
-(setq org-refile-use-outline-path 'file)
-;;(setq org-outline-path-complete-in-steps t)
-(setq org-refile-targets
-      '((org-agenda-files . (:maxlevel . 5))))
+(global-set-key
+ (kbd "C-c a")
+ (lambda ()
+   (interactive)
+   (if (get-buffer "*Org Agenda*")
+       (switch-to-buffer "*Org Agenda*")
+     (org-agenda))))
 
-;; Log into a drawer, which is nice
-(setq org-log-into-drawer t)
+;; ;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
+;; ;; that it might crash. So I set this variable, which gets me the same
+;; ;; effect.
+;; (setq org-hide-leading-stars t)
 
-;; Include things in the diary file
-(setq org-agenda-include-diary t)
+;; ;; Let me refile by path, and to deeper nesting
+;; (setq org-refile-use-outline-path 'file)
+;; ;;(setq org-outline-path-complete-in-steps t)
+;; (setq org-refile-targets
+;;       '((org-agenda-files . (:maxlevel . 5))))
 
-;; Make events sort by newest first in the agenda view
-(setq org-agenda-sorting-strategy
-      '((agenda priority-down timestamp-down habit-down time-up category-keep)
-        (todo priority-down category-keep)
-        (tags priority-down category-keep)
-        (search category-keep)))
+;; ;; Log into a drawer, which is nice
+;; (setq org-log-into-drawer t)
 
-;; Store captured notes in notes.org, and bind capture to C-c c
-(setq org-default-notes-file (concat org-directory "/notes.org"))
-(define-key global-map (kbd "C-c c") 'org-capture)
+;; ;; Include things in the diary file
+;; (setq org-agenda-include-diary t)
+
+;; ;; Make events sort by newest first in the agenda view
+;; (setq org-agenda-sorting-strategy
+;;       '((agenda priority-down timestamp-down habit-down time-up category-keep)
+;;         (todo priority-down category-keep)
+;;         (tags priority-down category-keep)
+;;         (search category-keep)))
+
+;; ;; Store captured notes in notes.org, and bind capture to C-c c
+;; (setq org-default-notes-file (concat org-directory "/notes.org"))
+;; (define-key global-map (kbd "C-c c") 'org-capture)
 
 
-;; Log time task was closed
-(setq org-log-done t)
+;; ;; Log time task was closed
+;; (setq org-log-done t)
 
-;; Turn off the annoying mouse highlight in agenda views
-(add-hook 'org-finalize-agenda-hook
-          (lambda () (remove-text-properties
-                      (point-min) (point-max) '(mouse-face t))))
+;; ;; Turn off the annoying mouse highlight in agenda views
+;; (add-hook 'org-finalize-agenda-hook
+;;           (lambda () (remove-text-properties
+;;                       (point-min) (point-max) '(mouse-face t))))
 
-;; Set up for agendas and mobile org
-(when (file-exists-p "~/Dropbox/org/")
-  ;; Set to the location of your Org files on your local system
-  (setq org-directory "~/Dropbox/org/")
-  ;; Set to the name of the file where new notes will be stored
-  (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
-  ;; Set to <your Dropbox root directory>/MobileOrg.
-  (setq org-mobile-directory "~/Dropbox/MobileOrg")
-  ;; A file that lists which org files should be pulled into the agenda
-  (setq org-agenda-files "~/Dropbox/org/agendas.org"))
+;; ;; Set up for agendas and mobile org
+;; (when (file-exists-p "~/Dropbox/org/")
+;;   ;; Set to the location of your Org files on your local system
+;;   (setq org-directory "~/Dropbox/org/")
+;;   ;; Set to the name of the file where new notes will be stored
+;;   (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
+;;   ;; Set to <your Dropbox root directory>/MobileOrg.
+;;   (setq org-mobile-directory "~/Dropbox/MobileOrg")
+;;   ;; A file that lists which org files should be pulled into the agenda
+;;   (setq org-agenda-files "~/Dropbox/org/agendas.org"))
 
 (defun org-time-difference (ts1 ts2)
   "Given two org time strings, return the floating point time
@@ -992,195 +1047,195 @@ always last."
   (interactive)
   (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
 
-;; Compute my own custom scores for habits
+;; ;; Compute my own custom scores for habits
 
-(defun org-candera-habit-penalty (days-since-last)
-  (- (if days-since-last
-         (if (< 1 days-since-last)
-             (- (expt 2 days-since-last)
-                2)
-           0)
-       0)))
+;; (defun org-candera-habit-penalty (days-since-last)
+;;   (- (if days-since-last
+;;          (if (< 1 days-since-last)
+;;              (- (expt 2 days-since-last)
+;;                 2)
+;;            0)
+;;        0)))
 
-(defun org-candera-habit-score (days today initial-value)
-  (when days
-    (let ((score-info
-           (reduce (lambda (acc d)
-                     (let* ((last-day (gethash :last-day acc))
-                            (days-since-last (when last-day (- d last-day)))
-                            (on-streak? (when days-since-last (= 1 days-since-last)))
-                            (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
-                            (streak-bonus (if on-streak?
-                                              (if (zerop (mod streak 3))
-                                                  (/ streak 3)
-                                                0)
-                                            0))
-                            (score (gethash :score acc 0)))
-                       (puthash :last-day d acc)
-                       (puthash :streak streak acc)
-                       (puthash :score (max 1 (+ (or score 0)
-                                                 streak-bonus
-                                                 1
-                                                 (org-candera-habit-penalty days-since-last)))
-                                acc)
-                       acc))
-                   days
-                   :initial-value initial-value)))
-      (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
-                                                         (first (last days))))))
-        (puthash :score
-                 (max 0 (+ (gethash :score score-info) today-penalty))
-                 score-info)
-        (unless (zerop today-penalty)
-          (puthash :streak 0 score-info))
-        score-info))))
+;; (defun org-candera-habit-score (days today initial-value)
+;;   (when days
+;;     (let ((score-info
+;;            (reduce (lambda (acc d)
+;;                      (let* ((last-day (gethash :last-day acc))
+;;                             (days-since-last (when last-day (- d last-day)))
+;;                             (on-streak? (when days-since-last (= 1 days-since-last)))
+;;                             (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
+;;                             (streak-bonus (if on-streak?
+;;                                               (if (zerop (mod streak 3))
+;;                                                   (/ streak 3)
+;;                                                 0)
+;;                                             0))
+;;                             (score (gethash :score acc 0)))
+;;                        (puthash :last-day d acc)
+;;                        (puthash :streak streak acc)
+;;                        (puthash :score (max 1 (+ (or score 0)
+;;                                                  streak-bonus
+;;                                                  1
+;;                                                  (org-candera-habit-penalty days-since-last)))
+;;                                 acc)
+;;                        acc))
+;;                    days
+;;                    :initial-value initial-value)))
+;;       (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
+;;                                                          (first (last days))))))
+;;         (puthash :score
+;;                  (max 0 (+ (gethash :score score-info) today-penalty))
+;;                  score-info)
+;;         (unless (zerop today-penalty)
+;;           (puthash :streak 0 score-info))
+;;         score-info))))
 
-(defun org-collect-dates-for-element ()
-  "Gets all the dates for the element at point"
-  (let* ((element (org-element-at-point))
-         (start (org-element-property :begin element))
-         (end (org-element-property :end element)))
-    (org-get-all-dates start end nil nil t)))
+;; (defun org-collect-dates-for-element ()
+;;   "Gets all the dates for the element at point"
+;;   (let* ((element (org-element-at-point))
+;;          (start (org-element-property :begin element))
+;;          (end (org-element-property :end element)))
+;;     (org-get-all-dates start end nil nil t)))
 
-(defun org-collect-dates (match)
-  "Returns all the unique dates that appear in items that match MATCH"
-  ;; TODO: Figure how to keep it from scanning both parents and
-  ;; children, since that's redundant
-  ;; TODO: Skipping archived items doesn't seem to work,
-  ;; although skipping commented items does.
-  (let* ((dates (apply #'append
-                       (org-map-entries #'org-collect-dates-for-element
-                                        match
-                                        'file
-                                        'archive
-                                        'comment)))
-         (uniques (cl-remove-duplicates dates))
-         (sorted ))
-    (cl-sort uniques #'<)))
+;; (defun org-collect-dates (match)
+;;   "Returns all the unique dates that appear in items that match MATCH"
+;;   ;; TODO: Figure how to keep it from scanning both parents and
+;;   ;; children, since that's redundant
+;;   ;; TODO: Skipping archived items doesn't seem to work,
+;;   ;; although skipping commented items does.
+;;   (let* ((dates (apply #'append
+;;                        (org-map-entries #'org-collect-dates-for-element
+;;                                         match
+;;                                         'file
+;;                                         'archive
+;;                                         'comment)))
+;;          (uniques (cl-remove-duplicates dates))
+;;          (sorted ))
+;;     (cl-sort uniques #'<)))
 
-(defun org-dblock-write:compute-habit-score (params)
-  "Returns a 'score' for entries that match `match` (e.g. a tag)
-  based on timestamps that appear in them.
+;; (defun org-dblock-write:compute-habit-score (params)
+;;   "Returns a 'score' for entries that match `match` (e.g. a tag)
+;;   based on timestamps that appear in them.
 
-  One point is given for each consecutive day that appears. A day
-  without activity drops the score by (expt 2
-  days-since-last-activity). Every third day of a streak, a bonus
-  of (/ streak-length 3) is awarded.
+;;   One point is given for each consecutive day that appears. A day
+;;   without activity drops the score by (expt 2
+;;   days-since-last-activity). Every third day of a streak, a bonus
+;;   of (/ streak-length 3) is awarded.
 
-  If not all data is recorded in the org file initially, initial
-  values can be provided via :last-day, :initial-streak,
-  and :initial-score params."
-  (interactive)
-  (let* ((last-day-param (plist-get params :last-day))
-         (last-day (when last-day-param
-                     (time-to-days (org-time-string-to-time last-day-param))))
-         (initial-streak (plist-get params :initial-streak))
-         (initial-score (plist-get params :initial-score))
-         (initial-value (make-hash-table))
-         (match (plist-get params :match)))
-    (puthash :last-day last-day initial-value)
-    (puthash :streak initial-streak initial-value)
-    (puthash :score initial-score initial-value)
-    (save-excursion
-      (let* ((dates (org-collect-dates match))
-             (score-info (org-candera-habit-score
-                          (if last-day
-                              (remove-if (lambda (d) (<= d last-day)) dates)
-                            dates)
-                          (time-to-days (current-time))
-                          initial-value)))
-        (insert
-         (format "Score as of %s: %s\nStreak: %d"
-                 (format-time-string "%Y-%m-%d" (current-time))
-                 (if score-info (or (gethash :score score-info) "No score") "No score")
-                 (if score-info (or (gethash :streak score-info) 0) 0)))))))
+;;   If not all data is recorded in the org file initially, initial
+;;   values can be provided via :last-day, :initial-streak,
+;;   and :initial-score params."
+;;   (interactive)
+;;   (let* ((last-day-param (plist-get params :last-day))
+;;          (last-day (when last-day-param
+;;                      (time-to-days (org-time-string-to-time last-day-param))))
+;;          (initial-streak (plist-get params :initial-streak))
+;;          (initial-score (plist-get params :initial-score))
+;;          (initial-value (make-hash-table))
+;;          (match (plist-get params :match)))
+;;     (puthash :last-day last-day initial-value)
+;;     (puthash :streak initial-streak initial-value)
+;;     (puthash :score initial-score initial-value)
+;;     (save-excursion
+;;       (let* ((dates (org-collect-dates match))
+;;              (score-info (org-candera-habit-score
+;;                           (if last-day
+;;                               (remove-if (lambda (d) (<= d last-day)) dates)
+;;                             dates)
+;;                           (time-to-days (current-time))
+;;                           initial-value)))
+;;         (insert
+;;          (format "Score as of %s: %s\nStreak: %d"
+;;                  (format-time-string "%Y-%m-%d" (current-time))
+;;                  (if score-info (or (gethash :score score-info) "No score") "No score")
+;;                  (if score-info (or (gethash :streak score-info) 0) 0)))))))
 
-(defun candera:goal-achieved?
-  (achieved?)
-  (string-prefix-p achieved? "y" t))
+;; (defun candera:goal-achieved?
+;;   (achieved?)
+;;   (string-prefix-p achieved? "y" t))
 
-(defun candera:streak-game-compute-elapsed
-  (current-date prior-date current-achievement prior-achievement prior-elapsed)
-  (let ((date-difference (floor
-                          (/ (org-time-difference current-date prior-date)
-                             (* 24 60 60.0)))))
-    (if (candera:goal-achieved? current-achievement)
-        (+ prior-elapsed date-difference)))
-  )
+;; (defun candera:streak-game-compute-elapsed
+;;   (current-date prior-date current-achievement prior-achievement prior-elapsed)
+;;   (let ((date-difference (floor
+;;                           (/ (org-time-difference current-date prior-date)
+;;                              (* 24 60 60.0)))))
+;;     (if (candera:goal-achieved? current-achievement)
+;;         (+ prior-elapsed date-difference)))
+;;   )
 
-;; I don't want to see days in cumulative durations, thanks
-(setq org-time-clocksum-format
-      '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
+;; ;; I don't want to see days in cumulative durations, thanks
+;; (setq org-time-clocksum-format
+;;       '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up org-babel
-;; Stolen from https://github.com/stuartsierra/dotfiles/blob/2ec5ab2a45c091d74c8e73d62683b15ddd8bd9c7/.emacs.d/local/init.el#L295
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up org-babel
+;; ;; Stolen from https://github.com/stuartsierra/dotfiles/blob/2ec5ab2a45c091d74c8e73d62683b15ddd8bd9c7/.emacs.d/local/init.el#L295
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'org)
-(require 'ob)
-(require 'ob-tangle)
-(require 'ob-clojure)
-;;(setq org-babel-clojure-backend 'cider)
-;;(require 'cider)
+;; (require 'org)
+;; (require 'ob)
+;; (require 'ob-tangle)
+;; (require 'ob-clojure)
+;; ;;(setq org-babel-clojure-backend 'cider)
+;; ;;(require 'cider)
 
-;; Don't make me confirm evaluation every single time
-(setq org-confirm-babel-evaluate nil)
+;; ;; Don't make me confirm evaluation every single time
+;; (setq org-confirm-babel-evaluate nil)
 
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((emacs-lisp . t)
-   (clojure . t)
-   (shell . t)
-   (dot . t)))
+;; (org-babel-do-load-languages
+;;  'org-babel-load-languages
+;;  '((emacs-lisp . t)
+;;    (clojure . t)
+;;    (shell . t)
+;;    (dot . t)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up clojure-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up clojure-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Require clojure-mode to load and associate it to all .clj files.
+;; ;; Require clojure-mode to load and associate it to all .clj files.
 
 (use-package clojure-mode
   :ensure t)
 
-(autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
-(add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
-(add-to-list 'auto-mode-alist '("\\.cljs$" . clojurescript-mode))
-(add-to-list 'auto-mode-alist '("\\.hl$" . clojurescript-mode))
-(add-to-list 'auto-mode-alist '("\\.cljc$" . clojurec-mode))
-(add-to-list 'auto-mode-alist '("\\.edn$" . clojure-mode))
-(add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
-(add-to-list 'auto-mode-alist '("\\.boot$" . clojure-mode))
+;; (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
+;; (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
+;; (add-to-list 'auto-mode-alist '("\\.cljs$" . clojurescript-mode))
+;; (add-to-list 'auto-mode-alist '("\\.hl$" . clojurescript-mode))
+;; (add-to-list 'auto-mode-alist '("\\.cljc$" . clojurec-mode))
+;; (add-to-list 'auto-mode-alist '("\\.edn$" . clojure-mode))
+;; (add-to-list 'auto-mode-alist '("\\.dtm$" . clojure-mode))
+;; (add-to-list 'auto-mode-alist '("\\.boot$" . clojure-mode))
 
-;; (require 'dumb-jump)
-;; (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljc"))
-;; (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs"))
-;; (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs.hl"))
+;; ;; (require 'dumb-jump)
+;; ;; (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljc"))
+;; ;; (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs"))
+;; ;; (add-to-list 'dumb-jump-language-file-exts '(:language "clojure" :ext "cljs.hl"))
 
-;; Turn on paredit for clojure files
-;(require 'clojure-paredit)
-(setq clojure-enable-paredit t)
+;; ;; Turn on paredit for clojure files
+;; ;(require 'clojure-paredit)
+;; (setq clojure-enable-paredit t)
 
-;; This gives us a way to turn off slime-mode via .dir-locals.el. Just
-;; execute add-dir-local-variable to set clojure-mode-no-slime to t,
-;; and after that slime-mode will be turned off in any clojure-mode
-;; buffer that gets opened in that directory structure.
-(defvar clojure-mode-no-slime nil)
+;; ;; This gives us a way to turn off slime-mode via .dir-locals.el. Just
+;; ;; execute add-dir-local-variable to set clojure-mode-no-slime to t,
+;; ;; and after that slime-mode will be turned off in any clojure-mode
+;; ;; buffer that gets opened in that directory structure.
+;; (defvar clojure-mode-no-slime nil)
 
-;; We have to use hack-local-variables-hook, because apparently
-;; clojure-mode-hook runs before the local variables are set.
-(add-hook 'hack-local-variables-hook
-          '(lambda () (when clojure-mode-no-slime
-                        (message "Disabling slime-mode because clojure-mode-no-slime is set")
-                        (slime-mode -1))))
+;; ;; We have to use hack-local-variables-hook, because apparently
+;; ;; clojure-mode-hook runs before the local variables are set.
+;; (add-hook 'hack-local-variables-hook
+;;           '(lambda () (when clojure-mode-no-slime
+;;                         (message "Disabling slime-mode because clojure-mode-no-slime is set")
+;;                         (slime-mode -1))))
 
-;; Work around bug where inf-clojure-minor-mode sets
-;; comint-input-sender too aggressively
-(make-variable-buffer-local comint-input-sender)
+;; ;; Work around bug where inf-clojure-minor-mode sets
+;; ;; comint-input-sender too aggressively
+;; (make-variable-buffer-local comint-input-sender)
 
 ;; These are extra key defines because I kept typing them.
 ;; Within clojure-mode, have Ctrl-x Ctrl-e evaluate the last
@@ -1232,65 +1287,56 @@ always last."
 ;; were multi-line, which they often are
 (setq comment-multi-line t)
 
-;;(require 'clojure-test-mode)
-
-;; Some indentation fixups for core.async
-;;(put-clojure-indent 'go-loop 1)         ; Like 'let'
-
-;; Same thing for core.typed
-;;(put-clojure-indent 'doseq> 1)          ; Like 'let'
-;;(put-clojure-indent 'for> 1)            ; Like 'let'
-
-;; And for core.match
+;; For core.match
 (put-clojure-indent 'match 1) ; Like let
 
-;; clojure-fill-docstring got changed rather radically in a newer
-;; version of clojure-mode than the one I use. I prefer the one I
-;; wrote, so I override it here. I also made a few changes, like
-;; respecting markdown syntax to give me things like correctly
-;; indenting bulleted lists.
-(defun clojure-fill-docstring ()
-  "Fill the definition that the point is on appropriate for Clojure.
+;; ;; clojure-fill-docstring got changed rather radically in a newer
+;; ;; version of clojure-mode than the one I use. I prefer the one I
+;; ;; wrote, so I override it here. I also made a few changes, like
+;; ;; respecting markdown syntax to give me things like correctly
+;; ;; indenting bulleted lists.
+;; (defun clojure-fill-docstring ()
+;;   "Fill the definition that the point is on appropriate for Clojure.
 
-Fills so that every paragraph has a minimum of two initial spaces,
-with the exception of the first line.  Fill margins are taken from
-paragraph start, so a paragraph that begins with four spaces will
-remain indented by four spaces after refilling."
-  (interactive)
-  (if (and (fboundp 'paredit-in-string-p) paredit-mode)
-      (unless (paredit-in-string-p)
-        (error "Must be inside a string")))
-  ;; Oddly, save-excursion doesn't do a good job of preserving point.
-  ;; It's probably because we delete the string and then re-insert it.
-  (let ((old-point (point)))
-    (save-restriction
-      (save-excursion
-        (let* ((clojure-fill-column 70)
-               (string-region (clojure-docstring-start+end-points))
-               (string-start (1+ (car string-region)))
-               (string-end (1- (cdr string-region)))
-               (string (buffer-substring-no-properties string-start
-                                                       string-end)))
-          (delete-region string-start string-end)
-          (insert
-           (with-temp-buffer
-             ;; Bah, this doesn't work, because it isn't idempotent.
-             ;; To make it so, and to preserve correctly line flow for
-             ;; things like bulleted lists, it looks like we might
-             ;; have to heuristically detect that every non-blank line
-             ;; starts with two spaces and remove them before trying
-             ;; again. I think the fix might be to make
-             ;; `markdown-adaptive-fill-function` aware of
-             ;; `left-margin`.
-             (insert string)
-             (markdown-mode)
-             (setq fill-column (- clojure-fill-column 2))
-             (fill-region (point-min) (point-max))
-             (goto-char (point-min))
-             (replace-regexp "^" "  ")
-             (delete-trailing-whitespace)
-             (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))
-    (goto-char old-point)))
+;; Fills so that every paragraph has a minimum of two initial spaces,
+;; with the exception of the first line.  Fill margins are taken from
+;; paragraph start, so a paragraph that begins with four spaces will
+;; remain indented by four spaces after refilling."
+;;   (interactive)
+;;   (if (and (fboundp 'paredit-in-string-p) paredit-mode)
+;;       (unless (paredit-in-string-p)
+;;         (error "Must be inside a string")))
+;;   ;; Oddly, save-excursion doesn't do a good job of preserving point.
+;;   ;; It's probably because we delete the string and then re-insert it.
+;;   (let ((old-point (point)))
+;;     (save-restriction
+;;       (save-excursion
+;;         (let* ((clojure-fill-column 70)
+;;                (string-region (clojure-docstring-start+end-points))
+;;                (string-start (1+ (car string-region)))
+;;                (string-end (1- (cdr string-region)))
+;;                (string (buffer-substring-no-properties string-start
+;;                                                        string-end)))
+;;           (delete-region string-start string-end)
+;;           (insert
+;;            (with-temp-buffer
+;;              ;; Bah, this doesn't work, because it isn't idempotent.
+;;              ;; To make it so, and to preserve correctly line flow for
+;;              ;; things like bulleted lists, it looks like we might
+;;              ;; have to heuristically detect that every non-blank line
+;;              ;; starts with two spaces and remove them before trying
+;;              ;; again. I think the fix might be to make
+;;              ;; `markdown-adaptive-fill-function` aware of
+;;              ;; `left-margin`.
+;;              (insert string)
+;;              (markdown-mode)
+;;              (setq fill-column (- clojure-fill-column 2))
+;;              (fill-region (point-min) (point-max))
+;;              (goto-char (point-min))
+;;              (replace-regexp "^" "  ")
+;;              (delete-trailing-whitespace)
+;;              (buffer-substring-no-properties (+ 2 (point-min)) (point-max)))))))
+;;     (goto-char old-point)))
 
 (defun find-clojure-namespaced-tag ()
   "Find the tag to search for at point. Remove the namespace
@@ -1318,105 +1364,107 @@ back to the original string."
                    (start (point))
                    (_ (paredit-forward))
                    (end (point))
-                   (contents (buffer-substring-no-properties (1+ start) (1- end))))
+                   (contents (buffer-substring-no-properties (1+ start) (1- end)))
+		   (finish (lambda ()
+                             (interactive)
+                             (save-mark-and-excursion
+                               (lexical-let* ((contents (buffer-substring-no-properties
+                                                         (point-min)
+                                                         (point-max))))
+                                 (switch-to-buffer orig)
+                                 (kill-region (1+ start) (1- end))
+                                 (goto-char (1+ start))
+                                 (insert contents))))))
       (lexical-let* ((new-buffer (switch-to-buffer (make-temp-name "clojure-string")))))
-      (local-set-key (kbd "C-c C-c") (lambda ()
-                                       (interactive)
-                                       (save-mark-and-excursion
-                                         (lexical-let* ((contents (buffer-substring-no-properties
-                                                                   (point-min)
-                                                                   (point-max))))
-                                           (switch-to-buffer orig)
-                                           (kill-region (1+ start) (1- end))
-                                           (goto-char (1+ start))
-                                           (insert contents)))))
       (insert contents)
       (save-mark-and-excursion
         (mark-whole-buffer)
         (replace-string "\\n" "\n"))
-      (normal-mode))))
+      (normal-mode)
+      (local-set-key (kbd "C-c C-c") finish)
+      (local-set-key (kbd "C-c C-f") finish))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; inferior-lisp
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; inferior-lisp
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'inf-lisp)
-(require 'clojure-mode)
-(require 'paredit)
+;; (require 'inf-lisp)
+;; (require 'clojure-mode)
+;; (require 'paredit)
 
-;; Right now I only use inferior lisp for clojure, so we configure for that
-(define-key clojure-mode-map (kbd "C-c C-c") 'lisp-eval-defun)
+;; ;; Right now I only use inferior lisp for clojure, so we configure for that
+;; (define-key clojure-mode-map (kbd "C-c C-c") 'lisp-eval-defun)
 
 (add-hook 'inferior-lisp-mode-hook
           (lambda ()
             (paredit-mode t)))
 
-(defun comint-clear-buffer ()
-  (interactive)
-  (let ((comint-buffer-maximum-size 0))
-    (comint-truncate-buffer)))
-
-(define-key inferior-lisp-mode-map (kbd "C-c M-o") #'comint-clear-buffer)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; cider
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (require 'cider)
-
-;; ;; Don't use on the Pi, due to excessive CPU
-;; (unless (string= "raspberrypi" system-name)
-;;   (add-hook 'cider-mode-hook
-;;             (lambda ()
-;;               (eldoc-mode)
-;;               (cider-eldoc-setup)
-;;               ;; Suppress some really stupid shit that cider is doing
-;;               ;; around background colors. I think it's assuming
-;;               ;; there's a theme. Or it could be the problem that when
-;;               ;; cider loads, the background color is still light.
-;;               ;; (setq cider-stacktrace-frames-background-color
-;;               ;;       (cider-scale-background-color))
-;;               )))
-
-;; (add-hook 'cider-repl-mode-hook
-;;           (lambda ()
-;;             (paredit-mode 1)
-;;             ;; For some reason this isn't defined correctly
-;;             (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)
-;;             (define-key cider-repl-mode-map (kbd "}") #'paredit-close-curly)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; elein-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (require 'elein)
-
-;; (defun lein-repl ()
-;;   "Run 'lein repl' in an inferior-lisp."
+;; (defun comint-clear-buffer ()
 ;;   (interactive)
-;;   (inferior-lisp "lein repl"))
+;;   (let ((comint-buffer-maximum-size 0))
+;;     (comint-truncate-buffer)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up Craig's web-lookup utilities
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (define-key inferior-lisp-mode-map (kbd "C-c M-o") #'comint-clear-buffer)
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; cider
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; (require 'cider)
+
+;; ;; ;; Don't use on the Pi, due to excessive CPU
+;; ;; (unless (string= "raspberrypi" system-name)
+;; ;;   (add-hook 'cider-mode-hook
+;; ;;             (lambda ()
+;; ;;               (eldoc-mode)
+;; ;;               (cider-eldoc-setup)
+;; ;;               ;; Suppress some really stupid shit that cider is doing
+;; ;;               ;; around background colors. I think it's assuming
+;; ;;               ;; there's a theme. Or it could be the problem that when
+;; ;;               ;; cider loads, the background color is still light.
+;; ;;               ;; (setq cider-stacktrace-frames-background-color
+;; ;;               ;;       (cider-scale-background-color))
+;; ;;               )))
+
+;; ;; (add-hook 'cider-repl-mode-hook
+;; ;;           (lambda ()
+;; ;;             (paredit-mode 1)
+;; ;;             ;; For some reason this isn't defined correctly
+;; ;;             (define-key cider-repl-mode-map (kbd "{") #'paredit-open-curly)
+;; ;;             (define-key cider-repl-mode-map (kbd "}") #'paredit-close-curly)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; elein-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; (require 'elein)
+
+;; ;; (defun lein-repl ()
+;; ;;   "Run 'lein repl' in an inferior-lisp."
+;; ;;   (interactive)
+;; ;;   (inferior-lisp "lein repl"))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up Craig's web-lookup utilities
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'web-lookup)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up Craig's typing-speed-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(load "~/.emacs.d/custom/candera/typing-speed.el")
-;; (add-hook 'text-mode-hook (lambda ()
-;;                             (turn-on-typing-speed)))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up Craig's typing-speed-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (load "~/.emacs.d/custom/candera/typing-speed.el")
+;; ;; (add-hook 'text-mode-hook (lambda ()
+;; ;;                             (turn-on-typing-speed)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1425,91 +1473,92 @@ back to the original string."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'view-visited-file)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up Craig's outline-presentation-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up Craig's outline-presentation-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Turn on Craig's outline-presentation hacks.
 (load "~/.emacs.d/custom/candera/outline-presentation.el")
 
-(global-set-key (quote [f5]) 'outline-presentation-mode-on)
-(global-set-key (quote [f6]) 'lisp-mode)
+;; (global-set-key (quote [f5]) 'outline-presentation-mode-on)
+;; (global-set-key (quote [f6]) 'lisp-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; This section sets up Craig's journal functionality
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up Craig's journal functionality
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (load-file "~/.emacs.d/custom/candera/journal.el")
 (global-set-key (kbd "C-x y") 'find-yesterday-log-file)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; sgml-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; sgml-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'sgml-mode)
+;; (require 'sgml-mode)
 
-(setq auto-mode-alist
-      (append '(
-             ("\\.xml$" . sgml-mode)
-             ("\\.build$" . sgml-mode)
-             ("\\.config$" . sgml-mode)
-             ("\\.xslt$" . sgml-mode)
-             ("\\.xsl$" . sgml-mode)
-             ("\\.xsd$" . sgml-mode)
-             ) auto-mode-alist ))
+;; (setq auto-mode-alist
+;;       (append '(
+;;              ("\\.xml$" . sgml-mode)
+;;              ("\\.build$" . sgml-mode)
+;;              ("\\.config$" . sgml-mode)
+;;              ("\\.xslt$" . sgml-mode)
+;;              ("\\.xsl$" . sgml-mode)
+;;              ("\\.xsd$" . sgml-mode)
+;;              ) auto-mode-alist ))
 
-(defun sgml-pretty-print-buffer ()
-  "Format the entire buffer using sgml-pretty-print"
-  (interactive)
-  (save-excursion
-    (sgml-pretty-print (point-min) (point-max))))
+;; (defun sgml-pretty-print-buffer ()
+;;   "Format the entire buffer using sgml-pretty-print"
+;;   (interactive)
+;;   (save-excursion
+;;     (sgml-pretty-print (point-min) (point-max))))
 
-(add-hook 'sgml-mode-hook
-          (lambda ()
-            (define-key sgml-mode-map (kbd "C-c p") 'sgml-pretty-print-buffer)))
+;; (add-hook 'sgml-mode-hook
+;;           (lambda ()
+;;             (define-key sgml-mode-map (kbd "C-c p") 'sgml-pretty-print-buffer)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Set up the command shell
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;
+;; ; Set up the command shell
+;; ;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (defun my-shell-setup ()
-;;   "For cmdproxy shell under Emacs 20"
-;;   (setq w32-quote-process-args ?\")
-;;   (make-variable-buffer-local 'comint-completion-addsuffix))
+(defun my-shell-setup ()
+  "For cmdproxy shell under Emacs 20"
+  (setq w32-quote-process-args ?\")
+  (make-variable-buffer-local 'comint-completion-addsuffix)
+  (auto-complete-mode 1))
 
-;; (setq shell-mode-hook 'my-shell-setup)
+(add-hook 'shell-mode-hook 'my-shell-setup)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; This sets CVS to use plink, which SourceForge requires
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setenv "CVS_RSH" "plink")
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;
+;; ; This sets CVS to use plink, which SourceForge requires
+;; ;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (setenv "CVS_RSH" "plink")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; This sets up my FlexWiki mode
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'auto-mode-alist '("\\.wiki$" . flexwiki-mode))
-(require 'flexwiki)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;
+;; ; This sets up my FlexWiki mode
+;; ;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (add-to-list 'auto-mode-alist '("\\.wiki$" . flexwiki-mode))
+;; (require 'flexwiki)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Sets up outline-mode
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'auto-mode-alist '("\\.outline$" . outline-mode))
-(add-hook 'outline-mode-hook 'auto-fill-mode)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;
+;; ; Sets up outline-mode
+;; ;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (add-to-list 'auto-mode-alist '("\\.outline$" . outline-mode))
+;; (add-hook 'outline-mode-hook 'auto-fill-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1519,24 +1568,25 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'highlight-symbol)
+(use-package highlight-symbol
+  :ensure t)
 
-(global-set-key [(control f3)] 'highlight-symbol-at-point)
-(global-set-key [f3] 'highlight-symbol-next)
-(global-set-key [(shift f3)] 'highlight-symbol-prev)
-(global-set-key [(meta f3)] 'highlight-symbol-prev)
+;; (global-set-key [(control f3)] 'highlight-symbol-at-point)
+;; (global-set-key [f3] 'highlight-symbol-next)
+;; (global-set-key [(shift f3)] 'highlight-symbol-prev)
+;; (global-set-key [(meta f3)] 'highlight-symbol-prev)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up markdown-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up markdown-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package markdown-mode
-  :ensure t
-  :mode "\\.md"
-  :config
-  (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1))))
+;; (use-package markdown-mode
+;;   :ensure t
+;;   :mode "\\.md"
+;;   :config
+;;   (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1))))
 
 
 
@@ -1570,152 +1620,152 @@ back to the original string."
   (set-variable 'magit-emacsclient-executable
                 "/Applications/Emacs.app/Contents/MacOS/bin/emacsclient"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up gist.el
-;;
-;; http://github.com/defunkt/gist.el
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up gist.el
+;; ;;
+;; ;; http://github.com/defunkt/gist.el
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'gist)
+;; ;; (require 'gist)
 
-;; ;; Turn on longlines mode whenever we're in an edit server buffer
-;; (add-hook 'edit-server-text-mode-hook
-;;           '(lambda ()
-;;              (longlines-mode 1)))
+;; ;; ;; Turn on longlines mode whenever we're in an edit server buffer
+;; ;; (add-hook 'edit-server-text-mode-hook
+;; ;;           '(lambda ()
+;; ;;              (longlines-mode 1)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; diary setup
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; diary setup
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq diary-file "~/Dropbox/diary")
+;; (setq diary-file "~/Dropbox/diary")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up nXhtml mode
-;;
-;; http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;(load "~/.emacs.d/custom/nxhtml/autostart.el")
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up nXhtml mode
+;; ;;
+;; ;; http://ourcomments.org/Emacs/nXhtml/doc/nxhtml.html
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;(load "~/.emacs.d/custom/nxhtml/autostart.el")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Change zap-to-char not to kill the char
-;; it zaps to. Taken from
-;; http://www.emacswiki.org/emacs/ZapUpToChar
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Change zap-to-char not to kill the char
+;; ;; it zaps to. Taken from
+;; ;; http://www.emacswiki.org/emacs/ZapUpToChar
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
-  "Kill up to the ARG'th occurence of CHAR, and leave CHAR.
-  The CHAR is replaced and the point is put before CHAR."
-  (insert char)
-  (forward-char -1))
+;; (defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
+;;   "Kill up to the ARG'th occurence of CHAR, and leave CHAR.
+;;   The CHAR is replaced and the point is put before CHAR."
+;;   (insert char)
+;;   (forward-char -1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Interactively evaluate SPARQL
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Interactively evaluate SPARQL
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(autoload 'sparql-mode "sparql-mode.el"
-     "Major mode for editing SPARQL files" t)
-(add-to-list 'auto-mode-alist '("\\.sparql$" . sparql-mode))
+;; (autoload 'sparql-mode "sparql-mode.el"
+;;      "Major mode for editing SPARQL files" t)
+;; (add-to-list 'auto-mode-alist '("\\.sparql$" . sparql-mode))
 
-(setq sparql-default-base-url "http://localhost:2020/metamodl_test/")
+;; (setq sparql-default-base-url "http://localhost:2020/metamodl_test/")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Set up ERC
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Set up ERC
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;(add-hook 'erc-insert-post-hook 'ding)
+;; ;;(add-hook 'erc-insert-post-hook 'ding)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; find-file-in-git-repo
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; find-file-in-git-repo
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Deprecating in favor of find-file-in-project
-;; (require 'find-file-in-git-repo)
-;; (global-set-key (kbd "C-x M-f") 'find-file-in-git-repo)
+;; ;; Deprecating in favor of find-file-in-project
+;; ;; (require 'find-file-in-git-repo)
+;; ;; (global-set-key (kbd "C-x M-f") 'find-file-in-git-repo)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; find-file-in-project
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; find-file-in-project
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'find-file-in-project)
-;; (global-set-key (kbd "C-x M-f") 'find-file-in-project)
-;; (setq ffip-patterns (append '("*.clj" "*.cljc" "*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn") ffip-patterns))
-;; (setq ffip-limit 2048)
+;; ;; (require 'find-file-in-project)
+;; ;; (global-set-key (kbd "C-x M-f") 'find-file-in-project)
+;; ;; (setq ffip-patterns (append '("*.clj" "*.cljc" "*.cljs" "*.scss" ".css" "*.java" "*.dtm" "*.edn") ffip-patterns))
+;; ;; (setq ffip-limit 2048)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; helm-projectile
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; helm-projectile
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package helm-projectile
-;;   :ensure t)
+;; ;; (use-package helm-projectile
+;; ;;   :ensure t)
 
-;; (require 'helm-projectile)
-;; (global-set-key (kbd "C-x M-f") 'helm-projectile-find-file)
+;; ;; (require 'helm-projectile)
+;; ;; (global-set-key (kbd "C-x M-f") 'helm-projectile-find-file)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; helm-ag
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; helm-ag
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package helm-ag
-;;   :ensure t)
+;; ;; (use-package helm-ag
+;; ;;   :ensure t)
 
-;; ;; Even though it breaks sometimes, it's still better than counsel-ag
-;; ;; because it uses a separate buffer.
-;; (require 'helm-ag)
-;; (global-set-key (kbd "C-x M-s") 'helm-do-ag-project-root)
+;; ;; ;; Even though it breaks sometimes, it's still better than counsel-ag
+;; ;; ;; because it uses a separate buffer.
+;; ;; (require 'helm-ag)
+;; ;; (global-set-key (kbd "C-x M-s") 'helm-do-ag-project-root)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; align-cljlet, for aligning let forms
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; align-cljlet, for aligning let forms
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'align-cljlet)
-;; (define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
+;; ;; (require 'align-cljlet)
+;; ;; (define-key clojure-mode-map (kbd "C-c |") 'align-cljlet)
 
-;; Deprecated - replaced by clojure-mode support
-(define-key clojure-mode-map (kbd "C-c |") 'clojure-align)
+;; ;; Deprecated - replaced by clojure-mode support
+;; (define-key clojure-mode-map (kbd "C-c |") 'clojure-align)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; SMEX
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; SMEX
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package smex
-  :ensure t
-  :config
-  (smex-initialize)
-  ;; (global-set-key (kbd "M-x") 'smex)
-  ;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-  ;; This is your old M-x.
-  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command))
+;; (use-package smex
+;;   :ensure t
+;;   :config
+;;   (smex-initialize)
+;;   ;; (global-set-key (kbd "M-x") 'smex)
+;;   ;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+;;   ;; This is your old M-x.
+;;   (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Ivy, Counsel, Company
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Ivy, Counsel, Company
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package ivy
   :ensure t)
@@ -1738,14 +1788,14 @@ back to the original string."
 ;; Don't make M-x match on beginning of string
 (add-to-list 'ivy-initial-inputs-alist '(counsel-M-x . ""))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; flx
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; flx
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package flx
-  :ensure t)
+;; (use-package flx
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1768,53 +1818,53 @@ back to the original string."
 (projectile-mode +1)
 (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 
-;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
-;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
+;; ;; (global-set-key (kbd "C-x M-f") 'counsel-projectile-find-file)
+;; ;;(global-set-key (kbd "C-x M-s") 'counsel-projectile-ag)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; expand-region
-;;   https://github.com/emacsmirror/expand-region.git
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; expand-region
+;; ;;   https://github.com/emacsmirror/expand-region.git
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package expand-region
-  :ensure t
-  :config
-  (global-set-key (kbd "C-=") 'er/expand-region))
+;; (use-package expand-region
+;;   :ensure t
+;;   :config
+;;   (global-set-key (kbd "C-=") 'er/expand-region))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; auto-complete-mode
-;;   https://github.com/auto-complete/auto-complete
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; auto-complete-mode
+;; ;;   https://github.com/auto-complete/auto-complete
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package auto-complete
-  :ensure t
-  :config
-  (ac-config-default)
-  ;; Turn off automatic start of auto-complete
-  (setq ac-auto-start nil)
+;; (use-package auto-complete
+;;   :ensure t
+;;   :config
+;;   (ac-config-default)
+;;   ;; Turn off automatic start of auto-complete
+;;   (setq ac-auto-start nil)
 
-  (add-hook 'auto-complete-mode-hook
-          (lambda ()
-            (local-set-key (kbd "M-/") 'auto-complete)
-            (define-key ac-completing-map (kbd "C-n") 'ac-next)
-            (define-key ac-completing-map (kbd "C-p") 'ac-previous)
-            (define-key ac-completing-map (kbd "C-g") 'ac-stop)
-            (define-key ac-completing-map (kbd "ESC") 'ac-stop))))
+;;   (add-hook 'auto-complete-mode-hook
+;;           (lambda ()
+;;             (local-set-key (kbd "M-/") 'auto-complete)
+;;             (define-key ac-completing-map (kbd "C-n") 'ac-next)
+;;             (define-key ac-completing-map (kbd "C-p") 'ac-previous)
+;;             (define-key ac-completing-map (kbd "C-g") 'ac-stop)
+;;             (define-key ac-completing-map (kbd "ESC") 'ac-stop))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; command-log-mode
-;;  https://github.com/lewang/command-log-mode.git
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; command-log-mode
+;; ;;  https://github.com/lewang/command-log-mode.git
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package command-log-mode
-  :ensure t)
+;; (use-package command-log-mode
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1828,32 +1878,32 @@ back to the original string."
   :config
   (global-undo-tree-mode 1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; eshell customizations
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; eshell customizations
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun eshell/clear ()
-  "Clear the eshell buffer."
-  (interactive)
-  (let ((inhibit-read-only t))
-    (erase-buffer)))
+;; (defun eshell/clear ()
+;;   "Clear the eshell buffer."
+;;   (interactive)
+;;   (let ((inhibit-read-only t))
+;;     (erase-buffer)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; haml-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; haml-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package haml-mode
-  :ensure t
-  :config
-  (add-hook 'haml-mode-hook
-            (lambda ()
-              (setq indent-tabs-mode nil)
-              (define-key haml-mode-map "\C-m" 'newline-and-indent))))
+;; (use-package haml-mode
+;;   :ensure t
+;;   :config
+;;   (add-hook 'haml-mode-hook
+;;             (lambda ()
+;;               (setq indent-tabs-mode nil)
+;;               (define-key haml-mode-map "\C-m" 'newline-and-indent))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1867,17 +1917,17 @@ back to the original string."
             (define-key hs-minor-mode-map (kbd "C-c h a") 'hs-hide-all)
             (define-key hs-minor-mode-map (kbd "C-c h s") 'hs-show-all)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; gherkin-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; gherkin-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package gherkin-mode
-  :ensure t)
+;; (use-package gherkin-mode
+;;   :ensure t)
 
-(require 'gherkin-mode)
-(add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
+;; (require 'gherkin-mode)
+;; (add-to-list 'auto-mode-alist '("\\.gk$" . gherkin-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1889,11 +1939,11 @@ back to the original string."
   :ensure t
   :mode "\\.[Cc][Ss][Vv]\\'")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; inf-clojure
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; inf-clojure
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; The mainline version has a bug (#152) where it collapses
 ;; consecutive spaces. Although the bug itself bonkers, the maintainer
@@ -2012,47 +2062,47 @@ back to the original string."
           (mark-defun)
           (indent-for-tab-command))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Un-pork scrolling
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Un-pork scrolling
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
-(setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-(setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-(setq scroll-step 1) ;; keyboard scroll one line at a time
-(setq compilation-scroll-output 'first-error) ;; Can also be `t` for
-                                              ;; scrolling to the end
+;; (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
+;; (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+;; (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+;; (setq scroll-step 1) ;; keyboard scroll one line at a time
+;; (setq compilation-scroll-output 'first-error) ;; Can also be `t` for
+;;                                               ;; scrolling to the end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Hoplon support
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Hoplon support
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-to-list 'auto-mode-alist '("\\.cljs\\.hl\\'" . clojurescript-mode))
+;; (add-to-list 'auto-mode-alist '("\\.cljs\\.hl\\'" . clojurescript-mode))
 
-(add-hook 'clojure-mode-hook
-          '(lambda ()
-             ;; Hoplon functions and macros
-             (dolist (pair '((page . 'defun)
-                             (loop-tpl . 'defun)
-                             (cell-let . 'defun)
-                             (if-tpl . '1)
-                             (for-tpl . '1)
-                             (for-append . '1)
-                             (keyed-for-tpl . '2)
-                             (map-lens-tpl . '2)
-                             (do-watch . '1)
-                             (case-tpl . '1)
-                             (cond-tpl . 'defun)
-                             (formula-of . 'defun)
-                             (GET . 'defun)
-                             (PUT . 'defun)
-                             (POST . 'defun)))
-               (put-clojure-indent (car pair)
-                                   (car (last pair))))))
+;; (add-hook 'clojure-mode-hook
+;;           '(lambda ()
+;;              ;; Hoplon functions and macros
+;;              (dolist (pair '((page . 'defun)
+;;                              (loop-tpl . 'defun)
+;;                              (cell-let . 'defun)
+;;                              (if-tpl . '1)
+;;                              (for-tpl . '1)
+;;                              (for-append . '1)
+;;                              (keyed-for-tpl . '2)
+;;                              (map-lens-tpl . '2)
+;;                              (do-watch . '1)
+;;                              (case-tpl . '1)
+;;                              (cond-tpl . 'defun)
+;;                              (formula-of . 'defun)
+;;                              (GET . 'defun)
+;;                              (PUT . 'defun)
+;;                              (POST . 'defun)))
+;;                (put-clojure-indent (car pair)
+;;                                    (car (last pair))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2060,7 +2110,11 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'flyspell)
+(use-package flyspell
+  :ensure t)
+
+(use-package flyspell-popup
+  :ensure t)
 
 (defun flyspell-popup-correct-previous-word ()
   (interactive)
@@ -2072,59 +2126,71 @@ back to the original string."
 (global-set-key (kbd "C-;") 'flyspell-popup-correct-previous-word)
 (define-key flyspell-mode-map (kbd "C-;") 'flyspell-popup-correct-previous-word)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; restclient
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; restclient
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ;; Not working yet - the execution is asynchronous
-;; (defun org-babel-execute:restclient (body params)
-;;   (save-mark-and-excursion
-;;    (with-temp-buffer
-;;      (insert body)
-;;      (restclient-http-send-current nil t)
-;;      (switch-to-buffer "*HTTP Response*")
-;;      (buffer-substring (point-min) (point-max)))))
+;; ;; ;; Not working yet - the execution is asynchronous
+;; ;; (defun org-babel-execute:restclient (body params)
+;; ;;   (save-mark-and-excursion
+;; ;;    (with-temp-buffer
+;; ;;      (insert body)
+;; ;;      (restclient-http-send-current nil t)
+;; ;;      (switch-to-buffer "*HTTP Response*")
+;; ;;      (buffer-substring (point-min) (point-max)))))
 
-(use-package restclient
-  :ensure t)
+;; (use-package restclient
+;;   :ensure t)
 
-(use-package ob-restclient
-  :ensure t
-  :config
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((restclient . t))))
+;; (use-package ob-restclient
+;;   :ensure t
+;;   :config
+;;   (org-babel-do-load-languages
+;;    'org-babel-load-languages
+;;    '((restclient . t))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; csharp-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; csharp-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Unfortunately I can't get these to work. They rely on map-put!
+;; which I think might only be available in Emacs 27.
+(use-package tree-sitter :ensure t)
+(use-package tree-sitter-langs :ensure t)
 
 (use-package csharp-mode
   :ensure t
   :hook (csharp-mode-hook . (lambda ()
                               ;; (display-line-numbers-mode 1)
-                              (setq c-basic-offset 2))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; java-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                              (setq c-basic-offset 2)))
+  :config
+  ;; (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode))
+  (unless (assoc 'csharp-mode hs-special-modes-alist)
+          (push '(csharp-mode
+                  "{" "}"
+                  "/[*/]" nil hs-c-like-adjust-block-beginning)
+                  hs-special-modes-alist)))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; java-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-hook 'java-mode-hook (lambda ()
-                            (setq c-basic-offset 2
-                                  tab-width 2
-                                  indent-tabs-mode nil
-                                  c-default-style '((java-mode . "linux")))))
+;; (add-hook 'java-mode-hook (lambda ()
+;;                             (setq c-basic-offset 2
+;;                                   tab-width 2
+;;                                   indent-tabs-mode nil
+;;                                   c-default-style '((java-mode . "linux")))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; sql-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; sql-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package sqlup-mode
   :ensure t)
@@ -2144,7 +2210,7 @@ back to the original string."
 (defvar sql-eval-mode-shell-buffer "")
 (make-variable-buffer-local 'sql-eval-mode-shell-buffer)
 
-(defvar sql-eval-mode-style :dosql)
+(defvar sql-eval-mode-style :sqlcmd)
 (make-variable-buffer-local 'sql-eval-mode-style)
 
 (defun sql-to-single-line (sql)
@@ -2157,12 +2223,15 @@ back to the original string."
   (concat "/* "
           (current-time-string)
           " */ "
-          (if (eq sql-eval-mode-style :dosql)
-              (sql-to-single-line sql)
-            sql)))
+          (replace-regexp-in-string "\t"
+				    "  "
+				    (if (eq sql-eval-mode-style :dosql)
+					(sql-to-single-line sql)
+				      sql))))
 
 (defun sql-eval-buffer-subset (buf beg end)
   "Send the text in the buffer from `beg` to `end` to SQL eval buffer `buf`"
+  (display-buffer buf)
   (save-excursion
     (save-match-data
       (goto-char beg)
@@ -2171,16 +2240,15 @@ back to the original string."
           (goto-char cur)
           (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
                          (block-end (min end (if next-go
-                                                 (- next-go
-                                                    (if (eq sql-eval-mode-style :dosql)
-                                                        2
-                                                      0))
+                                                 (- next-go 2)
                                                end)))
                          (sql (buffer-substring-no-properties cur block-end))
                          (prepped-sql (sql-eval-prep-input sql)))
-            (shell-send-input prepped-sql buf)
-            (when (eq sql-eval-mode-style :sqlcmd)
-              (shell-send-input "GO" buf))
+            (save-window-excursion
+              (switch-to-buffer-other-window buf)
+              (vterm-send-string prepped-sql)
+              (when (eq sql-eval-mode-style :sqlcmd)
+                (vterm-send-string "\nGO\n")))
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
 (defun sql-eval-region (buffer)
@@ -2204,7 +2272,7 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                  sql-eval-mode-shell-buffer
-               (read-buffer "Buffer: " "sql-mdev" t))))
+               (read-buffer "Buffer: " "sql-mdev-default" t))))
     (save-excursion
       (save-match-data
         (lexical-let* ((p (point))
@@ -2228,14 +2296,77 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "bBuffer:")
   (setq sql-eval-mode-shell-buffer buffer))
 
-(defvar sql-eval-interpreter "dosql -i --tall")
+(defvar sql-eval-interpreter "zclsql")
 
 (defvar sql-eval-mode-map (make-keymap))
 (define-key sql-eval-mode-map (kbd "C-c e") 'sql-eval-region)
 (define-key sql-eval-mode-map (kbd "C-c C-r") 'sql-eval-region)
 (define-key sql-eval-mode-map (kbd "C-M-x") 'sql-eval-defun)
-(define-key sql-eval-mode-map (kbd "C-c C-c") 'sql-eval-defun)
 (define-key sql-eval-mode-map (kbd "C-c C-b") 'sql-eval-set-buffer)
+
+(defvar sql-keywords
+  '("A" "ABORT" "ABS" "ABSOLUTE" "ACCESS" "ACTION" "ADA" "ADD" "ADMIN" "AFTER" "AGGREGATE" "ALIAS" "ALL" "ALLOCATE" "ALSO" "ALTER"
+    "ALWAYS" "ANALYSE" "ANALYZE" "AND" "ANY" "ARE" "ARRAY" "AS" "ASC" "ASENSITIVE" "ASSERTION" "ASSIGNMENT" "ASYMMETRIC" "AT" "ATOMIC" "ATTRIBUTE"
+    "ATTRIBUTES" "AUDIT" "AUTHORIZATION" "AUTO_INCREMENT" "AVG" "AVG_ROW_LENGTH" "BACKUP" "BACKWARD" "BEFORE" "BEGIN" "BERNOULLI" "BETWEEN" "BIGINT" "BINARY" "BIT" "BIT_LENGTH"
+    "BITVAR" "BLOB" "BOOL" "BOOLEAN" "BOTH" "BREADTH" "BREAK" "BROWSE" "BULK" "BY" "C" "CACHE" "CALL" "CALLED" "CARDINALITY" "CASCADE"
+    "CASCADED" "CASE" "CAST" "CATALOG" "CATALOG_NAME" "CEIL" "CEILING" "CHAIN" "CHANGE" "CHAR" "CHAR_LENGTH" "CHARACTER" "CHARACTER_LENGTH" "CHARACTER_SET_CATALOG" "CHARACTER_SET_NAME" "CHARACTER_SET_SCHEMA"
+    "CHARACTERISTICS" "CHARACTERS" "CHECK" "CHECKED" "CHECKPOINT" "CHECKSUM" "CLASS" "CLASS_ORIGIN" "CLOB" "CLOSE" "CLUSTER" "CLUSTERED" "COALESCE" "COBOL" "COLLATE" "COLLATION"
+    "COLLATION_CATALOG" "COLLATION_NAME" "COLLATION_SCHEMA" "COLLECT" "COLUMN" "COLUMN_NAME" "COLUMNS" "COMMAND_FUNCTION" "COMMAND_FUNCTION_CODE" "COMMENT" "COMMIT" "COMMITTED" "COMPLETION" "COMPRESS" "COMPUTE" "CONDITION"
+    "CONDITION_NUMBER" "CONNECT" "CONNECTION" "CONNECTION_NAME" "CONSTRAINT" "CONSTRAINT_CATALOG" "CONSTRAINT_NAME" "CONSTRAINT_SCHEMA" "CONSTRAINTS" "CONSTRUCTOR" "CONTAINS" "CONTAINSTABLE" "CONTINUE" "CONVERSION" "CONVERT" "COPY"
+    "CORR" "CORRESPONDING" "COUNT" "COVAR_POP" "COVAR_SAMP" "CREATE" "CREATEDB" "CREATEROLE" "CREATEUSER" "CROSS" "CSV" "CUBE" "CUME_DIST" "CURRENT" "CURRENT_DATE" "CURRENT_DEFAULT_TRANSFORM_GROUP"
+    "CURRENT_PATH" "CURRENT_ROLE" "CURRENT_TIME" "CURRENT_TIMESTAMP" "CURRENT_TRANSFORM_GROUP_FOR_TYPE" "CURRENT_USER" "CURSOR" "CURSOR_NAME" "CYCLE" "DATA" "DATABASE" "DATABASES" "DATE" "DATETIME" "DATETIME_INTERVAL_CODE" "DATETIME_INTERVAL_PRECISION"
+    "DAY" "DAY_HOUR" "DAY_MICROSECOND" "DAY_MINUTE" "DAY_SECOND" "DAYOFMONTH" "DAYOFWEEK" "DAYOFYEAR" "DBCC" "DEALLOCATE" "DEC" "DECIMAL" "DECLARE" "DEFAULT" "DEFAULTS" "DEFERRABLE"
+    "DEFERRED" "DEFINED" "DEFINER" "DEGREE" "DELAY_KEY_WRITE" "DELAYED" "DELETE" "DELIMITER" "DELIMITERS" "DENSE_RANK" "DENY" "DEPTH" "DEREF" "DERIVED" "DESC" "DESCRIBE"
+    "DESCRIPTOR" "DESTROY" "DESTRUCTOR" "DETERMINISTIC" "DIAGNOSTICS" "DICTIONARY" "DISABLE" "DISCONNECT" "DISK" "DISPATCH" "DISTINCT" "DISTINCTROW" "DISTRIBUTED" "DIV" "DO" "DOMAIN"
+    "DOUBLE" "DROP" "DUAL" "DUMMY" "DUMP" "DYNAMIC" "DYNAMIC_FUNCTION" "DYNAMIC_FUNCTION_CODE" "EACH" "ELEMENT" "ELSE" "ELSEIF" "ENABLE" "ENCLOSED" "ENCODING" "ENCRYPTED"
+    "END" "END-EXEC" "ENUM" "EQUALS" "ERRLVL" "ESCAPE" "ESCAPED" "EVERY" "EXCEPT" "EXCEPTION" "EXCLUDE" "EXCLUDING" "EXCLUSIVE" "EXEC" "EXECUTE" "EXISTING"
+    "EXISTS" "EXIT" "EXP" "EXPLAIN" "EXTERNAL" "EXTRACT" "FALSE" "FETCH" "FIELDS" "FILE" "FILLFACTOR" "FILTER" "FINAL" "FIRST" "FLOAT" "FLOAT4"
+    "FLOAT8" "FLOOR" "FLUSH" "FOLLOWING" "FOR" "FORCE" "FOREIGN" "FORTRAN" "FORWARD" "FOUND" "FREE" "FREETEXT" "FREETEXTTABLE" "FREEZE" "FROM" "FULL"
+    "FULLTEXT" "FUNCTION" "FUSION" "G" "GENERAL" "GENERATED" "GET" "GLOBAL" "GO" "GOTO" "GRANT" "GRANTED" "GRANTS" "GREATEST" "GROUP" "GROUPING"
+    "HANDLER" "HAVING" "HEADER" "HEAP" "HIERARCHY" "HIGH_PRIORITY" "HOLD" "HOLDLOCK" "HOST" "HOSTS" "HOUR" "HOUR_MICROSECOND" "HOUR_MINUTE" "HOUR_SECOND" "IDENTIFIED" "IDENTITY"
+    "IDENTITY_INSERT" "IDENTITYCOL" "IF" "IGNORE" "ILIKE" "IMMEDIATE" "IMMUTABLE" "IMPLEMENTATION" "IMPLICIT" "IN" "INCLUDE" "INCLUDING" "INCREMENT" "INDEX" "INDICATOR" "INFILE"
+    "INFIX" "INHERIT" "INHERITS" "INITIAL" "INITIALIZE" "INITIALLY" "INNER" "INOUT" "INPUT" "INSENSITIVE" "INSERT" "INSERT_ID" "INSTANCE" "INSTANTIABLE" "INSTEAD" "INT"
+    "INT1" "INT2" "INT3" "INT4" "INT8" "INTEGER" "INTERSECT" "INTERSECTION" "INTERVAL" "INTO" "INVOKER" "IS" "ISAM" "ISNULL" "ISOLATION" "ITERATE"
+    "JOIN" "K" "KEY" "KEY_MEMBER" "KEY_TYPE" "KEYS" "KILL" "LANCOMPILER" "LANGUAGE" "LARGE" "LAST" "LAST_INSERT_ID" "LATERAL" "LEADING" "LEAST" "LEAVE"
+    "LEFT" "LENGTH" "LESS" "LEVEL" "LIKE" "LIMIT" "LINENO" "LINES" "LISTEN" "LN" "LOAD" "LOCAL" "LOCALTIME" "LOCALTIMESTAMP" "LOCATION" "LOCATOR"
+    "LOCK" "LOGIN" "LOGS" "LONG" "LONGBLOB" "LONGTEXT" "LOOP" "LOW_PRIORITY" "LOWER" "M" "MAP" "MATCH" "MATCHED" "MAX" "MAX_ROWS" "MAXEXTENTS"
+    "MAXVALUE" "MEDIUMBLOB" "MEDIUMINT" "MEDIUMTEXT" "MEMBER" "MERGE" "MESSAGE_LENGTH" "MESSAGE_OCTET_LENGTH" "MESSAGE_TEXT" "METHOD" "MIDDLEINT" "MIN" "MIN_ROWS" "MINUS" "MINUTE" "MINUTE_MICROSECOND"
+    "MINUTE_SECOND" "MINVALUE" "MLSLABEL" "MOD" "MODE" "MODIFIES" "MODIFY" "MODULE" "MONTH" "MONTHNAME" "MORE" "MOVE" "MULTISET" "MUMPS" "MYISAM" "NAME"
+    "NAMES" "NATIONAL" "NATURAL" "NCHAR" "NCLOB" "NESTING" "NEW" "NEXT" "NO" "NO_WRITE_TO_BINLOG" "NOAUDIT" "NOCHECK" "NOCOMPRESS" "NOCREATEDB" "NOCREATEROLE" "NOCREATEUSER"
+    "NOINHERIT" "NOLOGIN" "NONCLUSTERED" "NONE" "NORMALIZE" "NORMALIZED" "NOSUPERUSER" "NOT" "NOTHING" "NOTIFY" "NOTNULL" "NOWAIT" "NULL" "NULLABLE" "NULLIF" "NULLS"
+    "NUMBER" "NUMERIC" "OBJECT" "OCTET_LENGTH" "OCTETS" "OF" "OFF" "OFFLINE" "OFFSET" "OFFSETS" "OIDS" "OLD" "ON" "ONLINE" "ONLY" "OPEN"
+    "OPENDATASOURCE" "OPENQUERY"
+    "OPENROWSET" "OPENXML" "OPERATION" "OPERATOR" "OPTIMIZE" "OPTION" "OPTIONALLY" "OPTIONS" "OR" "ORDER" "ORDERING" "ORDINALITY" "OTHERS" "OUT"
+    "OUTER" "OUTFILE" "OUTPUT" "OVER" "OVERLAPS" "OVERLAY" "OVERRIDING" "OWNER" "PACK_KEYS" "PAD" "PARAMETER" "PARAMETER_MODE" "PARAMETER_NAME" "PARAMETER_ORDINAL_POSITION" "PARAMETER_SPECIFIC_CATALOG" "PARAMETER_SPECIFIC_NAME"
+    "PARAMETER_SPECIFIC_SCHEMA" "PARAMETERS" "PARTIAL" "PARTITION" "PASCAL" "PASSWORD" "PATH" "PCTFREE" "PERCENT" "PERCENT_RANK" "PERCENTILE_CONT" "PERCENTILE_DISC" "PLACING" "PLAN" "PLI" "POSITION"
+    "POSTFIX" "POWER" "PRECEDING" "PRECISION" "PREFIX" "PREORDER" "PREPARE" "PREPARED" "PRESERVE" "PRIMARY" "PRINT" "PRIOR" "PRIVILEGES" "PROC" "PROCEDURAL" "PROCEDURE"
+    "PROCESS" "PROCESSLIST" "PUBLIC" "PURGE" "QUOTE" "RAID0" "RAISERROR" "RANGE" "RANK" "RAW" "READ" "READS" "READTEXT" "REAL" "RECHECK" "RECONFIGURE"
+    "RECURSIVE" "REF" "REFERENCES" "REFERENCING" "REGEXP" "REGR_AVGX" "REGR_AVGY" "REGR_COUNT" "REGR_INTERCEPT" "REGR_R2" "REGR_SLOPE" "REGR_SXX" "REGR_SXY" "REGR_SYY" "REINDEX" "RELATIVE"
+    "RELEASE" "RELOAD" "RENAME" "REPEAT" "REPEATABLE" "REPLACE" "REPLICATION" "REQUIRE" "RESET" "RESIGNAL" "RESOURCE" "RESTART" "RESTORE" "RESTRICT" "RESULT" "RETURN"
+    "RETURNED_CARDINALITY" "RETURNED_LENGTH" "RETURNED_OCTET_LENGTH" "RETURNED_SQLSTATE" "RETURNS" "REVOKE" "RIGHT" "RLIKE" "ROLE" "ROLLBACK" "ROLLUP" "ROUTINE" "ROUTINE_CATALOG" "ROUTINE_NAME" "ROUTINE_SCHEMA" "ROW"
+    "ROW_COUNT" "ROW_NUMBER" "ROWCOUNT" "ROWGUIDCOL" "ROWID" "ROWNUM" "ROWS" "RULE" "SAVE" "SAVEPOINT" "SCALE" "SCHEMA" "SCHEMA_NAME" "SCHEMAS" "SCOPE" "SCOPE_CATALOG"
+    "SCOPE_NAME" "SCOPE_SCHEMA" "SCROLL" "SEARCH" "SECOND" "SECOND_MICROSECOND" "SECTION" "SECURITY" "SELECT" "SELF" "SENSITIVE" "SEPARATOR" "SEQUENCE" "SERIALIZABLE" "SERVER_NAME" "SESSION"
+    "SESSION_USER" "SET" "SETOF" "SETS" "SETUSER" "SHARE" "SHOW" "SHUTDOWN" "SIGNAL" "SIMILAR" "SIMPLE" "SIZE" "SMALLINT" "SOME" "SONAME" "SOURCE"
+    "SPACE" "SPATIAL" "SPECIFIC" "SPECIFIC_NAME" "SPECIFICTYPE" "SQL" "SQL_BIG_RESULT" "SQL_BIG_SELECTS" "SQL_BIG_TABLES" "SQL_CALC_FOUND_ROWS" "SQL_LOG_OFF" "SQL_LOG_UPDATE" "SQL_LOW_PRIORITY_UPDATES" "SQL_SELECT_LIMIT" "SQL_SMALL_RESULT" "SQL_WARNINGS"
+    "SQLCA" "SQLCODE" "SQLERROR" "SQLEXCEPTION" "SQLSTATE" "SQLWARNING" "SQRT" "SSL" "STABLE" "START" "STARTING" "STATE" "STATEMENT" "STATIC" "STATISTICS" "STATUS"
+    "STDDEV_POP" "STDDEV_SAMP" "STDIN" "STDOUT" "STORAGE" "STRAIGHT_JOIN" "STRICT" "STRING" "STRUCTURE" "STYLE" "SUBCLASS_ORIGIN" "SUBLIST" "SUBMULTISET" "SUBSTRING" "SUCCESSFUL" "SUM"
+    "SUPERUSER" "SYMMETRIC" "SYNONYM" "SYSDATE" "SYSID" "SYSTEM" "SYSTEM_USER" "TABLE" "TABLE_NAME" "TABLES" "TABLESAMPLE" "TABLESPACE" "TEMP" "TEMPLATE" "TEMPORARY" "TERMINATE"
+    "TERMINATED" "TEXT" "TEXTSIZE" "THAN" "THEN" "TIES" "TIME" "TIMESTAMP" "TIMEZONE_HOUR" "TIMEZONE_MINUTE" "TINYBLOB" "TINYINT" "TINYTEXT" "TO" "TOAST" "TOP"
+    "TOP_LEVEL_COUNT" "TRAILING" "TRAN" "TRANSACTION" "TRANSACTION_ACTIVE" "TRANSACTIONS_COMMITTED" "TRANSACTIONS_ROLLED_BACK" "TRANSFORM" "TRANSFORMS" "TRANSLATE" "TRANSLATION" "TREAT" "TRIGGER" "TRIGGER_CATALOG" "TRIGGER_NAME" "TRIGGER_SCHEMA"
+    "TRIM" "TRUE" "TRUNCATE" "TRUSTED" "TSEQUAL" "TYPE" "UESCAPE" "UID" "UNBOUNDED" "UNCOMMITTED" "UNDER" "UNDO" "UNENCRYPTED" "UNION" "UNIQUE" "UNKNOWN"
+    "UNLISTEN" "UNLOCK" "UNNAMED" "UNNEST" "UNSIGNED" "UNTIL" "UPDATE" "UPDATETEXT" "UPPER" "USAGE" "USE" "USER" "USER_DEFINED_TYPE_CATALOG" "USER_DEFINED_TYPE_CODE" "USER_DEFINED_TYPE_NAME" "USER_DEFINED_TYPE_SCHEMA"
+    "USING" "UTC_DATE" "UTC_TIME" "UTC_TIMESTAMP" "VACUUM" "VALID" "VALIDATE" "VALIDATOR" "VALUE" "VALUES" "VAR_POP" "VAR_SAMP" "VARBINARY" "VARCHAR" "VARCHAR2" "VARCHARACTER"
+    "VARIABLE" "VARIABLES" "VARYING" "VERBOSE" "VIEW" "VOLATILE" "WAITFOR" "WHEN" "WHENEVER" "WHERE" "WHILE" "WIDTH_BUCKET" "WINDOW" "WITH" "WITHIN" "WITHOUT"
+    "WORK" "WRITE" "WRITETEXT" "X509" "XOR" "YEAR" "YEAR_MONTH" "ZEROFILL" "ZONE"))
+
+(define-minor-mode sql-highlight-minor-mode
+  "A minor mode for highlighting SQL keywords."
+  :init-value nil
+  :lighter "highlight"
+  :keymap nil
+  (when sql-highlight-minor-mode
+    (setq font-lock-keywords-case-fold-search t)
+    (font-lock-add-keywords nil `((,(regexp-opt sql-keywords 'symbols) . font-lock-keyword-face)))))
 
 (define-minor-mode sql-eval-mode
   "A minor mode for evaluating SQL statements by sending them to a comint buffer."
@@ -2254,16 +2385,32 @@ to `sql-eval-interpreter` for interpreter."
   (let* ((interpreter (if (null interpreter)
                           sql-eval-interpreter
                         (read-string "Interpreter: ")))
-         (name (or name (read-buffer "Buffer (sql-mdev): " "sql-mdev")))
          (zone (read-string "Zone (mdev): " nil nil "mdev"))
          (deployment (read-string "Deployment (default): " nil nil "default"))
          (user (read-string "User (prod-user): " nil nil "prod-user"))
+         (default-name (format "sql-%s-%s%s"
+			       zone
+			       deployment
+			       (cond ((string= user "sa")
+                                                      "-sa")
+						     ((string= user "readonly")
+						      "-readonly")
+                                                     (""))))
+         (name (or name (read-buffer (format "Buffer (%s): " default-name) default-name)))
          (process-connection-type nil)
          (temp-name (symbol-name (gensym)))
-         (process (make-comint temp-name "bash" nil "-i"))
+         ;; (process (make-comint temp-name "bash" nil "-i"))
          (starred-name (concat "*" temp-name "*"))
-         (temp-file (make-temp-file "encrypt" nil nil "throwaway")))
+         ;; (temp-file (make-temp-file "encrypt" nil nil "throwaway"))
+         )
+    (save-window-excursion
+      (vterm starred-name))
     (switch-to-buffer-other-window starred-name)
+    ;; Override keys that vterm does weird stuff with
+    (local-set-key (kbd "M-N") 'other-window)
+    (local-set-key (kbd "M-P") (lambda ()
+                                 (interactive)
+                                 (other-window -1)))
     (rename-buffer name)
     ;; Somehow inf-clojure is setting this variable in my SQL Eval
     ;; buffers, which is screwing things up royally. Clobber it back.
@@ -2272,20 +2419,20 @@ to `sql-eval-interpreter` for interpreter."
     ;; This is a hack to get gpg-agent to have the keys we need. I
     ;; haven't been able to figure out how to get zerkenv to do it
     ;; correctly on its own when run under emacs
-    (epa-decrypt-file "~/dummy.asc" "/dev/null")
+    ;; (epa-decrypt-file "~/dummy.asc" "/dev/null")
     ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
-    (sleep-for 0.25)
-    (process-send-string process "zerk\n")
-    (sleep-for 0.25)
-    (process-send-string process (format "sql-env --zone %s --deployment-name %s %s\n"
+    ;; (sleep-for 0.25)
+    (process-send-string vterm--process "zerk\n")
+    ;; (sleep-for 0.25)
+    (process-send-string vterm--process (format "sql-env --zone %s --deployment-name %s %s\n"
                                          zone
                                          deployment
                                          (if (string= "prod-user" user)
                                              ""
                                            (concat "--user " user))))
     ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
-    (sleep-for 0.25)
-    (process-send-string process (concat interpreter "\n"))))
+    ;; (sleep-for 0.25)
+    (process-send-string vterm--process (concat interpreter "\n"))))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
 
@@ -2389,88 +2536,88 @@ buffer, respectively."
   (or adzerk-api-key-cache
       (setq adzerk-api-key-cache (get-adzerk-var "ADZERK_API_KEY"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; mirror-image support
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; mirror-image support
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Lets you edit images in text in one buffer and see the changes live
-;; in another. Source:
-;; https://emacs.stackexchange.com/questions/7198/indirect-buffer-in-image-mode-main-buffer-in-text
+;; ;; Lets you edit images in text in one buffer and see the changes live
+;; ;; in another. Source:
+;; ;; https://emacs.stackexchange.com/questions/7198/indirect-buffer-in-image-mode-main-buffer-in-text
 
-(defun gpc/mirror-buffer (buffer-name &optional more-after-change)
-  "Create a buffer whose contents will follow the current one's
-and returns the new buffer.  Runs `more-after-change' after each
-change if provided.
+;; (defun gpc/mirror-buffer (buffer-name &optional more-after-change)
+;;   "Create a buffer whose contents will follow the current one's
+;; and returns the new buffer.  Runs `more-after-change' after each
+;; change if provided.
 
-This differs from `clone-indirect-buffer' in that the new buffer
-is not visiting a file.  It's really just a kludge to support
-`gpc/mirror-image', which see."
-  (interactive (list
-                (let ((default (concat (buffer-name) "<mirror>")))
-                  (read-string "Buffer name: " default
-                               nil nil default))))
-  (make-local-variable 'after-change-functions)
-  (make-local-variable 'kill-buffer-hook)
-  (lexical-let*
-      ((target-buffer (generate-new-buffer buffer-name))
-       ;; Give lexical scope to arg
-       (after-change more-after-change)
-       (copy-change
-        #'(lambda(start end old-len)
-            (let ((inhibit-read-only t))
-              ;; Quick and dirty: may not be suitable for large buffers.
-              (copy-to-buffer target-buffer (point-min) (point-max))
-              (when (functionp after-change)
-                (funcall after-change target-buffer))))))
+;; This differs from `clone-indirect-buffer' in that the new buffer
+;; is not visiting a file.  It's really just a kludge to support
+;; `gpc/mirror-image', which see."
+;;   (interactive (list
+;;                 (let ((default (concat (buffer-name) "<mirror>")))
+;;                   (read-string "Buffer name: " default
+;;                                nil nil default))))
+;;   (make-local-variable 'after-change-functions)
+;;   (make-local-variable 'kill-buffer-hook)
+;;   (lexical-let*
+;;       ((target-buffer (generate-new-buffer buffer-name))
+;;        ;; Give lexical scope to arg
+;;        (after-change more-after-change)
+;;        (copy-change
+;;         #'(lambda(start end old-len)
+;;             (let ((inhibit-read-only t))
+;;               ;; Quick and dirty: may not be suitable for large buffers.
+;;               (copy-to-buffer target-buffer (point-min) (point-max))
+;;               (when (functionp after-change)
+;;                 (funcall after-change target-buffer))))))
 
-    ;; Initialize the target buffer with the source text.
-    (copy-to-buffer target-buffer (point-min) (point-max))
+;;     ;; Initialize the target buffer with the source text.
+;;     (copy-to-buffer target-buffer (point-min) (point-max))
 
-    (add-hook 'after-change-functions copy-change t t)
+;;     (add-hook 'after-change-functions copy-change t t)
 
-    ;; Cleanup hooks.
+;;     ;; Cleanup hooks.
 
-    ;; Kill the other buffer if the source buffer is closed.
-    (add-hook 'kill-buffer-hook
-              #'(lambda () (kill-buffer target-buffer)) t t)
+;;     ;; Kill the other buffer if the source buffer is closed.
+;;     (add-hook 'kill-buffer-hook
+;;               #'(lambda () (kill-buffer target-buffer)) t t)
 
-    ;; Destroy the change hook if the other buffer is killed.
-    (with-current-buffer target-buffer
-      (make-local-variable 'kill-buffer-hook)
-      (add-hook 'kill-buffer-hook
-                #'(lambda ()
-                    (remove-hook 'after-change-functions copy-change t))
-                t t))))
+;;     ;; Destroy the change hook if the other buffer is killed.
+;;     (with-current-buffer target-buffer
+;;       (make-local-variable 'kill-buffer-hook)
+;;       (add-hook 'kill-buffer-hook
+;;                 #'(lambda ()
+;;                     (remove-hook 'after-change-functions copy-change t))
+;;                 t t))))
 
-(defun gpc/mirror-image ()
-  "Open an `image-mode' buffer that tracks the content of the
-current buffer.  Intended for use with svg files."
-  (interactive)
-  (image-mode-as-text)
-  (let* ((buffer-name (concat (buffer-name) "<image>"))
-         ;; An `image-mode' buffer will switch back to text when its contents
-         ;; are replaced.  Besides, the image is not updated in-place when the
-         ;; content changes, so you'd have to toggle back to image-mode anyway.
-         (after-change '(lambda (buffer)
-                          (with-current-buffer buffer (image-mode))))
-         (mirror (gpc/mirror-buffer buffer-name after-change)))
-    (split-window)
-    (other-window 1)
-    (switch-to-buffer buffer-name)
-    (image-mode)
-    (other-window 1)))
+;; (defun gpc/mirror-image ()
+;;   "Open an `image-mode' buffer that tracks the content of the
+;; current buffer.  Intended for use with svg files."
+;;   (interactive)
+;;   (image-mode-as-text)
+;;   (let* ((buffer-name (concat (buffer-name) "<image>"))
+;;          ;; An `image-mode' buffer will switch back to text when its contents
+;;          ;; are replaced.  Besides, the image is not updated in-place when the
+;;          ;; content changes, so you'd have to toggle back to image-mode anyway.
+;;          (after-change '(lambda (buffer)
+;;                           (with-current-buffer buffer (image-mode))))
+;;          (mirror (gpc/mirror-buffer buffer-name after-change)))
+;;     (split-window)
+;;     (other-window 1)
+;;     (switch-to-buffer buffer-name)
+;;     (image-mode)
+;;     (other-window 1)))
 
-(dir-locals-set-class-variables
- 'pubconsumer
- '((clojure-mode .
-                 ((use-inf-clojure-program . "nc localhost 51336")
-                  (inf-clojure-buffer . "pubconsumer-repl")
-                  (use-inf-clojure . t)))))
+;; (dir-locals-set-class-variables
+;;  'pubconsumer
+;;  '((clojure-mode .
+;;                  ((use-inf-clojure-program . "nc localhost 51336")
+;;                   (inf-clojure-buffer . "pubconsumer-repl")
+;;                   (use-inf-clojure . t)))))
 
-(dir-locals-set-directory-class
- "~/adzerk/pubconsumer/" 'pubconsumer)
+;; (dir-locals-set-directory-class
+;;  "~/adzerk/pubconsumer/" 'pubconsumer)
 
 (dir-locals-set-class-variables
  'vmt
@@ -2513,6 +2660,16 @@ current buffer.  Intended for use with svg files."
  "~/adzerk/api-proxy/" 'api-proxy)
 
 (dir-locals-set-class-variables
+ 'audit-log-writer
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 9584")
+                  (inf-clojure-buffer . "audit-log-writer-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/audit-log-writer/" 'audit-log-writer)
+
+(dir-locals-set-class-variables
  'integration-tests
  '((clojure-mode .
                  ((use-inf-clojure-program . "nc localhost 5272")
@@ -2522,74 +2679,74 @@ current buffer.  Intended for use with svg files."
 (dir-locals-set-directory-class
  "~/adzerk/integration-tests/" 'integration-tests)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; image+
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package image+
-  :ensure t
-  :bind (:map imagex-sticky-mode-map
-              ("+" . imagex-sticky-zoom-in)
-              ("-" . imagex-sticky-zoom-out)
-              ("g" . imagex-sticky-restore-original)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Edit server - edit in emacs from Chrome
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (require 'edit-server)
-;; (edit-server-start)
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
-;; ;; Atomic Chrome - edit with Emacs from Chrome
+;; ;; image+
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package atomic-chrome
+;; (use-package image+
 ;;   :ensure t
-;;   :config
-;;   (atomic-chrome-start-server))
+;;   :bind (:map imagex-sticky-mode-map
+;;               ("+" . imagex-sticky-zoom-in)
+;;               ("-" . imagex-sticky-zoom-out)
+;;               ("g" . imagex-sticky-restore-original)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Miscellaneous customizations
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Edit server - edit in emacs from Chrome
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq confirm-nonexistent-file-or-buffer nil)
+;; ;; (require 'edit-server)
+;; ;; (edit-server-start)
 
-;;(load "~/.emacs.d/custom/colors.el")
 
-(add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
-(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
+;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; ;;
+;; ;; ;; Atomic Chrome - edit with Emacs from Chrome
+;; ;; ;;
+;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq save-interprogram-paste-before-kill t)
+;; ;; (use-package atomic-chrome
+;; ;;   :ensure t
+;; ;;   :config
+;; ;;   (atomic-chrome-start-server))
 
-;; First indent, then complete
-(setq tab-always-indent 'complete)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Miscellaneous customizations
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun clear-tags-tables ()
-  "Removes all tags from the active tags lists."
-  (interactive)
-  (setq tags-table-list '()))
+;; (setq confirm-nonexistent-file-or-buffer nil)
 
-;; This prevents Emacs from creating lockfiles, which prevent two
-;; people from editing the same file at the same time. Since my setup
-;; is single-user, all this does is occasionally confuse me by telling
-;; me a file is locked, and would I like to steal it?
-(setq create-lockfiles nil)
+;; ;;(load "~/.emacs.d/custom/colors.el")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Mac customizations
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
+;; (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
+
+;; (setq save-interprogram-paste-before-kill t)
+
+;; ;; First indent, then complete
+;; (setq tab-always-indent 'complete)
+
+;; (defun clear-tags-tables ()
+;;   "Removes all tags from the active tags lists."
+;;   (interactive)
+;;   (setq tags-table-list '()))
+
+;; ;; This prevents Emacs from creating lockfiles, which prevent two
+;; ;; people from editing the same file at the same time. Since my setup
+;; ;; is single-user, all this does is occasionally confuse me by telling
+;; ;; me a file is locked, and would I like to steal it?
+;; (setq create-lockfiles nil)
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Mac customizations
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar dock-mode nil)
 
@@ -2635,330 +2792,330 @@ current buffer.  Intended for use with svg files."
                     (not currently-undocked))
            (docked-laptop-mode)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Compensate for the fact that I frequently fat-finger C-m instead of
-;; C-n by first mapping C-m away from return (which will only work
-;; when in a GUI session), and then binding C-m
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Compensate for the fact that I frequently fat-finger C-m instead of
+;; ;; C-n by first mapping C-m away from return (which will only work
+;; ;; when in a GUI session), and then binding C-m
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Caused more problems than it solved.
-;; (define-key input-decode-map [?\C-m] [C-m])
-;; (global-set-key (kbd "<C-m>") 'next-line)
+;; ;; Caused more problems than it solved.
+;; ;; (define-key input-decode-map [?\C-m] [C-m])
+;; ;; (global-set-key (kbd "<C-m>") 'next-line)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; highlight-focus
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; highlight-focus
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(el-get-bundle kriyative/highlight-focus)
+;; (el-get-bundle kriyative/highlight-focus)
 
-(use-package highlight-focus
-  :config
-  ;; set the background of the mode-line
-  (setq highlight-focus:face 'default
-        highlight-focus:face-property :background
-        highlight-focus:face-property-value "black"))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; floobits
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package floobits
-  :ensure t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; blockdiag-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package blockdiag-mode
-  :ensure t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; graphviz-dot-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package graphviz-dot-mode
-  :ensure t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; org-mind-map
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package org-mind-map
-  :ensure t
-  :init (require 'ox-org))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; plantuml-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package plantuml-mode
-  :ensure t
-  :config
-  (progn
-    (setq plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
-    (setq org-plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
-    (add-to-list
-     'org-src-lang-modes '("plantuml" . plantuml))
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((plantuml . t)))))
-
-;; (use-package flycheck-plantuml
-;;   :ensure t
+;; (use-package highlight-focus
 ;;   :config
-;;   (flycheck-plantuml-setup))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; neotree
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun neotree-resize-window (&rest _args)
-    "Resize neotree window.
-https://github.com/jaypei/emacs-neotree/pull/110"
-    (interactive)
-    (neo-buffer--with-resizable-window
-     (let ((fit-window-to-buffer-horizontally t))
-       (fit-window-to-buffer))))
-
-(use-package neotree
-  :ensure t
-  :config
-  (add-hook 'neo-change-root-hook #'neotree-resize-window)
-  (add-hook 'neo-enter-hook #'neotree-resize-window))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; php-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package php-mode
-  :ensure t)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; web-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package web-mode
-  :ensure t
-  :mode "\\.spark\\'")
+;;   ;; set the background of the mode-line
+;;   (setq highlight-focus:face 'default
+;;         highlight-focus:face-property :background
+;;         highlight-focus:face-property-value "black"))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
-;; ;; interleave-mode
+;; ;; floobits
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ;; Allows you to take notes on a PDF while reading it in Emacs.
-
-;; (use-package interleave
+;; (use-package floobits
 ;;   :ensure t)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
-;; ;; Capture snippet
+;; ;; blockdiag-mode
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ;; Credit http://ul.io/nb/2018/04/30/better-code-snippets-with-org-capture/
+;; (use-package blockdiag-mode
+;;   :ensure t)
 
-;; Unfortunately which-function-mode has a bug wherein
-;; `which-func-update` will totally bork exiting an ediff mode,
-;; forever displaying "selecting deleted buffer" and making Emacs
-;; impossible to use.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; graphviz-dot-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (which-function-mode 1)
+;; (use-package graphviz-dot-mode
+;;   :ensure t)
 
-;; (defun nb/org-capture-get-src-block-string (major-mode)
-;;   "Given a major mode symbol, return the associated org-src block
-;; string that will enable syntax highlighting for that language
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; org-mind-map
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; E.g. tuareg-mode will return 'ocaml', python-mode 'python', etc..."
+;; (use-package org-mind-map
+;;   :ensure t
+;;   :init (require 'ox-org))
 
-;;   (let ((mm (intern (replace-regexp-in-string "-mode" "" (format "%s" major-mode)))))
-;;     (or (car (rassoc mm org-src-lang-modes)) (format "%s" mm))))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; plantuml-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (defun nb/org-capture-region ()
-;;   (interactive)
-;;   (let ((code-snippet (buffer-substring-no-properties (mark) (- (point) 1)))
-;;         (func-name (which-function))
-;;         (file-name (buffer-file-name))
-;;         (line-number (line-number-at-pos (region-beginning)))
-;;         (org-src-mode (nb/org-capture-get-src-block-string major-mode)))
-;;     (kill-new (format
-;;                "file:%s::%s
-;; In ~%s~:
-;; #+BEGIN_SRC %s
-;; %s
-;; #+END_SRC"
-;;                file-name
-;;                line-number
-;;                func-name
-;;                org-src-mode
-;;                code-snippet))))
+;; (use-package plantuml-mode
+;;   :ensure t
+;;   :config
+;;   (progn
+;;     (setq plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
+;;     (setq org-plantuml-jar-path "/usr/local/Cellar/plantuml/1.2018.0/libexec/plantuml.jar")
+;;     (add-to-list
+;;      'org-src-lang-modes '("plantuml" . plantuml))
+;;     (org-babel-do-load-languages
+;;      'org-babel-load-languages
+;;      '((plantuml . t)))))
 
-;; ;; ;; Capture Template
-;; ;; ("s" "code snippet" entry (file ,(my/org-dir-file "snippets.org"))
-;; ;;  "* %?\n%(my/org-capture-code-snippet \"%F\")")
+;; ;; (use-package flycheck-plantuml
+;; ;;   :ensure t
+;; ;;   :config
+;; ;;   (flycheck-plantuml-setup))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Load a theme
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; neotree
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package paganini-theme
-  :ensure t
-  :config
-  (load-theme 'paganini t)
-  (set-default-font-size 240))
+;; (defun neotree-resize-window (&rest _args)
+;;     "Resize neotree window.
+;; https://github.com/jaypei/emacs-neotree/pull/110"
+;;     (interactive)
+;;     (neo-buffer--with-resizable-window
+;;      (let ((fit-window-to-buffer-horizontally t))
+;;        (fit-window-to-buffer))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; clubhouse integration
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (use-package neotree
+;;   :ensure t
+;;   :config
+;;   (add-hook 'neo-change-root-hook #'neotree-resize-window)
+;;   (add-hook 'neo-enter-hook #'neotree-resize-window))
 
-(use-package dash
-  :ensure t)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; php-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package dash-functional
-  :ensure t)
+;; (use-package php-mode
+;;   :ensure t)
 
-(use-package clubhouse-api
-  :config
-  (setq clubhouse-api-team-name "adzerk")
-  (setq clubhouse-api-default-project "Management")
-  (setq clubhouse-api-auth-token-path "~/.adzerk/secrets/candera/CLUBHOUSE_API_TOKEN.asc")
-  (add-hook 'clubhouse-api-story-edit-minor-mode-hook
-            (lambda ()
-              (visual-line-mode 1))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Simple line references
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; web-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun save-line-reference ()
-  "Saves a reference to the current line (like `foo.clj(23)` to the kill ring.")
+;; (use-package web-mode
+;;   :ensure t
+;;   :mode "\\.spark\\'")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; git-link: link to a line on GitHub
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; ;;
+;; ;; ;; interleave-mode
+;; ;; ;;
+;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; ;; Allows you to take notes on a PDF while reading it in Emacs.
+
+;; ;; (use-package interleave
+;; ;;   :ensure t)
+
+;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; ;;
+;; ;; ;; Capture snippet
+;; ;; ;;
+;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; ;; Credit http://ul.io/nb/2018/04/30/better-code-snippets-with-org-capture/
+
+;; ;; Unfortunately which-function-mode has a bug wherein
+;; ;; `which-func-update` will totally bork exiting an ediff mode,
+;; ;; forever displaying "selecting deleted buffer" and making Emacs
+;; ;; impossible to use.
+
+;; ;; (which-function-mode 1)
+
+;; ;; (defun nb/org-capture-get-src-block-string (major-mode)
+;; ;;   "Given a major mode symbol, return the associated org-src block
+;; ;; string that will enable syntax highlighting for that language
+
+;; ;; E.g. tuareg-mode will return 'ocaml', python-mode 'python', etc..."
+
+;; ;;   (let ((mm (intern (replace-regexp-in-string "-mode" "" (format "%s" major-mode)))))
+;; ;;     (or (car (rassoc mm org-src-lang-modes)) (format "%s" mm))))
+
+;; ;; (defun nb/org-capture-region ()
+;; ;;   (interactive)
+;; ;;   (let ((code-snippet (buffer-substring-no-properties (mark) (- (point) 1)))
+;; ;;         (func-name (which-function))
+;; ;;         (file-name (buffer-file-name))
+;; ;;         (line-number (line-number-at-pos (region-beginning)))
+;; ;;         (org-src-mode (nb/org-capture-get-src-block-string major-mode)))
+;; ;;     (kill-new (format
+;; ;;                "file:%s::%s
+;; ;; In ~%s~:
+;; ;; #+BEGIN_SRC %s
+;; ;; %s
+;; ;; #+END_SRC"
+;; ;;                file-name
+;; ;;                line-number
+;; ;;                func-name
+;; ;;                org-src-mode
+;; ;;                code-snippet))))
+
+;; ;; ;; ;; Capture Template
+;; ;; ;; ("s" "code snippet" entry (file ,(my/org-dir-file "snippets.org"))
+;; ;; ;;  "* %?\n%(my/org-capture-code-snippet \"%F\")")
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Load a theme
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package paganini-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'paganini t)
+;;   (set-default-font-size 240))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; clubhouse integration
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package dash
+;;   :ensure t)
+
+;; (use-package dash-functional
+;;   :ensure t)
+
+;; (use-package clubhouse-api
+;;   :config
+;;   (setq clubhouse-api-team-name "adzerk")
+;;   (setq clubhouse-api-default-project "Management")
+;;   (setq clubhouse-api-auth-token-path "~/.adzerk/secrets/candera/CLUBHOUSE_API_TOKEN.asc")
+;;   (add-hook 'clubhouse-api-story-edit-minor-mode-hook
+;;             (lambda ()
+;;               (visual-line-mode 1))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Simple line references
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (defun save-line-reference ()
+;;   "Saves a reference to the current line (like `foo.clj(23)` to the kill ring.")
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; git-link: link to a line on GitHub
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package git-link
   :ensure t
   :init
   (setq git-link-use-commit t))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; visible-mark: make mark visible in buffers
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; visible-mark: make mark visible in buffers
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(comment
- (use-package visible-mark
-   :ensure t
-   :init
-   (defface visible-mark-active ;; put this before (require 'visible-mark)
-     '((((type tty) (class mono)))
-       (t (:box "magenta"))) "")
-   (defface custom-visible-mark-face1
-     '((((type tty) (class mono)))
-       (t (:box "light red")))
-     "Example face which can be customized and added to subsequent face lists.")
-   (defface custom-visible-mark-face2
-     '((((type tty) (class mono)))
-       (t (:box "light green")))
-     "Example face which can be customized and added to subsequent face lists.")
+;; (comment
+;;  (use-package visible-mark
+;;    :ensure t
+;;    :init
+;;    (defface visible-mark-active ;; put this before (require 'visible-mark)
+;;      '((((type tty) (class mono)))
+;;        (t (:box "magenta"))) "")
+;;    (defface custom-visible-mark-face1
+;;      '((((type tty) (class mono)))
+;;        (t (:box "light red")))
+;;      "Example face which can be customized and added to subsequent face lists.")
+;;    (defface custom-visible-mark-face2
+;;      '((((type tty) (class mono)))
+;;        (t (:box "light green")))
+;;      "Example face which can be customized and added to subsequent face lists.")
 
-   :config
-   (global-visible-mark-mode 1)
-   (setq visible-mark-max 2)
-   (setq visible-mark-faces `(custom-visible-mark-face1 custom-visible-mark-face2))))
+;;    :config
+;;    (global-visible-mark-mode 1)
+;;    (setq visible-mark-max 2)
+;;    (setq visible-mark-faces `(custom-visible-mark-face1 custom-visible-mark-face2))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Make Tramp faster
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Make Tramp faster
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq remote-file-name-inhibit-cache nil)
-(setq vc-ignore-dir-regexp
-      (format "%s\\|%s"
-                    vc-ignore-dir-regexp
-                    tramp-file-name-regexp))
-(setq tramp-verbose 3)
+;; (setq remote-file-name-inhibit-cache nil)
+;; (setq vc-ignore-dir-regexp
+;;       (format "%s\\|%s"
+;;                     vc-ignore-dir-regexp
+;;                     tramp-file-name-regexp))
+;; (setq tramp-verbose 3)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; ediff
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; ediff
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package ediff
-  :custom
-  (ediff-window-setup-function 'ediff-setup-windows-plain) ; No separate frame
-  (ediff-diff-options "-w")
-  (ediff-split-window-function 'split-window-horizontally) ; Default to horizontal split
-  )
+;; (use-package ediff
+;;   :custom
+;;   (ediff-window-setup-function 'ediff-setup-windows-plain) ; No separate frame
+;;   (ediff-diff-options "-w")
+;;   (ediff-split-window-function 'split-window-horizontally) ; Default to horizontal split
+;;   )
 
-;; TODO: disable projectile in tramp buffers if things are still slow. Somehow.
+;; ;; TODO: disable projectile in tramp buffers if things are still slow. Somehow.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Paradox: (hopefully) better package UI
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Paradox: (hopefully) better package UI
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package paradox
-  :ensure t
+;; (use-package paradox
+;;   :ensure t
 
-  :config
-  (paradox-enable))
+;;   :config
+;;   (paradox-enable))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; copy-as-format: copy regions of emacs buffers to the kill ring in
-;; various formats.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; copy-as-format: copy regions of emacs buffers to the kill ring in
+;; ;; various formats.
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package copy-as-format
-  :ensure t)
+;; (use-package copy-as-format
+;;   :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; github-review: support for reviewing pull requests from within
-;; emacs.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; github-review: support for reviewing pull requests from within
+;; ;; emacs.
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package github-review
-  :ensure t)
+;; (use-package github-review
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2969,37 +3126,37 @@ https://github.com/jaypei/emacs-neotree/pull/110"
 (use-package forge
   :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; multiple-cursors
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; multiple-cursors
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package multiple-cursors
-  :ensure t
-  :config
-  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
+;; (use-package multiple-cursors
+;;   :ensure t
+;;   :config
+;;   (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; ggtags
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; ggtags
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package ggtags
-;;   :ensure t)
+;; ;; (use-package ggtags
+;; ;;   :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; ejc-sql
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; ejc-sql
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Complexity alert! Requires nREPL, Cider, Lein....
-;; (use-package ejc-sql
-;;   :ensure t)
+;; ;; Complexity alert! Requires nREPL, Cider, Lein....
+;; ;; (use-package ejc-sql
+;; ;;   :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; camp-letterize
 ;;
@@ -3032,7 +3189,7 @@ compatible with the Concordia web sysstem."
             (next-line chunk-size)
             (re-search-backward "^$")
             (setq page-number (1+ page-number))
-            (insert (format "\n[Continued in part %d]\n\n[Continued from part %d]\n"
+            (insert (format "\n[Continued in part %d]\n\n[Part %d]\n"
                             page-number
                             page-number)))))
       (set-fill-column 10000)
@@ -3047,18 +3204,18 @@ compatible with the Concordia web sysstem."
       (message "Buffer saved to kill ring")
       (browse-url "https://concordia.campintouch.com/Email07/"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Telega - Emacs Telegram client
-;;
-;; https://github.com/zevlg/telega.el
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Telega - Emacs Telegram client
+;; ;;
+;; ;; https://github.com/zevlg/telega.el
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'cursor-sensor)
-;; (setq load-path (append '("~/projects/telega.el" load-path)))
+;; ;; (require 'cursor-sensor)
+;; ;; (setq load-path (append '("~/projects/telega.el" load-path)))
 
-;; (require 'telega)
+;; ;; (require 'telega)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3067,109 +3224,120 @@ compatible with the Concordia web sysstem."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package vterm
-;;   :ensure t
-;;   :config
-;;   (make-variable-buffer-local 'global-hl-line-mode)
-;;   (add-hook 'vterm-mode-hook
-;;             (lambda ()
-;;               (setq global-hl-line-mode nil))))
+(use-package vterm
+  :ensure t
+  :config
+  (make-variable-buffer-local 'global-hl-line-mode)
+  (add-hook 'vterm-mode-hook
+            (lambda ()
+              (setq global-hl-line-mode nil)))
+  :bind
+  (("C-c C-t" . (lambda ()
+		  (interactive)
+		  (vterm-copy-mode "toggle")))
+   ("C-c C-c" . vterm-send-C-c)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; gcode-mode
-;;
-;; http://pixpopuli.blogspot.com/2011/01/syntax-highlighting-for-cnc-g-code.html
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defadvice vterm-copy-mode (after my-vterm-copy-mode-advice (arg) activate)
+  "Set the cursor type according to whether we're in copy mode or not."
+  (if vterm-copy-mode
+      (setq cursor-type 'box)
+    (setq cursor-type 'bar)))
 
-(require 'generic-x)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; gcode-mode
+;; ;;
+;; ;; http://pixpopuli.blogspot.com/2011/01/syntax-highlighting-for-cnc-g-code.html
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-generic-mode gcode-generic-mode
-  '(";" ("(" . ")"))
-  (apply 'append
-         (mapcar #'(lambda (s) (list (upcase s) (downcase s) (capitalize s)))
-                 '("sub" "endsub" "if" "do" "while" "endwhile" "call" "endif"
-                   "sqrt" "return" "mod" "eq" "ne" "gt" "ge" "lt" "le" "and"
-                   "or" "xor" "atan" "abs" "acos" "asin" "cos" "exp"
-                   "fix" "fup" "round" "ln" "sin" "tan" "repeat" "endrepeat")))
-  '(; ("\\(;.*\\)" (1 font-lock-comment-face))
-    ("\\(#<_?[A-Za-z0-9_]+>\\)" (1 font-lock-type-face))
-    ("\\([NnGgMmFfSsTtOo]\\)" (1 font-lock-function-name-face))
-    ("\\([XxYyZzAaBbCcUuVvWwIiJjKkPpQqRr]\\)" (1 font-lock-string-face))
-    ("\\([\-+]?[0-9]*\\.[0-9]+\\)" (1 font-lock-constant-face))
-    ("\\(#[0-9]+\\)" (1 font-lock-type-face))
-    ("\\([0-9]+\\)" (1 font-lock-constant-face)))
-  '("\\.ngc\\'" "\\.gcode\\'" )
-  nil
-  "Generic mode for g-code files.")
+;; (require 'generic-x)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; A better json-pretty-print
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (define-generic-mode gcode-generic-mode
+;;   '(";" ("(" . ")"))
+;;   (apply 'append
+;;          (mapcar #'(lambda (s) (list (upcase s) (downcase s) (capitalize s)))
+;;                  '("sub" "endsub" "if" "do" "while" "endwhile" "call" "endif"
+;;                    "sqrt" "return" "mod" "eq" "ne" "gt" "ge" "lt" "le" "and"
+;;                    "or" "xor" "atan" "abs" "acos" "asin" "cos" "exp"
+;;                    "fix" "fup" "round" "ln" "sin" "tan" "repeat" "endrepeat")))
+;;   '(; ("\\(;.*\\)" (1 font-lock-comment-face))
+;;     ("\\(#<_?[A-Za-z0-9_]+>\\)" (1 font-lock-type-face))
+;;     ("\\([NnGgMmFfSsTtOo]\\)" (1 font-lock-function-name-face))
+;;     ("\\([XxYyZzAaBbCcUuVvWwIiJjKkPpQqRr]\\)" (1 font-lock-string-face))
+;;     ("\\([\-+]?[0-9]*\\.[0-9]+\\)" (1 font-lock-constant-face))
+;;     ("\\(#[0-9]+\\)" (1 font-lock-type-face))
+;;     ("\\([0-9]+\\)" (1 font-lock-constant-face)))
+;;   '("\\.ngc\\'" "\\.gcode\\'" )
+;;   nil
+;;   "Generic mode for g-code files.")
 
-(defun candera-json-pretty-print-buffer ()
-  "Pretty prints the entire buffer"
-  (interactive)
-  (shell-command-on-region (point-min) (point-max) "jq ." (current-buffer)))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; A better json-pretty-print
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; edit-region-in-other-buffer
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (defun candera-json-pretty-print-buffer ()
+;;   "Pretty prints the entire buffer"
+;;   (interactive)
+;;   (shell-command-on-region (point-min) (point-max) "jq ." (current-buffer)))
 
-(defun edit-region-in-other-buffer (edit-mode)
-  "Opens a temporary buffer and populates it with the contents of
-the region. Hitting C-c C-c in that buffer will save it
-back to the original string."
-  (interactive "amode: ")
-  (save-mark-and-excursion
-    (lexical-let* ((orig (current-buffer))
-                   (start (region-beginning))
-                   (end (region-end))
-                   (contents (buffer-substring-no-properties start end)))
-      (switch-to-buffer (make-temp-name "edit-string"))
-      (eval (list edit-mode))
-      (use-local-map (if (current-local-map)
-                         (copy-keymap (current-local-map))
-                       (make-sparse-keymap)))
-      (local-set-key (kbd "C-c C-c") (lambda ()
-                                       (interactive)
-                                       (save-mark-and-excursion
-                                         (lexical-let* ((contents (buffer-substring-no-properties
-                                                                   (point-min)
-                                                                   (point-max))))
-                                           (switch-to-buffer orig)
-                                           (kill-region start end)
-                                           (goto-char start)
-                                           (insert contents)))))
-      (insert contents))))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; edit-region-in-other-buffer
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; lilypond-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (defun edit-region-in-other-buffer (edit-mode)
+;;   "Opens a temporary buffer and populates it with the contents of
+;; the region. Hitting C-c C-c in that buffer will save it
+;; back to the original string."
+;;   (interactive "amode: ")
+;;   (save-mark-and-excursion
+;;     (lexical-let* ((orig (current-buffer))
+;;                    (start (region-beginning))
+;;                    (end (region-end))
+;;                    (contents (buffer-substring-no-properties start end)))
+;;       (switch-to-buffer (make-temp-name "edit-string"))
+;;       (eval (list edit-mode))
+;;       (use-local-map (if (current-local-map)
+;;                          (copy-keymap (current-local-map))
+;;                        (make-sparse-keymap)))
+;;       (local-set-key (kbd "C-c C-c") (lambda ()
+;;                                        (interactive)
+;;                                        (save-mark-and-excursion
+;;                                          (lexical-let* ((contents (buffer-substring-no-properties
+;;                                                                    (point-min)
+;;                                                                    (point-max))))
+;;                                            (switch-to-buffer orig)
+;;                                            (kill-region start end)
+;;                                            (goto-char start)
+;;                                            (insert contents)))))
+;;       (insert contents))))
 
-(setq load-path (append '("/Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp/")
-                        load-path))
-;; Copied from /Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp/lilypond-init.el
-(autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
-(add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
-(add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
-(add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; lilypond-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; hyperbole
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (setq load-path (append '("/Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp/")
+;;                         load-path))
+;; ;; Copied from /Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp/lilypond-init.el
+;; (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
+;; (add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
+;; (add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
+;; (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
 
-(use-package hyperbole
-  :ensure t)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; hyperbole
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package hyperbole
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3182,11 +3350,275 @@ back to the original string."
   :config
   (which-key-mode 1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Varibles set by "customize" wind up here
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; exec-path-from-shell
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(if (functionp 'custom-set-variables-local)
-    (custom-set-variables-local))
+;; (use-package exec-path-from-shell
+;;   :ensure t
+;;   :config
+;;   (exec-path-from-shell-initialize))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; ag
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package ag
+;;   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; coffee-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package coffee-mode
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; bitly-shorten
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun bitly-shorten ()
+  "Shortens link at point via bitly."
+  (interactive)
+  (let ((bounds (thing-at-point-bounds-of-url-at-point)))
+    (save-mark-and-excursion
+      (shell-command-on-region (car bounds) (cdr bounds) "bitly-shorten"nil t))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; define-word
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package define-word
+  :ensure t)
+
+(defun flyspell-goto-previous-error ()
+  "Go to the previous previously detected error.
+In general FLYSPELL-GOTO-NEXT-ERROR must be used after
+FLYSPELL-BUFFER."
+  (interactive)
+  (let ((pos (point))
+	(min (point-min)))
+    (if (and (eq (current-buffer) flyspell-old-buffer-error)
+	     (eq pos flyspell-old-pos-error))
+	(progn
+	  (if (= flyspell-old-pos-error min)
+	      ;; goto end of buffer
+	      (progn
+		(message "Restarting from end of buffer")
+		(goto-char (point-max)))
+	    (backward-word 1))
+	  (setq pos (point))))
+    ;; seek the next error
+    (while (and (> pos min)
+		(let ((ovs (overlays-at pos))
+		      (r '()))
+		  (while (and (not r) (consp ovs))
+		    (if (flyspell-overlay-p (car ovs))
+			(setq r t)
+		      (setq ovs (cdr ovs))))
+		  (not r)))
+      (setq pos (1- pos)))
+    ;; save the current location for next invocation
+    (setq flyspell-old-pos-error pos)
+    (setq flyspell-old-buffer-error (current-buffer))
+    (goto-char pos)
+    (if (= pos min)
+	(message "No more miss-spelled word!"))))
+
+(defun define-previous-erroneous-word ()
+  "Print a definition of the most recent previously flagged word,
+so we can check to see if flyspell is just lacking a definition."
+  (interactive)
+  (save-mark-and-excursion
+    (flyspell-goto-previous-error)
+    (define-word-at-point nil)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; slack mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun encrypted-file-contents (path)
+  (save-mark-and-excursion
+   (lexical-let ((temp-file (make-temp-file "epa-temp")))
+     (message temp-file)
+     (unwind-protect
+         (progn
+           (epa-decrypt-file path temp-file)
+           (lexical-let ((s (with-temp-buffer
+			      (insert-file-contents temp-file)
+			      (buffer-string))))
+	     (delete-file temp-file)
+	     s))))))
+
+
+(el-get-bundle yuya373/emacs-slack)
+;; (el-get-bundle yuya373/helm-slack) ;; optional
+;; (use-package helm-slack :after (slack)) ;; optional
+
+(use-package alert
+  :ensure t)
+(use-package circe
+  :ensure t)
+(use-package oauth
+  :ensure t)
+(use-package request
+  :ensure t)
+(use-package websocket
+  :ensure t)
+
+;; Get token following instructions at https://github.com/yuya373/emacs-slack/blob/9fbad25af792d1dee88aae0fc9550bd29dabe269/README.md
+
+(use-package slack
+  :commands (slack-start)
+  :init
+  (setq slack-buffer-emojify t) ;; if you want to enable emoji, default nil
+  (setq slack-prefer-current-team t)
+  :config
+  (slack-register-team
+   :name "Kevel"
+   :default t
+   ;; :token (encrypted-file-contents "~/.config/slack-token.asc")
+   ;; :cookie (encrypted-file-contents "~/.config/slack-cookie.asc")
+   :subscribed-channels '(teammgmt)
+   :full-and-display-names t)
+
+  ;; (slack-register-team
+  ;;  :name "test"
+  ;;  :token "xoxs-yyyyyyyyyy-zzzzzzzzzzz-hhhhhhhhhhh-llllllllll"
+  ;;  :subscribed-channels '(hoge fuga))
+
+  ;; (evil-define-key 'normal slack-info-mode-map
+  ;;   ",u" 'slack-room-update-messages)
+  ;; (evil-define-key 'normal slack-mode-map
+  ;;   ",c" 'slack-buffer-kill
+  ;;   ",ra" 'slack-message-add-reaction
+  ;;   ",rr" 'slack-message-remove-reaction
+  ;;   ",rs" 'slack-message-show-reaction-users
+  ;;   ",pl" 'slack-room-pins-list
+  ;;   ",pa" 'slack-message-pins-add
+  ;;   ",pr" 'slack-message-pins-remove
+  ;;   ",mm" 'slack-message-write-another-buffer
+  ;;   ",me" 'slack-message-edit
+  ;;   ",md" 'slack-message-delete
+  ;;   ",u" 'slack-room-update-messages
+  ;;   ",2" 'slack-message-embed-mention
+  ;;   ",3" 'slack-message-embed-channel
+  ;;   "\C-n" 'slack-buffer-goto-next-message
+  ;;   "\C-p" 'slack-buffer-goto-prev-message)
+  ;;  (evil-define-key 'normal slack-edit-message-mode-map
+  ;;   ",k" 'slack-message-cancel-edit
+  ;;   ",s" 'slack-message-send-from-buffer
+  ;;   ",2" 'slack-message-embed-mention
+  ;;   ",3" 'slack-message-embed-channel
+
+) 
+
+(use-package alert
+  :commands (alert)
+  :init
+  (setq alert-default-style 'notifier))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; jet - pretty print EDN
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun jet ()
+  "Pretty print EDN in region"
+  (interactive)
+  (shell-command-on-region
+   (region-beginning)
+   (region-end)
+   "jet --pretty --edn-reader-opts '{:default tagged-literal}'"
+   (current-buffer)
+   t
+   "*jet error buffer*"
+   t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; code-review - magit-like code reviews
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package code-review
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; sdcv-mode - StarDict dictionary support
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(el-get-bundle gucong/emacs-sdcv)
+
+(use-package sdcv-mode)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; edit-with-emacs hammerspoon support
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; https://github.com/dmgerman/editWithEmacs.spoon
+
+(load-file "~/.hammerspoon/Spoons/editWithEmacs.spoon/hammerspoon.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; eglot - LSP server integration. 
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Unfortunately the bundled version of project is old, overrides the
+;; one eglot depends on, and does not contain the project-root var.
+;; This is a backport workaround from
+;; [[here][https://github.com/hlissner/doom-emacs/issues/3269#issuecomment-637945554]]
+(defun project-root (project)
+  (car (project-roots project)))
+
+(use-package eglot
+  :ensure t
+  :config
+  (add-hook 'clojure-mode-hook
+	    (lambda ()
+	      (eglot-ensure))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; shell-script-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'sh-mode-hook (lambda () (auto-complete-mode 1)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Run deferred setup
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (fboundp 'deferred-local-setup)
+  (deferred-local-setup))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;
+;; ; Varibles set by "customize" wind up here
+;; ;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (if (functionp 'custom-set-variables-local)
+;;     (custom-set-variables-local))
