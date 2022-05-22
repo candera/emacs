@@ -885,25 +885,27 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;                        (region-end)))
 ;;     (error "The region is not active - nothing to evaluate")))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; OMFG: cider requires org-mode, which will pull in the default
-;; ;; version built in to Emacs if I don't set it up before
-;; ;; clojure-mode/cider.
-;; ;;
-;; ;; Set up later version of org-mode
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-mode
+;; 
+;; OMFG: cider requires org-mode, which will pull in the default
+;; version built in to Emacs if I don't set it up before
+;; clojure-mode/cider.
+;;
+;; Set up later version of org-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package org :ensure t)
+(use-package org :ensure t)
 
-;; (require 'org)
-;; (require 'org-install)
+(require 'org)
+(require 'org-install)
 
 ;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
 
 ;; (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
-;; (global-set-key (kbd "C-c l") 'org-store-link)
+(global-set-key (kbd "C-c l") 'org-store-link)
 
 ;; ;; Bizarrely, org-clock defaults to showing the current year only
 ;; (setq org-clock-display-default-range 'untilnow)
@@ -933,7 +935,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-hook 'org-agenda-mode-hook
           (lambda ()
             ;; I always type this instead of C-c C-t
-            (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)))
+            (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)
+	    (display-line-numbers-mode 0)))
 
 ;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
 (setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
@@ -963,32 +966,46 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; ;; effect.
 ;; (setq org-hide-leading-stars t)
 
-;; ;; Let me refile by path, and to deeper nesting
+;; Allow slash-separated paths when refiling
 ;; (setq org-refile-use-outline-path 'file)
-;; ;;(setq org-outline-path-complete-in-steps t)
-;; (setq org-refile-targets
-;;       '((org-agenda-files . (:maxlevel . 5))))
+;; (setq org-outline-path-complete-in-steps nil)
+(setq org-refile-use-outline-path 'file)
+(setq org-outline-path-complete-in-steps nil)
+(setq org-refile-targets  
+      '(
+	;; (org-agenda-files . (:tag . "active"))
+	(org-agenda-files . (:maxlevel . 3))
+	)
+      )
+
+;; Ivy breaks org-refile for some reason
+(defadvice org-refile-disable-ivy (around org-refile)
+  (ivy-mode 0)
+  (let ((result ad-do-it))
+    (ivy-mode 1)
+    result))
 
 ;; ;; Log into a drawer, which is nice
 ;; (setq org-log-into-drawer t)
 
-;; ;; Include things in the diary file
-;; (setq org-agenda-include-diary t)
+;; Include things in the diary file
+(setq org-agenda-include-diary t)
 
-;; ;; Make events sort by newest first in the agenda view
-;; (setq org-agenda-sorting-strategy
-;;       '((agenda priority-down timestamp-down habit-down time-up category-keep)
-;;         (todo priority-down category-keep)
-;;         (tags priority-down category-keep)
-;;         (search category-keep)))
+;; Make events sort by newest first in the agenda view
+(setq org-agenda-sorting-strategy
+      '((agenda priority-down timestamp-down habit-down time-up category-keep)
+        (todo priority-down category-keep)
+        (tags priority-down category-keep)
+        (search category-keep)))
 
-;; ;; Store captured notes in notes.org, and bind capture to C-c c
-;; (setq org-default-notes-file (concat org-directory "/notes.org"))
-;; (define-key global-map (kbd "C-c c") 'org-capture)
-
+;; Store captured notes in notes.org, and bind capture to C-c c
+(setq org-default-notes-file "~/notes.org")
+(define-key global-map (kbd "C-c c") 'org-capture)
 
 ;; ;; Log time task was closed
-;; (setq org-log-done t)
+(setq org-log-done t)
+
+(setq org-agenda-log-mode-items '(closed clock state))
 
 ;; ;; Turn off the annoying mouse highlight in agenda views
 ;; (add-hook 'org-finalize-agenda-hook
@@ -1017,23 +1034,25 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (defun org-custom-todo-sort-fn ()
   "Returns a value that sorts tasks according to my personal
-heuristic. Namely, by task state: INPROGRESS, then BLOCKED, the
-TODO, then nothing, then DONE. Within the non-done states, sort
-by scheduled, or by deadline if not scheduled, with oldest dates
-first. Within DONE, most-recently done first. Archived items are
-always last."
+heuristic. Namely, by task state: INPROGRESS, then BLOCKED, then
+TODO, then PAUSED, then nothing, then DONE. Within the non-done
+states, sort by scheduled, or by deadline if not scheduled, with
+oldest dates first. Within in-progress tasks, sort by priority
+before scheduled. Within DONE, most-recently done first. Archived
+items are always last."
   (format "%s/%s-%s/%s"
           (if (member "ARCHIVE" (org-get-tags)) "1" "0")
           (pcase (org-get-todo-state)
-            ("INPROGRESS" 1)
+            ("INPROGRESS" (format "1%s" (or (org-entry-get (point) "PRIORITY") "Z")))
             ("BLOCKED" 2)
             ("TODO" 3)
-            (`nil 4)
-            ("DONE" (format "5%20d" (let ((ct (org-entry-get (point) "CLOSED")))
+	    ("PAUSED" 4)
+            (`nil 5)
+            ("DONE" (format "6%20d" (let ((ct (org-entry-get (point) "CLOSED")))
                                       (if ct
                                           (org-time-difference ct "2038-01-01")
                                         1.0e23))))
-            (otherwise 6))
+            (otherwise 9))
           (let ((etime (or (org-entry-get (point) "SCHEDULED")
                            (org-entry-get (point) "DEADLINE"))))
             (if etime
@@ -1736,6 +1755,15 @@ back to the original string."
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
+;; ;; helm-org
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package helm-org
+;;   :ensure t)
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
 ;; ;; align-cljlet, for aligning let forms
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2203,7 +2231,8 @@ back to the original string."
 
 (add-hook 'sql-mode-hook
           (lambda ()
-            (sqlup-mode 1)))
+            (sqlup-mode 1)
+	    (auto-complete-mode 1)))
 
 ;; sql-eval-mode
 
@@ -2258,12 +2287,24 @@ With a prefix arg, prompts for the buffer to send to."
   (interactive "P")
   (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
                 sql-eval-mode-shell-buffer
-              (read-buffer "Buffer: " "sql-mdev" t))))
+              (read-buffer "Buffer: " "sql-mdev-default" t))))
     (if (use-region-p)
         (sql-eval-buffer-subset buf
                                 (region-beginning)
                                 (region-end))
       (error "The region is not active - nothing to evaluate"))))
+
+(defun sql-eval-buffer (buffer)
+  "Send the contents of the buffer to the *shell* buffer. Strips newlines from the string first.
+
+With a prefix arg, prompts for the buffer to send to."
+  (interactive "P")
+  (let ((buf (if (and (null buffer) (not (string= "" sql-eval-mode-shell-buffer)))
+                sql-eval-mode-shell-buffer
+              (read-buffer "Buffer: " "sql-mdev-default" t))))
+    (sql-eval-buffer-subset buf
+                            (point-min)
+                            (point-max))))
 
 (defun sql-eval-defun (buffer)
   "Send the text surrounding point (to the nearest blank line) to the *shell* buffer.
@@ -2392,47 +2433,54 @@ to `sql-eval-interpreter` for interpreter."
 			       zone
 			       deployment
 			       (cond ((string= user "sa")
-                                                      "-sa")
-						     ((string= user "readonly")
-						      "-readonly")
-                                                     (""))))
+                                      "-sa")
+				     ((string= user "readonly")
+				      "-readonly")
+                                     (""))))
          (name (or name (read-buffer (format "Buffer (%s): " default-name) default-name)))
          (process-connection-type nil)
          (temp-name (symbol-name (gensym)))
          ;; (process (make-comint temp-name "bash" nil "-i"))
          (starred-name (concat "*" temp-name "*"))
          ;; (temp-file (make-temp-file "encrypt" nil nil "throwaway"))
-         )
-    (save-window-excursion
-      (vterm starred-name))
-    (switch-to-buffer-other-window starred-name)
-    ;; Override keys that vterm does weird stuff with
-    (local-set-key (kbd "M-N") 'other-window)
-    (local-set-key (kbd "M-P") (lambda ()
-                                 (interactive)
-                                 (other-window -1)))
-    (rename-buffer name)
-    ;; Somehow inf-clojure is setting this variable in my SQL Eval
-    ;; buffers, which is screwing things up royally. Clobber it back.
-    (make-variable-buffer-local 'comint-input-sender)
-    (setq comint-input-sender 'comint-simple-send)
-    ;; This is a hack to get gpg-agent to have the keys we need. I
-    ;; haven't been able to figure out how to get zerkenv to do it
-    ;; correctly on its own when run under emacs
-    ;; (epa-decrypt-file "~/dummy.asc" "/dev/null")
-    ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
-    ;; (sleep-for 0.25)
-    (process-send-string vterm--process "zerk\n")
-    ;; (sleep-for 0.25)
-    (process-send-string vterm--process (format "sql-env --zone %s --deployment-name %s %s\n"
-                                         zone
-                                         deployment
-                                         (if (string= "prod-user" user)
-                                             ""
-                                           (concat "--user " user))))
-    ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
-    ;; (sleep-for 0.25)
-    (process-send-string vterm--process (concat interpreter "\n"))))
+         (continue     (if (get-buffer name)
+			 (lexical-let ((answer (read-string (format "A buffer named %s already exists. (K)ill and recreate, (s)witch to, or (a)bort? " name))))
+			   (cond
+			    ((string= answer "k") (progn (kill-buffer name) t))
+			    ((string= answer "s") (progn (switch-to-buffer name) nil))
+			    (t nil)))
+			 t)))
+    (when continue 
+      (save-window-excursion
+	(vterm starred-name))
+      (switch-to-buffer-other-window starred-name)
+      ;; Override keys that vterm does weird stuff with
+      (local-set-key (kbd "M-N") 'other-window)
+      (local-set-key (kbd "M-P") (lambda ()
+                                   (interactive)
+                                   (other-window -1)))
+      (rename-buffer name)
+      ;; Somehow inf-clojure is setting this variable in my SQL Eval
+      ;; buffers, which is screwing things up royally. Clobber it back.
+      (make-variable-buffer-local 'comint-input-sender)
+      (setq comint-input-sender 'comint-simple-send)
+      ;; This is a hack to get gpg-agent to have the keys we need. I
+      ;; haven't been able to figure out how to get zerkenv to do it
+      ;; correctly on its own when run under emacs
+      ;; (epa-decrypt-file "~/dummy.asc" "/dev/null")
+      ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
+      ;; (sleep-for 0.25)
+      (process-send-string vterm--process "zerk\n")
+      ;; (sleep-for 0.25)
+      (process-send-string vterm--process (format "sql-env --zone %s --deployment-name %s %s\n"
+						  zone
+						  deployment
+						  (if (string= "prod-user" user)
+						      ""
+						    (concat "--user " user))))
+      ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
+      ;; (sleep-for 0.25)
+      (process-send-string vterm--process (concat interpreter "\n")))))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
 
@@ -3224,6 +3272,18 @@ compatible with the Concordia web sysstem."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun toggle-vterm-copy-mode ()
+  (interactive)
+  (if vterm-copy-mode
+      (vterm-copy-mode-done nil)
+    (vterm-copy-mode 1)))
+
+(defun vterm-clear-all ()
+  "Clears both the buffer and the scrollback"
+  (interactive)
+  (vterm-clear)
+  (vterm-clear-scrollback))
+
 (use-package vterm
   :ensure t
   :config
@@ -3231,11 +3291,13 @@ compatible with the Concordia web sysstem."
   (add-hook 'vterm-mode-hook
             (lambda ()
               (setq global-hl-line-mode nil)))
+
   :bind
-  (("C-c C-t" . (lambda ()
-		  (interactive)
-		  (vterm-copy-mode "toggle")))
-   ("C-c C-c" . vterm-send-C-c)))
+  (:map vterm-mode-map
+	("C-c C-t" . toggle-vterm-copy-mode)
+	("C-c C-l" . vterm-clear-all)
+	("C-c C-c" . vterm-send-C-c)
+	("M-N" . nil)))
 
 (defadvice vterm-copy-mode (after my-vterm-copy-mode-advice (arg) activate)
   "Set the cursor type according to whether we're in copy mode or not."
