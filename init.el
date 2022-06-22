@@ -309,6 +309,7 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "M-[") 'previous-buffer)
 (global-set-key (kbd "M-]") 'next-buffer)
 (global-set-key (kbd "C-c d") 'sdcv-search)
+(global-set-key (kbd "C-c D") 'define-word-at-point)
 
 ;; Auto-complete customization. Might want to make this mode-specific
 (global-set-key (kbd "M-/") 'auto-complete)
@@ -930,7 +931,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
                            ;; idle. Important because I use Dropbox to
                            ;; sync them, and forgetting to save when
                            ;; switching computers means conflicts.
-                           (add-to-list 'idle-save-buffer-list (current-buffer))))
+                           (add-to-list 'idle-save-buffer-list (current-buffer))
+			   ;; Don't populate the initial input with
+			   ;; "^" when refiling - allows me just to
+			   ;; type what I'm after without having it
+			   ;; match the beginning of the string.
+			   (add-to-list 'ivy-initial-inputs-alist '(org-refile . ""))))
 
 (add-hook 'org-agenda-mode-hook
           (lambda ()
@@ -2407,7 +2413,64 @@ With a prefix arg, prompts for the buffer to send to."
   :keymap nil
   (when sql-highlight-minor-mode
     (setq font-lock-keywords-case-fold-search t)
-    (font-lock-add-keywords nil `((,(regexp-opt sql-keywords 'symbols) . font-lock-keyword-face)))))
+    (font-lock-add-keywords nil `((,(regexp-opt sql-keywords 'symbols) . font-lock-keyword-face)))
+    (font-lock-fontify-buffer)))
+
+(defvar clsql-keywords
+  '())
+
+(defvar clsql-record-separator
+  "^\\*+ .*$")
+
+(defvar clsql-keyword-specs
+  `((,clsql-record-separator . font-lock-comment-face)
+    ("^\\([A-Za-z_]+\\) *:" 1 font-lock-variable-name-face)))
+
+(defun clsql-next-result ()
+  "Moves to the next result in clsql output."
+  (interactive)
+  (re-search-forward clsql-record-separator))
+
+(defun clsql-prev-result ()
+  "Moves to the prior result in clsql output."
+  (interactive)
+  (re-search-backward clsql-record-separator))
+
+(defvar clsql-mode-map (make-keymap))
+(define-key clsql-mode-map (kbd "M-n") 'clsql-next-result)
+(define-key clsql-mode-map (kbd "M-p") 'clsql-prev-result)
+
+(define-minor-mode clsql-minor-mode
+  "A minor mode for highlighting cl-sql results and buffers."
+  :init-value nil
+  :lighter " clsql"
+  :keymap clsql-mode-map
+  (when clsql-minor-mode
+    (setq font-lock-keywords-case-fold-search t)
+    (font-lock-add-keywords nil (append `((,(regexp-opt clsql-keywords 'symbols) . font-lock-keyword-face))
+					clsql-keyword-specs))
+    (font-lock-fontify-buffer)))
+
+(defun clsql-examine-last-result  ()
+  "Clones the last results in the current buffer and highlights it assuming it is clsql output."
+  (interactive)
+  (lexical-let* ((prompt "^[[:alpha:]-]+@[[:alnum:].-]+>")
+		 (b (get-buffer-create (concat (buffer-name) "-" (format-time-string "%m%d-%H%M%S"))))
+		 (contents (save-excursion
+			     (end-of-buffer)
+			     (lexical-let* ((end (re-search-backward prompt))
+					    (search1 (re-search-backward prompt nil t))
+					    (search2 (re-search-forward prompt nil t))
+					    (start (if search1 (point) (point-min))))
+			       (buffer-substring-no-properties start end)))))
+    (pop-to-buffer b)
+    (insert contents)
+    (beginning-of-buffer)
+    (text-mode)
+    (read-only-mode t)
+    (clsql-minor-mode)
+    (sql-highlight-minor-mode)))
+
 
 (define-minor-mode sql-eval-mode
   "A minor mode for evaluating SQL statements by sending them to a comint buffer."
@@ -2459,6 +2522,7 @@ to `sql-eval-interpreter` for interpreter."
       (local-set-key (kbd "M-P") (lambda ()
                                    (interactive)
                                    (other-window -1)))
+
       (rename-buffer name)
       ;; Somehow inf-clojure is setting this variable in my SQL Eval
       ;; buffers, which is screwing things up royally. Clobber it back.
@@ -2470,6 +2534,7 @@ to `sql-eval-interpreter` for interpreter."
       ;; (epa-decrypt-file "~/dummy.asc" "/dev/null")
       ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
       ;; (sleep-for 0.25)
+      (process-send-string vterm--process "bash -i\n")
       (process-send-string vterm--process "zerk\n")
       ;; (sleep-for 0.25)
       (process-send-string vterm--process (format "sql-env --zone %s --deployment-name %s %s\n"
@@ -3297,7 +3362,14 @@ compatible with the Concordia web sysstem."
 	("C-c C-t" . toggle-vterm-copy-mode)
 	("C-c C-l" . vterm-clear-all)
 	("C-c C-c" . vterm-send-C-c)
-	("M-N" . nil)))
+	("M-N" . nil)
+	("C-c e" . clsql-examine-last-result))
+  (:map vterm-copy-mode-map
+	("C-c C-t" . toggle-vterm-copy-mode)
+	("C-c C-l" . vterm-clear-all)
+	("C-c C-c" . vterm-send-C-c)
+	("M-N" . nil)
+	("C-c e" . clsql-examine-last-result)))
 
 (defadvice vterm-copy-mode (after my-vterm-copy-mode-advice (arg) activate)
   "Set the cursor type according to whether we're in copy mode or not."
@@ -3407,10 +3479,27 @@ compatible with the Concordia web sysstem."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun candera-which-key-show-keymap (map)
+  "Show the which-key interface for the current mode.
+
+With a prefix arg, prompts for the mode to show."
+  (interactive "P")
+  (lexical-let* ((mode-name (if (null map)
+				(symbol-name major-mode)
+			      (read-string "Mode: " (symbol-name major-mode))))
+		 (mode-map-name  (concat mode-name "-map"))
+		 (mode-map-symbol (intern mode-map-name))
+		 (mode-map (symbol-value mode-map-symbol)))
+    (if (keymapp mode-map) 
+	(which-key-show-keymap mode-map-symbol)
+      (message "Could not find map %s" mode-map-name))))
+
 (use-package which-key
   :ensure t
   :config
-  (which-key-mode 1))
+  (which-key-mode 1)
+  (global-set-key (kbd "C-c K") 'candera-which-key-show-keymap)
+  (global-set-key (kbd "C-c k") 'which-key-show-top-level))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -3645,12 +3734,12 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Unfortunately the bundled version of project is old, overrides the
-;; one eglot depends on, and does not contain the project-root var.
-;; This is a backport workaround from
-;; [[here][https://github.com/hlissner/doom-emacs/issues/3269#issuecomment-637945554]]
-(defun project-root (project)
-  (car (project-roots project)))
+;; ;; Unfortunately the bundled version of project is old, overrides the
+;; ;; one eglot depends on, and does not contain the project-root var.
+;; ;; This is a backport workaround from
+;; ;; [[here][https://github.com/hlissner/doom-emacs/issues/3269#issuecomment-637945554]]
+;; (defun project-root (project)
+;;   (car (project-roots project)))
 
 (use-package eglot
   :ensure t
@@ -3666,6 +3755,57 @@ so we can check to see if flyspell is just lacking a definition."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (add-hook 'sh-mode-hook (lambda () (auto-complete-mode 1)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; straight
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; elfeed-tube
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Not in elpa yet, using straight
+(use-package elfeed-tube
+  :straight (:host github :repo "karthink/elfeed-tube")
+  :after elfeed
+  :demand t
+  :config
+  ;; (setq elfeed-tube-auto-save-p nil) ;; t is auto-save (not default)
+  ;; (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
+  (elfeed-tube-setup)
+
+  :bind (:map elfeed-show-mode-map
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)
+         :map elfeed-search-mode-map
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; gcode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package gcode
+  :straight (:host github :repo "jasapp/gcode-emacs"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
