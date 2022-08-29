@@ -429,7 +429,6 @@ width to 60% frame width, or 85, whichever is larger."
   (interactive)
   (flyspell-mode 0))
 
-(add-hook 'javascript-mode-hook 'turn-off-flyspell)
 (add-hook 'emacs-lisp-mode-hook 'turn-off-flyspell)
 (add-hook 'ruby-mode-hook 'turn-off-flyspell)
 
@@ -710,19 +709,19 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (add-hook 'dired-mode-hook
           (lambda ()
             (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)
+	    (define-key dired-mode-map (kbd "C-c C-c") 'wdired-change-to-wdired-mode)
             ;; (define-key dired-mode-map (kbd "M-p") 'emms-dired-play-file)
 	    ))
 
 (setq dired-dwim-target t)
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; Associate javascript mode with .js files
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; javascript-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
-;; (autoload 'javascript-mode "javascript" nil t)
+(add-hook 'javascript-mode-hook 'turn-off-flyspell)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -784,6 +783,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
   :hook (lisp-mode-hook . (lambda () (paredit-mode +1)))
   :hook (emacs-lisp-mode-hook . (lambda () (paredit-mode +1)))
   :hook (clojure-mode-hook . (lambda () (paredit-mode +1)))
+  :hook (javascript-mode-hook . (lambda () (paredit-mode +1)))
   :config
   (show-paren-mode t))
 
@@ -913,6 +913,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (add-hook 'org-mode-hook (lambda ()
                            (turn-on-flyspell)
+			   (auto-fill-mode 1)
                            ;; I always type this instead of C-c C-t
                            (define-key org-mode-map (kbd "C-c t") 'org-todo)
                            (auto-revert-mode 1)
@@ -936,7 +937,12 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 			   ;; "^" when refiling - allows me just to
 			   ;; type what I'm after without having it
 			   ;; match the beginning of the string.
-			   (add-to-list 'ivy-initial-inputs-alist '(org-refile . ""))))
+			   (delete '(org-refile . "^") ivy-initial-inputs-alist)
+			   (delete '(org-agenda-refile . "^") ivy-initial-inputs-alist)
+			   (delete '(org-capture-refile . "^") ivy-initial-inputs-alist)
+			   (add-to-list 'ivy-initial-inputs-alist '(org-refile . ""))
+			   (add-to-list 'ivy-initial-inputs-alist '(org-agenda-refile . ""))
+			   (add-to-list 'ivy-initial-inputs-alist '(org-capture-refile . ""))))
 
 (add-hook 'org-agenda-mode-hook
           (lambda ()
@@ -1272,7 +1278,7 @@ items are always last."
             (lambda ()
               (when use-inf-clojure
                 (inf-clojure-minor-mode 1)
-                (eldoc-mode 1)
+                ;; (eldoc-mode 1)
                 ;; (cider-mode 0)
                 ))
             nil
@@ -1990,7 +1996,8 @@ back to the original string."
 (add-hook 'inf-clojure-mode-hook
           (lambda ()
             (paredit-mode 1)
-            (eldoc-mode 1)))
+            (eldoc-mode -1)
+	    ))
 
 (require 'inf-clojure)
 
@@ -2264,6 +2271,14 @@ back to the original string."
 					(sql-to-single-line sql)
 				      sql))))
 
+(defun sql-eval-get-separator (product)
+  "Given a product, return a separator we can use between statements."
+  (cond
+   ((or (string= product "ansi")
+	(string= product "mssql")) "\nGO\n")
+   ((string= product "postgres") ";\n")
+   (t ";\n")))
+
 (defun sql-eval-buffer-subset (buf beg end)
   "Send the text in the buffer from `beg` to `end` to SQL eval buffer `buf`"
   (display-buffer buf)
@@ -2273,7 +2288,8 @@ back to the original string."
       (let ((cur (point)))
         (while (< cur end)
           (goto-char cur)
-          (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
+          (lexical-let* ((product sql-product) ; Preserve before buffer switch
+			 (next-go (re-search-forward "^GO$" nil t))
                          (block-end (min end (if next-go
                                                  (- next-go 2)
                                                end)))
@@ -2283,7 +2299,7 @@ back to the original string."
               (switch-to-buffer-other-window buf)
               (vterm-send-string prepped-sql)
               (when (eq sql-eval-mode-style :sqlcmd)
-                (vterm-send-string "\nGO\n")))
+                (vterm-send-string (sql-eval-get-separator product))))
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
 (defun sql-eval-region (buffer)
@@ -2439,6 +2455,8 @@ With a prefix arg, prompts for the buffer to send to."
 (defvar clsql-mode-map (make-keymap))
 (define-key clsql-mode-map (kbd "M-n") 'clsql-next-result)
 (define-key clsql-mode-map (kbd "M-p") 'clsql-prev-result)
+(define-key clsql-mode-map (kbd "q") 'bury-buffer)
+
 
 (define-minor-mode clsql-minor-mode
   "A minor mode for highlighting cl-sql results and buffers."
@@ -2454,7 +2472,10 @@ With a prefix arg, prompts for the buffer to send to."
 (defun clsql-examine-last-result  ()
   "Clones the last results in the current buffer and highlights it assuming it is clsql output."
   (interactive)
-  (lexical-let* ((prompt "^[[:alpha:]-]+@[[:alnum:].-]+>")
+  (lexical-let* ((prompt (cond
+			  ((string= sql-product "postgres")
+			   "^[[:alpha:]-]+=>")
+			  (t "^[[:alpha:]-]+@[[:alnum:].-]+>")))
 		 (b (get-buffer-create (concat (buffer-name) "-" (format-time-string "%m%d-%H%M%S"))))
 		 (contents (save-excursion
 			     (end-of-buffer)
@@ -2559,14 +2580,14 @@ buffer, respectively."
   (let* ((arguments (nth 2 babel-info))
          (buffer-name (alist-get :buffer-name arguments))
          (eval-buffer (alist-get :eval-buffer arguments))
-         (sql-product-val (alist-get :sql-product arguments))
+         (sql-product-val (alist-get :engine arguments))
          (style (alist-get :sql-eval-mode-style arguments)))
     (when buffer-name
       (rename-buffer (format "*Org src %s*" buffer-name)))
     (when eval-buffer
       (sql-eval-set-buffer eval-buffer))
     (when sql-product
-      (setq sql-product sql-product-val))
+      (sql-set-product sql-product-val))
     (when style
       (setq sql-eval-mode-style (intern-soft style)))))
 
@@ -2595,7 +2616,7 @@ buffer, respectively."
             (accept-process-output ns 0.1))
           (delete-process ns)
           (read (buffer-substring-no-properties (point-min) (point-max)))
-)))))
+	  )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3281,14 +3302,16 @@ buffer, respectively."
   "Formats a letter to the kids at camp in a way that's
 compatible with the Concordia web sysstem."
   (interactive)
-  (beginning-of-buffer)
-  (search-forward "-----------")
-  (next-line)
-  (beginning-of-line)
-  (set-mark (point))
-  (search-forward "----------")
-  (beginning-of-line)
-  (lexical-let ((end-marker (point)))
+  (unless (region-active-p)
+      (lexical-let ((prior-point (point)))
+	(search-backward "-----------")
+	(next-line)
+	(beginning-of-line)
+	(set-mark (point))
+	(goto-char prior-point)
+	(search-forward "----------")
+	(beginning-of-line)))
+  (lexical-let ((end-marker (region-end)))
     (kill-ring-save (mark) (point))
     (lexical-let ((buffer-name (format "camp-letter-%s.txt" (format-time-string "%F")))
                   (line-count (count-lines (mark) (point)))
@@ -3355,7 +3378,8 @@ compatible with the Concordia web sysstem."
   (make-variable-buffer-local 'global-hl-line-mode)
   (add-hook 'vterm-mode-hook
             (lambda ()
-              (setq global-hl-line-mode nil)))
+              (setq global-hl-line-mode nil)
+	      (local-set-key (kbd "C-c C-t") 'toggle-vterm-copy-mode)))
 
   :bind
   (:map vterm-mode-map
@@ -3806,6 +3830,15 @@ so we can check to see if flyspell is just lacking a definition."
 
 (use-package gcode
   :straight (:host github :repo "jasapp/gcode-emacs"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; multi-vterm
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package multi-vterm
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

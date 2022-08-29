@@ -38,5 +38,6 @@
   (interactive)
   (browse-url (format "http://en.wikipedia.org/wiki/%s" (word-at-point))))
 
-(define-key text-mode-map (kbd "C-c d") 'dictionary-lookup-word-at-point)
+;; (define-key text-mode-map (kbd "C-c d") 'dictionary-lookup-word-at-point)
+(define-key text-mode-map (kbd "C-c d") 'dictionary-search)
 (define-key text-mode-map (kbd "C-c w") 'wikipedia-lookup-word-at-point)
