@@ -5,15 +5,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar *journal-roots* '()) ; new entries must end with slash
 
-(defun days-to-date (date)
+(defun days-to-date (now-date to-date)
+  "Returns the number of days until a date. Input format is 2020-10-16"
+  (truncate
+   (/ (- (float-time (date-to-time (format "%sT00:00" to-date)))
+         (float-time now-date))
+      (* 60 60 24))))
+
+(defun display-days-to-date (date)
   "Returns the number of days until a date. Input format is 2020-10-16"
   (interactive "MDate: ")
-  (message
-   (format "%d"
-           (truncate
-            (/ (- (float-time (date-to-time (format "%sT00:00" date)))
-                  (float-time (time-n-days-ago 0)))
-               (* 60 60 24))))))
+  (message (format "%d" (days-to-date (time-n-days-ago 0) date))))
 
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
@@ -42,8 +44,7 @@
                              (string-to-number
                               (format-time-string "%e" logfile-date)))
                             (format-time-string ", %Y." logfile-date)
-                            ;; (format "%d days remaining." days-to-freedom)
-                            ))
+                            (format "\n\n%d days remaining." (days-to-date logfile-date "2023-07-01"))))
             ;; Auto save over SSH is a PITA. This will still auto-save
             ;; on idle.
             (when (or (numberp (string-match "/ssh:" new-logfile-filename))
@@ -56,7 +57,8 @@
             (message (concat "Opened " new-logfile-filename)))
           (flyspell-mode 1)
           (auto-fill-mode 1)
-          (setq show-trailing-whitespace t))))))
+          (setq show-trailing-whitespace t)
+	  (setq-local company-idle-delay nil))))))
 
 (defun find-random-log-file ()
   (interactive)

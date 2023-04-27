@@ -20,6 +20,9 @@
 (when (< emacs-major-version 27)
   (package-initialize))
 
+(unless (fboundp 'use-package)
+  (package-install 'use-package))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; cl is deprecated as of Emacs 27
@@ -56,6 +59,7 @@
 (use-package el-get
   :ensure t)
 
+
 ;; ;; This would be great if it didn't just cause cider to completely disappear
 ;; ;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
 
@@ -84,6 +88,20 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ;; (load "~/.emacs.d/custom/nxhtml/autostart.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Deletion moves to trash rather than permanently deleting
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq trash-directory "~/.Trash")
+
+;; See `trash-directory' as it requires defining `system-move-file-to-trash'.
+(defun system-move-file-to-trash (file)
+  "Use \"trash\" to move FILE to the system trash."
+  (cl-assert (executable-find "trash") nil "'trash' must be installed. Needs \"brew install trash\"")
+  (call-process "trash" nil 0 nil "-F"  file))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -297,14 +315,24 @@ width to 60% frame width, or 85, whichever is larger."
         (set-window-configuration former)
       (message "No previous window configuration"))))
 
+(defun candera-next-window ()
+  "Move to the next window."
+  (interactive)
+  (other-window 1))
+
+(defun candera-previous-window ()
+  "Move to the previous window."
+  (interactive)
+  (other-window -1))
+
 (global-set-key (kbd "C-x 4 C-c") 'center-window-horizontally)
 (global-set-key (kbd "C-x 4 C-r") 'restore-former-window-configuration)
 (global-set-key (kbd "C-x 4 1") 'temporarily-display-one-window)
 (global-set-key (kbd "C-x 4 2") 'temporarily-display-two-windows)
 (global-set-key (kbd "C-x 4 3") 'temporarily-display-three-windows)
 (global-set-key (kbd "C-x 4 4") 'temporarily-display-four-windows)
-(global-set-key (kbd "M-N") 'other-window)
-(global-set-key (kbd "M-P") (lambda () (interactive) (other-window -1)))
+(global-set-key (kbd "M-N") 'candera-next-window)
+(global-set-key (kbd "M-P") 'candera-previous-window)
 (global-set-key (kbd "M-`") 'other-frame)
 (global-set-key (kbd "M-[") 'previous-buffer)
 (global-set-key (kbd "M-]") 'next-buffer)
@@ -312,10 +340,10 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-c D") 'define-word-at-point)
 
 ;; Auto-complete customization. Might want to make this mode-specific
-(global-set-key (kbd "M-/") 'auto-complete)
-(require 'auto-complete)
-(define-key ac-completing-map (kbd "C-n") 'ac-next)
-(define-key ac-completing-map (kbd "C-p") 'ac-previous)
+;; (global-set-key (kbd "M-/") 'auto-complete)
+;; (require 'auto-complete)
+;; (define-key ac-completing-map (kbd "C-n") 'ac-next)
+;; (define-key ac-completing-map (kbd "C-p") 'ac-previous)
 
 ;; ;; Aliases for super-keys I confuse with the meta equivalent.
 ;; (global-set-key (kbd "s-N") 'other-window)
@@ -558,8 +586,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (unless (string= "raspberrypi" system-name)
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-  (add-hook 'emacs-lisp-mode-hook 'turn-on-paredit-mode)
-  (add-hook 'emacs-lisp-mode-hook (lambda () (auto-complete-mode 1))))
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-paredit-mode))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -904,6 +931,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (require 'org-install)
 
 ;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
+(define-key org-mode-map (kbd "C-c w") 'org-refile-goto-last-stored)
 
 ;; (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
 (global-set-key (kbd "C-c l") 'org-store-link)
@@ -1057,7 +1085,7 @@ items are always last."
           (pcase (org-get-todo-state)
             ("INPROGRESS" (format "1%s" (or (org-entry-get (point) "PRIORITY") "Z")))
             ("BLOCKED" 2)
-            ("TODO" 3)
+            ("TODO" (format "3%s" (or (org-entry-get (point) "PRIORITY") "Z")))
 	    ("PAUSED" 4)
             (`nil 5)
             ("DONE" (format "6%20d" (let ((ct (org-entry-get (point) "CLOSED")))
@@ -1222,6 +1250,8 @@ items are always last."
 ;;    (shell . t)
 ;;    (dot . t)))
 
+
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
 ;; ;; This section sets up clojure-mode
@@ -1289,7 +1319,6 @@ items are always last."
   (highlight-symbol-mode t)
   (paredit-mode 1)
   (hs-minor-mode 1)
-  (auto-complete-mode 1)
   (setq show-trailing-whitespace t)
   (flyspell-mode 0)
   (when (and (not use-inf-clojure)
@@ -1439,13 +1468,14 @@ back to the original string."
 
 ;; (define-key inferior-lisp-mode-map (kbd "C-c M-o") #'comint-clear-buffer)
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; cider
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; cider
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ;; (require 'cider)
+;; (use-package cider
+;;   :ensure t)
 
 ;; ;; ;; Don't use on the Pi, due to excessive CPU
 ;; ;; (unless (string= "raspberrypi" system-name)
@@ -1563,8 +1593,7 @@ back to the original string."
 (defun my-shell-setup ()
   "For cmdproxy shell under Emacs 20"
   (setq w32-quote-process-args ?\")
-  (make-variable-buffer-local 'comint-completion-addsuffix)
-  (auto-complete-mode 1))
+  (make-variable-buffer-local 'comint-completion-addsuffix))
 
 (add-hook 'shell-mode-hook 'my-shell-setup)
 
@@ -1628,7 +1657,10 @@ back to the original string."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package magit
-  :ensure t)
+  :ensure t
+  ;; Broken in the 20230107.2134 release
+  ;; :straight (:host github :repo "magit/magit" :commit "161ab485209ecd0f304e16ca95f8a145327e7ffe")
+  )
 
 (require 'magit)
 
@@ -1827,6 +1859,38 @@ back to the original string."
 
 ;; Don't make M-x match on beginning of string
 (add-to-list 'ivy-initial-inputs-alist '(counsel-M-x . ""))
+
+(use-package company
+  :ensure t
+  :config
+  (global-set-key (kbd "M-/") 'company-manual-begin)
+  (global-company-mode 1)
+  (setq company-idle-delay nil)
+  (company-tng-mode)
+  (setq company-selection-wrap-around t)
+
+  :hook
+  (org-mode . (lambda ()
+		(setq-local company-idle-delay nil)))
+  
+  :bind
+  (:map company-active-map
+	("M-/" . company-complete-common)
+	("RET" . company-complete)
+	("return" . company-complete)
+	("tab" . company-complete-common-or-cycle)))
+
+(use-package company-ctags
+  :ensure t
+
+  :config
+  (setq company-ctags-support-etags t)
+  (setq company-ctags-fuzzy-match-p t)
+  (with-eval-after-load 'company
+    (company-ctags-auto-setup)))
+
+(use-package company-wordfreq
+  :ensure t)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -2227,11 +2291,14 @@ back to the original string."
 ;;                                   indent-tabs-mode nil
 ;;                                   c-default-style '((java-mode . "linux")))))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; sql-mode
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; sql-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package sql-mode
+  :mode "\\.p?sql$")
 
 (use-package sqlup-mode
   :ensure t)
@@ -2244,8 +2311,8 @@ back to the original string."
 
 (add-hook 'sql-mode-hook
           (lambda ()
-            (sqlup-mode 1)
-	    (auto-complete-mode 1)))
+	    (unless (string= "postgres" sql-product)
+	      (sqlup-mode 1))))
 
 ;; sql-eval-mode
 
@@ -2275,7 +2342,7 @@ back to the original string."
   "Given a product, return a separator we can use between statements."
   (cond
    ((or (string= product "ansi")
-	(string= product "mssql")) "\nGO\n")
+	(string= product "ms")) "\nGO\n")
    ((string= product "postgres") ";\n")
    (t ";\n")))
 
@@ -2288,8 +2355,7 @@ back to the original string."
       (let ((cur (point)))
         (while (< cur end)
           (goto-char cur)
-          (lexical-let* ((product sql-product) ; Preserve before buffer switch
-			 (next-go (re-search-forward "^GO$" nil t))
+          (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
                          (block-end (min end (if next-go
                                                  (- next-go 2)
                                                end)))
@@ -2299,7 +2365,7 @@ back to the original string."
               (switch-to-buffer-other-window buf)
               (vterm-send-string prepped-sql)
               (when (eq sql-eval-mode-style :sqlcmd)
-                (vterm-send-string (sql-eval-get-separator product))))
+                (vterm-send-string (sql-eval-get-separator sql-product))))
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
 (defun sql-eval-region (buffer)
@@ -2501,19 +2567,15 @@ With a prefix arg, prompts for the buffer to send to."
           (lambda ()
             (sql-eval-mode 1)))
 
-(defun sql-eval-start-process (interpreter &optional name envs)
-  "Starts a shell that actually works with comint mode. Defaults
-to `sql-eval-interpreter` for interpreter."
-  (interactive "P")
+(defun db-eval-start-process (interpreter sql-product system &optional name envs)
+  "Starts a shell that actually works with comint mode."
   ;; We need process-connection-type to be nil, or it chokes whenever
   ;; the input exceeds a certain length.
-  (let* ((interpreter (if (null interpreter)
-                          sql-eval-interpreter
-                        (read-string "Interpreter: ")))
-         (zone (read-string "Zone (mdev): " nil nil "mdev"))
+  (let* ((zone (read-string "Zone (mdev): " nil nil "mdev"))
          (deployment (read-string "Deployment (default): " nil nil "default"))
          (user (read-string "User (prod-user): " nil nil "prod-user"))
-         (default-name (format "sql-%s-%s%s"
+         (default-name (format "%s-%s-%s%s"
+			       system
 			       zone
 			       deployment
 			       (cond ((string= user "sa")
@@ -2539,12 +2601,12 @@ to `sql-eval-interpreter` for interpreter."
 	(vterm starred-name))
       (switch-to-buffer-other-window starred-name)
       ;; Override keys that vterm does weird stuff with
-      (local-set-key (kbd "M-N") 'other-window)
-      (local-set-key (kbd "M-P") (lambda ()
-                                   (interactive)
-                                   (other-window -1)))
+      (local-set-key (kbd "M-N") 'candera-next-window)
+      (local-set-key (kbd "M-P") 'candera-previous-window)
 
       (rename-buffer name)
+      (sql-set-product sql-product)
+      (vterm-set-min-window-width 1000)
       ;; Somehow inf-clojure is setting this variable in my SQL Eval
       ;; buffers, which is screwing things up royally. Clobber it back.
       (make-variable-buffer-local 'comint-input-sender)
@@ -2558,7 +2620,8 @@ to `sql-eval-interpreter` for interpreter."
       (process-send-string vterm--process "bash -i\n")
       (process-send-string vterm--process "zerk\n")
       ;; (sleep-for 0.25)
-      (process-send-string vterm--process (format "sql-env --zone %s --deployment-name %s %s\n"
+      (process-send-string vterm--process (format "%s-env --zone %s --deployment-name %s %s\n"
+						  system
 						  zone
 						  deployment
 						  (if (string= "prod-user" user)
@@ -2567,6 +2630,20 @@ to `sql-eval-interpreter` for interpreter."
       ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
       ;; (sleep-for 0.25)
       (process-send-string vterm--process (concat interpreter "\n")))))
+
+(defun sql-eval-start-process (interpreter &optional name envs)
+  "Starts a shell that actually works with comint mode. Defaults
+to `sql-eval-interpreter` for interpreter."
+  (interactive "P")
+  (let* ((interpreter (if (null interpreter)
+			  sql-eval-interpreter
+			(read-string "Interpreter: "))))
+    (db-eval-start-process interpreter "ms" "sql" name envs)))
+
+(defun itemdb-eval-start-process ()
+  "Starts a shell for use with ItemDB."
+  (interactive)
+  (db-eval-start-process "psql" "postgres" "itemdb"))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
 
@@ -2897,7 +2974,8 @@ buffer, respectively."
   ;; Sadly, doesn't seem to work
   ;; (setq ns-function-modifier 'hyper)
   (setq dock-mode 'docked)
-  (message "Switched to docked laptop mode"))
+  (when (y-or-n-p "Switched to docked laptop mode. Increase font size?")
+    (set-default-font-size 200)))
 
 (defun undocked-laptop-mode ()
   "When the laptop isn't connected to my DasKeyboard, different
@@ -2907,24 +2985,26 @@ buffer, respectively."
   (setq mac-right-option-modifier 'control)
   (setq mac-option-modifier 'meta)
   (setq dock-mode 'undocked)
-  (message "Switched to undocked laptop mode"))
+  (when (y-or-n-p "Switched to undocked laptop mode. Decrease font size?")
+    (set-default-font-size 140)))
 
-(defvar dock-mode-timer
-  (when (or (string= system-name "valinor")
-            (string= system-name "valinor.local")
-            (string= system-name "brightmoon")
-            (string= system-name "brightmoon.local"))
-    (run-with-timer
-     0
-     5
-     (lambda ()
-       (lexical-let ((currently-undocked (not (= 5232 (display-pixel-width)))))
-         (when (and (not (eq dock-mode 'undocked))
-                    currently-undocked)
-           (undocked-laptop-mode))
-         (when (and (not (eq dock-mode 'docked))
-                    (not currently-undocked))
-           (docked-laptop-mode)))))))
+;; Never really got this to work right
+;; (defvar dock-mode-timer
+;;   (when (or (string= system-name "valinor")
+;;             (string= system-name "valinor.local")
+;;             (string= system-name "brightmoon")
+;;             (string= system-name "brightmoon.local"))
+;;     (run-with-timer
+;;      0 
+;;      5
+;;      (lambda ()
+;;        (lexical-let ((currently-undocked (> 2000 (display-pixel-width))))
+;;          (when (and (not (eq dock-mode 'undocked))
+;;                     currently-undocked)
+;;            (undocked-laptop-mode))
+;;          (when (and (not (eq dock-mode 'docked))
+;;                     (not currently-undocked))
+;;            (docked-laptop-mode)))))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -3257,6 +3337,9 @@ buffer, respectively."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package sqlite3
+  :ensure t)
+
 (use-package forge
   :ensure t)
 
@@ -3372,14 +3455,25 @@ compatible with the Concordia web sysstem."
   (vterm-clear)
   (vterm-clear-scrollback))
 
+(defun vterm-set-min-window-width (min-width)
+  "Sets the minimum window width in vterm buffers."
+  (interactive "nBuffer size: ")
+  (setq-local vterm-min-window-width min-width))
+
 (use-package vterm
   :ensure t
+  ;; Maybe I should just set this when I need it.
+  ;; :custom
+  ;; (vterm-min-window-width 1000 "I can scroll with emacs if I want to.")
   :config
   (make-variable-buffer-local 'global-hl-line-mode)
   (add-hook 'vterm-mode-hook
             (lambda ()
               (setq global-hl-line-mode nil)
-	      (local-set-key (kbd "C-c C-t") 'toggle-vterm-copy-mode)))
+	      (global-set-key (kbd "C-c C-t") 'toggle-vterm-copy-mode)
+	      (local-set-key (kbd "C-c C-t") 'toggle-vterm-copy-mode)
+	      (local-set-key (kbd "M-N") 'candera-next-window)
+	      (local-set-key (kbd "M-P") 'candera-previous-window)))
 
   :bind
   (:map vterm-mode-map
@@ -3387,12 +3481,14 @@ compatible with the Concordia web sysstem."
 	("C-c C-l" . vterm-clear-all)
 	("C-c C-c" . vterm-send-C-c)
 	("M-N" . nil)
+	("M-P" . nil)
 	("C-c e" . clsql-examine-last-result))
   (:map vterm-copy-mode-map
 	("C-c C-t" . toggle-vterm-copy-mode)
 	("C-c C-l" . vterm-clear-all)
 	("C-c C-c" . vterm-send-C-c)
 	("M-N" . nil)
+	("M-P" . nil)
 	("C-c e" . clsql-examine-last-result)))
 
 (defadvice vterm-copy-mode (after my-vterm-copy-mode-advice (arg) activate)
@@ -3778,7 +3874,7 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(add-hook 'sh-mode-hook (lambda () (auto-complete-mode 1)))
+;; (add-hook 'sh-mode-hook (lambda () (auto-complete-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3805,9 +3901,9 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Not in elpa yet, using straight
 (use-package elfeed-tube
-  :straight (:host github :repo "karthink/elfeed-tube")
+  :ensure t
+  ;; :straight (:host github :repo "karthink/elfeed-tube")
   :after elfeed
   :demand t
   :config
@@ -3839,6 +3935,102 @@ so we can check to see if flyspell is just lacking a definition."
 
 (use-package multi-vterm
   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; json-navigator
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Augments json tree navigation
+(use-package tree-mode
+  :ensure t)
+
+(use-package json-navigator
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-remark
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package org-remark
+  :ensure t
+
+  :config
+  (org-remark-global-tracking-mode +1)
+  (define-key global-map (kbd "C-c n m") #'org-remark-mark)
+
+  :bind
+  (:map org-remark-mode-map
+	("C-c n o" . #'org-remark-open)
+	("C-c n ]" . #'org-remark-view-next)
+	("C-c n [" . #'org-remark-view-prev)
+	("C-c n r" . #'org-remark-remove)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; dictionary-search (built in)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Uses the 1913 Webster edition, advocated here:
+;; https://irreal.org/blog/?p=10867
+(setq dictionary-server "dict.org")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; wc-mode
+;;
+;; Running count of words in buffer
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package wc-mode
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; visual-fill-column
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Usually you use this with visual-line-mode
+(use-package visual-fill-column
+  :ensure t
+  :config
+  (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; asciidoc mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package adoc-mode
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; iedit
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package iedit
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-roam
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package org-roam
+  :ensure t
+  :config
+  (org-roam-db-autosync-enable)
+  (require 'org-roam-protocol))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
