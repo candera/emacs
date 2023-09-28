@@ -50,7 +50,7 @@
 
 (defun outline-presentation-start ()
   "Begin the presentation by making only the current node visible"
-  (outline-mode) 
+  ;; (outline-mode) 
   (outline-back-to-heading)
   (let ((start (point)))
     (outline-next-heading)

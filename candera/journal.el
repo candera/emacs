@@ -17,6 +17,11 @@
   (interactive "MDate: ")
   (message (format "%d" (days-to-date (time-n-days-ago 0) date))))
 
+(defvar candera:log-file-target-date
+  nil
+  ;; "2023-06-30"
+  )
+
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
   (interactive "p")
@@ -44,7 +49,10 @@
                              (string-to-number
                               (format-time-string "%e" logfile-date)))
                             (format-time-string ", %Y." logfile-date)
-                            (format "\n\n%d days remaining." (days-to-date logfile-date "2023-07-01"))))
+			    (if candera:log-file-target-date
+				(format "\n\n%d days remaining." (days-to-date logfile-date candera:log-file-target-date))
+			      "")
+			    ))
             ;; Auto save over SSH is a PITA. This will still auto-save
             ;; on idle.
             (when (or (numberp (string-match "/ssh:" new-logfile-filename))

@@ -2,6 +2,13 @@
   (if (file-exists-p path)
       (load-file path)))
 
+;; Disable vc for files opened with TRAMP, because it's slow and I
+;; neve really want to do that.
+(setq vc-ignore-dir-regexp
+      (format "\\(%s\\)\\|\\(%s\\)"
+              vc-ignore-dir-regexp
+              tramp-file-name-regexp))
+
 (defmacro comment (&rest body)
        "Comment out one or more s-expressions."
          nil)
@@ -19,6 +26,10 @@
            ("org" . "http://orgmode.org/elpa/"))))
 (when (< emacs-major-version 27)
   (package-initialize))
+
+;; Bug in 28 means that SVG is inadvertantly not included
+(when (= emacs-major-version 28)
+  (setq iamge-types (append image-types '(svg))))
 
 (unless (fboundp 'use-package)
   (package-install 'use-package))
@@ -928,7 +939,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (use-package org :ensure t)
 
 (require 'org)
-(require 'org-install)
+;; (require 'org-install)
 
 ;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
 (define-key org-mode-map (kbd "C-c w") 'org-refile-goto-last-stored)
@@ -1250,6 +1261,16 @@ items are always last."
 ;;    (shell . t)
 ;;    (dot . t)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-trello
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Tried to set it up 2023-Jul, not working. Probably victim of Atlassian crapware issue.
+
+;; (use-package org-trello
+;;   :ensure t)
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1660,6 +1681,10 @@ back to the original string."
   :ensure t
   ;; Broken in the 20230107.2134 release
   ;; :straight (:host github :repo "magit/magit" :commit "161ab485209ecd0f304e16ca95f8a145327e7ffe")
+  :config
+  ;; For some weird reason, when this is true, delete does nothing. I
+  ;; even debugged it and couldnt' figure out why.
+  (setq magit-delete-by-moving-to-trash nil)
   )
 
 (require 'magit)
@@ -1818,44 +1843,75 @@ back to the original string."
 ;; ;; Deprecated - replaced by clojure-mode support
 ;; (define-key clojure-mode-map (kbd "C-c |") 'clojure-align)
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; SMEX
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; SMEX
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package smex
-;;   :ensure t
-;;   :config
-;;   (smex-initialize)
-;;   ;; (global-set-key (kbd "M-x") 'smex)
-;;   ;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-;;   ;; This is your old M-x.
-;;   (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command))
+(use-package smex
+  :ensure t
+  :config
+  (smex-initialize)
+  ;; (global-set-key (kbd "M-x") 'smex)
+  ;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+  ;; This is your old M-x.
+  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; Ivy, Counsel, Company
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Ivy, Counsel, Company
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun candera-ivy-sort-by-length (x y)
+  "Sort strings by length"
+  ;; (message "candera-ivy-sort-by-length %s %s" x y)
+  (< (length x) (length y)))
+
+(defun candera-ivy-heuristic-sort (name candidates)
+  "Use my heuristics to sort for a good match."
+  ;; (message "heuristics sorting %s" name)
+  candidates)
 
 (use-package ivy
+  :ensure t
+  :config
+  (setq ivy-re-builders-alist
+	'((t . ivy--regex-fuzzy)))
+  ;; ivy-sort-functions-alist controls the initial sort;
+  ;; (add-to-list 'ivy-sort-functions-alist
+  ;; 	       '(ivy-switch-buffer    . candera-ivy-sort-by-length))
+  ;; (add-to-list 'ivy-sort-functions-alist
+  ;; 	       '(counsel-find-file    . candera-ivy-sort-by-length))
+  ;; (add-to-list 'ivy-sort-functions-alist
+  ;; 	       '(projectile-find-file . candera-ivy-sort-by-length))
+  ;; ivy-sort-matches-functions-alist are called after each input to
+  ;; sort what remains.
+  ;; (add-to-list 'ivy-sort-matches-functions-alist
+  ;; 	       '(ivy-switch-buffer . candera-ivy-heuristic-sort))
+  ;; (global-set-key (kbd "C-s") 'swiper-isearch)
+
+  :bind
+  (:map ivy-minibuffer-map
+	("RET" . 'ivy-alt-done)))
+
+;; Better sorting for ivy--regex-fuzzy
+(use-package flx
   :ensure t)
 
 (use-package counsel
-  :ensure t)
+  :ensure t
+  :config
+  (global-set-key (kbd "M-x") 'counsel-M-x)
+  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+  ;; (global-set-key (kbd "C-y") 'counsel-yank-pop)
+  )
 
 (require 'ivy)
 (ivy-mode 1)
-(setq ivy-re-builders-alist
-      '((t . ivy--regex-fuzzy)))
-
-(define-key ivy-minibuffer-map (kbd "RET") 'ivy-alt-done)
 
 (require 'counsel)
-
-(global-set-key (kbd "C-x C-f") 'counsel-find-file)
-(global-set-key (kbd "M-x") 'counsel-M-x)
 
 ;; Don't make M-x match on beginning of string
 (add-to-list 'ivy-initial-inputs-alist '(counsel-M-x . ""))
@@ -1868,17 +1924,53 @@ back to the original string."
   (setq company-idle-delay nil)
   (company-tng-mode)
   (setq company-selection-wrap-around t)
+  ;; Gives me full control of when company auto completes. Keybindings
+  ;; below don't work right otherwise.
+  (setq copmany-auto-complete-chars nil)
+  (company-flx-mode +1)
 
   :hook
   (org-mode . (lambda ()
 		(setq-local company-idle-delay nil)))
   
   :bind
+  ;; Source: https://chat.openai.com/c/aaa51304-65a0-4c69-b581-479984af4d51
+  ;; 
+  ;; In Emacs' company-mode, company-search-map and company-active-map
+  ;; are keymaps used for different purposes within the completion
+  ;; process.
+
+  ;; company-search-map: This keymap is active when you are searching
+  ;; for completions. It is used in the search phase, where you can
+  ;; navigate through the available completions and select one. By
+  ;; default, it inherits from company-active-map, so it includes the
+  ;; key bindings defined in company-active-map. However, you can
+  ;; customize company-search-map separately if you want to have
+  ;; different key bindings specifically for the search phase.
+
+  ;; company-active-map: This keymap is active when the completions
+  ;; menu is displayed and you are interacting with it. It contains
+  ;; key bindings that allow you to select and manipulate the
+  ;; available completions. For example, you can use arrow keys, tab,
+  ;; or numbers to navigate through the completions, select one, or
+  ;; trigger additional actions. By default, company-active-map is the
+  ;; main keymap for interacting with the completions menu.
+
+  ;; In summary, company-search-map is used during the search phase to
+  ;; navigate and select completions, while company-active-map is used
+  ;; when the completions menu is active and you are interacting with
+  ;; it. The latter includes the former by default, but you can
+  ;; customize each map separately if desired.
   (:map company-active-map
 	("M-/" . company-complete-common)
-	("RET" . company-complete)
-	("return" . company-complete)
-	("tab" . company-complete-common-or-cycle)))
+	("<RET>" . company-complete)
+	("<return>" . company-complete)
+	("[?\\t]" . company-complete-common-or-cycle))
+
+  (:map company-search-map
+	("<RET>" . company-complete-common-or-cycle)
+	("<return>" . company-complete-common-or-cycle))
+  )
 
 (use-package company-ctags
   :ensure t
@@ -1890,6 +1982,10 @@ back to the original string."
     (company-ctags-auto-setup)))
 
 (use-package company-wordfreq
+  :ensure t)
+
+;; Better sorting for company
+(use-package company-flx
   :ensure t)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2260,25 +2356,27 @@ back to the original string."
 ;; ;;
 ;; ;; csharp-mode
 ;; ;;
+;; ;; Part of emacs as of v29
+;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Unfortunately I can't get these to work. They rely on map-put!
-;; which I think might only be available in Emacs 27.
-(use-package tree-sitter :ensure t)
-(use-package tree-sitter-langs :ensure t)
+;; ;; Unfortunately I can't get these to work. They rely on map-put!
+;; ;; which I think might only be available in Emacs 27.
+;; (use-package tree-sitter :ensure t)
+;; (use-package tree-sitter-langs :ensure t)
 
-(use-package csharp-mode
-  :ensure t
-  :hook (csharp-mode-hook . (lambda ()
-                              ;; (display-line-numbers-mode 1)
-                              (setq c-basic-offset 2)))
-  :config
-  ;; (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode))
-  (unless (assoc 'csharp-mode hs-special-modes-alist)
-          (push '(csharp-mode
-                  "{" "}"
-                  "/[*/]" nil hs-c-like-adjust-block-beginning)
-                  hs-special-modes-alist)))
+;; (use-package csharp-mode
+;;   :ensure t
+;;   :hook (csharp-mode-hook . (lambda ()
+;;                               ;; (display-line-numbers-mode 1)
+;;                               (setq c-basic-offset 2)))
+;;   :config
+;;   ;; (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode))
+;;   (unless (assoc 'csharp-mode hs-special-modes-alist)
+;;           (push '(csharp-mode
+;;                   "{" "}"
+;;                   "/[*/]" nil hs-c-like-adjust-block-beginning)
+;;                   hs-special-modes-alist)))
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
 ;; ;; java-mode
@@ -2298,21 +2396,24 @@ back to the original string."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package sql-mode
-  :mode "\\.p?sql$")
+  :mode "\\.p?sql$"
+  :config
+  (setq sql-use-indent-support nil)
+  )
 
-(use-package sqlup-mode
-  :ensure t)
+;; (use-package sqlup-mode
+;;   :ensure t)
 
 (require 'sql)
 
-(define-key sql-mode-map (kbd "C-M") 'newline)
+;; (define-key sql-mode-map (kbd "C-M") 'newline)
 
-(require 'sqlup-mode)
+;; (require 'sqlup-mode)
 
-(add-hook 'sql-mode-hook
-          (lambda ()
-	    (unless (string= "postgres" sql-product)
-	      (sqlup-mode 1))))
+;; (add-hook 'sql-mode-hook
+;;           (lambda ()
+;; 	    (unless (string= "postgres" sql-product)
+;; 	      (sqlup-mode 1))))
 
 ;; sql-eval-mode
 
@@ -2853,7 +2954,7 @@ buffer, respectively."
 (dir-locals-set-class-variables
  'publisher
  '((clojure-mode .
-                 ((use-inf-clojure-program . "nc localhost 7590")
+                 ((use-inf-clojure-program . "nc localhost 5555")
                   (inf-clojure-buffer . "publisher-repl")
                   (use-inf-clojure . t)))))
 
@@ -3197,6 +3298,22 @@ buffer, respectively."
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package haki-theme
+  :ensure t
+  :config
+  (setq haki-region "#2e8b6d"
+	;; If you skip setting this, it will use 'default' font.
+	haki-heading-font "Maple Mono"
+	haki-sans-font "Iosevka Comfy Motion"
+	haki-title-font "Impress BT"
+	haki-link-font "VictorMono Nerd Font" ;; or Maple Mono looks good
+	haki-code-font "Maple Mono") ;; inline code/verbatim (org,markdown..)
+  (load-theme 'haki t)
+  (custom-theme-set-faces 'haki
+			  '(link ((t (:slant normal))))
+			  '(org-priority ((t (:foreground "grey")))))
+  (set-default-font-size 200))
+
 ;; (use-package paganini-theme
 ;;   :ensure t
 ;;   :config
@@ -3341,18 +3458,22 @@ buffer, respectively."
   :ensure t)
 
 (use-package forge
-  :ensure t)
+  :ensure t
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; multiple-cursors
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  :bind
+  (:map forge-topic-mode-map
+	("r" . forge-edit-topic-review-requests)))
 
-;; (use-package multiple-cursors
-;;   :ensure t
-;;   :config
-;;   (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; multiple-cursors
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package multiple-cursors
+  :ensure t
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -3632,14 +3753,14 @@ With a prefix arg, prompts for the mode to show."
 ;;   :config
 ;;   (exec-path-from-shell-initialize))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; ag
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; ag
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package ag
-;;   :ensure t)
+(use-package ag
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3825,8 +3946,8 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package code-review
-  :ensure t)
+;; (use-package code-review
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4031,6 +4152,66 @@ so we can check to see if flyspell is just lacking a definition."
   :config
   (org-roam-db-autosync-enable)
   (require 'org-roam-protocol))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; log4j-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package log4j-mode
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; logview
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package logview
+  :ensure t
+  :config
+  (make-variable-buffer-local 'datetime-timezone)
+  (setq datetime-timezone  "Amerca/New_York")
+  (setq logview-additional-submodes
+	'(("format"
+	   (format . "TIMESTAMP [THREAD] LEVEL NAME {} ")
+	   (levels . "SLF4J")
+	   (timestamp)
+	   (aliases)))))
+
+(defun logview-json-follow-mode-next ()
+  "Move to next log message and disply it in the popup buffer."
+  (interactive)
+  (logview-next-entry)
+  (lexical-let ((b (current-buffer))
+		(exists (get-buffer "log-message")))
+    (save-mark-and-excursion
+      (set-mark (point))
+      (end-of-line)
+      (kill-ring-save (point) (mark))
+      (pop-to-buffer "log-message")
+      (unless exists
+	(javascript-mode))
+      (beginning-of-buffer)
+      (yank)
+      (set-mark (point))
+      (end-of-buffer)
+      (kill-region (point) (mark))
+      (unwind-protect
+	  (json-pretty-print-buffer))
+      (beginning-of-buffer)
+      (transient-mark-mode -1))
+    (pop-to-buffer b)))
+
+(defvar logview-json-follow-mode-map (make-keymap))
+
+(define-key logview-json-follow-mode-map (kbd "n") 'logview-json-follow-mode-next)
+
+(define-minor-mode logview-json-follow-mode
+  "A minor mode for following the current log message when
+navigating a logview buffer."
+  :keymap logview-json-follow-mode-map)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
