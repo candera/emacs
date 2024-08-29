@@ -15,8 +15,8 @@
 
 ;; Add the following to your init file to have packages installed by
 ;; Homebrew added to your load-path:
-(let ((default-directory "/usr/local/share/emacs/site-lisp/"))
-  (normal-top-level-add-subdirs-to-load-path))
+;; (let ((default-directory "/usr/local/share/emacs/site-lisp/"))
+;;   (normal-top-level-add-subdirs-to-load-path))
 
 (require 'package)
 (setq package-archives
@@ -27,6 +27,24 @@
 (when (< emacs-major-version 27)
   (package-initialize))
 
+;; Install straight
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+
 ;; Bug in 28 means that SVG is inadvertantly not included
 (when (= emacs-major-version 28)
   (setq iamge-types (append image-types '(svg))))
@@ -35,6 +53,330 @@
   (package-install 'use-package))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-mode
+;; 
+;; OMFG: cider requires org-mode, which will pull in the default
+;; version built in to Emacs if I don't set it up before
+;; clojure-mode/cider.
+;;
+;; Set up later version of org-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package org-plus-contrib
+;;   :pin org)
+
+(defun setup-org-mode ()
+  (turn-on-flyspell)
+  (auto-fill-mode 1)
+  ;; I always type this instead of C-c C-t
+  (define-key org-mode-map (kbd "C-c t") 'org-todo)
+  (auto-revert-mode 1)
+  (add-to-list 'org-modules 'org-habit)
+  ;; Org files can get big and have lots of
+  ;; folded content. There's not much benefit
+  ;; in line numbers, and they slow down org
+  ;; noticably.
+  ;; (linum-mode 0)
+  ;; Weird that I have to do this, but I
+  ;; can't figure out how to get habits
+  ;; turned on outside of the customization
+  ;; interface, which I prefer not to use.
+  (require 'org-habit)
+  ;; Automatically save org-mode buffers when
+  ;; idle. Important because I use Dropbox to
+  ;; sync them, and forgetting to save when
+  ;; switching computers means conflicts.
+  (add-to-list 'idle-save-buffer-list (current-buffer))
+  ;; Don't populate the initial input with
+  ;; "^" when refiling - allows me just to
+  ;; type what I'm after without having it
+  ;; match the beginning of the string.
+  (delete '(org-refile . "^") ivy-initial-inputs-alist)
+  (delete '(org-agenda-refile . "^") ivy-initial-inputs-alist)
+  (delete '(org-capture-refile . "^") ivy-initial-inputs-alist)
+  (add-to-list 'ivy-initial-inputs-alist '(org-refile . ""))
+  (add-to-list 'ivy-initial-inputs-alist '(org-agenda-refile . ""))
+  (add-to-list 'ivy-initial-inputs-alist '(org-capture-refile . "")))
+
+(defun setup-org-agenda-mode ()
+  ;; I always type this instead of C-c C-t
+  (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)
+  (display-line-numbers-mode 0))
+
+(use-package org
+  :ensure t
+  :pin gnu
+
+  :config
+  ;; (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
+  (global-set-key (kbd "C-c l") 'org-store-link) 
+  ;; ;; Bizarrely, org-clock defaults to showing the current year only
+  ;; (setq org-clock-display-default-range 'untilnow)
+  ;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
+  (setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
+ 
+  :hook
+  ((org-mode . setup-org-mode)
+   (org-agenda-mode . setup-org-agenda-mode))
+
+  :bind
+  (:map org-mode-map
+	("C-c w" . org-refile-goto-last-stored)
+	;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
+
+	))
+
+
+;; Skip items with the noagenda tag
+(defun org-init-skip-tags ()
+  "Skip the \"noagenda\" tags."
+  (let ((tags (org-get-tags-at (point))))
+    (when (member "noagenda" tags)
+      (save-excursion
+        (or
+         (ignore-errors (org-forward-element)
+                        (point))
+         (point-max))))))
+(setq org-agenda-skip-function-global 'org-init-skip-tags)
+
+(global-set-key
+ (kbd "C-c a")
+ (lambda ()
+   (interactive)
+   (if (get-buffer "*Org Agenda*")
+       (switch-to-buffer "*Org Agenda*")
+     (org-agenda))))
+
+;; ;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
+;; ;; that it might crash. So I set this variable, which gets me the same
+;; ;; effect.
+;; (setq org-hide-leading-stars t)
+
+;; Allow slash-separated paths when refiling
+;; (setq org-refile-use-outline-path 'file)
+;; (setq org-outline-path-complete-in-steps nil)
+(setq org-refile-use-outline-path 'file)
+(setq org-outline-path-complete-in-steps nil)
+(setq org-refile-targets  
+      '(
+	;; (org-agenda-files . (:tag . "active"))
+	(org-agenda-files . (:maxlevel . 3))
+	)
+      )
+
+;; Ivy breaks org-refile for some reason
+(defadvice org-refile-disable-ivy (around org-refile)
+  (ivy-mode 0)
+  (let ((result ad-do-it))
+    (ivy-mode 1)
+    result))
+
+;; ;; Log into a drawer, which is nice
+;; (setq org-log-into-drawer t)
+
+;; Include things in the diary file
+(setq org-agenda-include-diary t)
+
+;; Make events sort by newest first in the agenda view
+(setq org-agenda-sorting-strategy
+      '((agenda priority-down timestamp-down habit-down time-up category-keep)
+        (todo priority-down category-keep)
+        (tags priority-down category-keep)
+        (search category-keep)))
+
+;; Store captured notes in notes.org, and bind capture to C-c c
+(setq org-default-notes-file "~/notes.org")
+(define-key global-map (kbd "C-c c") 'org-capture)
+
+;; ;; Log time task was closed
+(setq org-log-done t)
+
+(setq org-agenda-log-mode-items '(closed clock state))
+
+;; ;; Turn off the annoying mouse highlight in agenda views
+;; (add-hook 'org-finalize-agenda-hook
+;;           (lambda () (remove-text-properties
+;;                       (point-min) (point-max) '(mouse-face t))))
+
+;; ;; Set up for agendas and mobile org
+;; (when (file-exists-p "~/Dropbox/org/")
+;;   ;; Set to the location of your Org files on your local system
+;;   (setq org-directory "~/Dropbox/org/")
+;;   ;; Set to the name of the file where new notes will be stored
+;;   (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
+;;   ;; Set to <your Dropbox root directory>/MobileOrg.
+;;   (setq org-mobile-directory "~/Dropbox/MobileOrg")
+;;   ;; A file that lists which org files should be pulled into the agenda
+;;   (setq org-agenda-files "~/Dropbox/org/agendas.org"))
+
+(defun org-time-difference (ts1 ts2)
+  "Given two org time strings, return the floating point time
+  difference between them."
+  (let* ((time1 (org-time-string-to-time ts1))
+         (time2 (org-time-string-to-time ts2))
+         (t1 (org-float-time time1))
+         (t2 (org-float-time time2)))
+    (- t2 t1)))
+
+(defun org-custom-todo-sort-fn ()
+  "Returns a value that sorts tasks according to my personal
+heuristic. Namely, by task state: INPROGRESS, then BLOCKED, then
+TODO, then PAUSED, then nothing, then DONE. Within the non-done
+states, sort by scheduled, or by deadline if not scheduled, with
+oldest dates first. Within in-progress tasks, sort by priority
+before scheduled. Within DONE, most-recently done first. Archived
+items are always last."
+  (format "%s/%s-%s/%s"
+          (if (member "ARCHIVE" (org-get-tags)) "1" "0")
+          (pcase (org-get-todo-state)
+            ("INPROGRESS" (format "1%s" (or (org-entry-get (point) "PRIORITY") "Z")))
+            ("BLOCKED" 2)
+            ("TODO" (format "3%s" (or (org-entry-get (point) "PRIORITY") "Z")))
+	    ("PAUSED" 4)
+            (`nil 5)
+            ("DONE" (format "6%20d" (let ((ct (org-entry-get (point) "CLOSED")))
+                                      (if ct
+                                          (org-time-difference ct "2038-01-01")
+                                        1.0e23))))
+            (otherwise 9))
+          (let ((etime (or (org-entry-get (point) "SCHEDULED")
+                           (org-entry-get (point) "DEADLINE"))))
+            (if etime
+                (format "%013.2f" (org-float-time (org-time-string-to-time etime)))
+              "zzzzzzzzzzzzzz"))
+
+          (org-get-heading :no-tags :no-todo)))
+
+(defun org-custom-entry-sort ()
+  "Sorts entries according to my personal heuristic"
+  (interactive)
+  (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
+
+;; ;; Compute my own custom scores for habits
+
+;; (defun org-candera-habit-penalty (days-since-last)
+;;   (- (if days-since-last
+;;          (if (< 1 days-since-last)
+;;              (- (expt 2 days-since-last)
+;;                 2)
+;;            0)
+;;        0)))
+
+;; (defun org-candera-habit-score (days today initial-value)
+;;   (when days
+;;     (let ((score-info
+;;            (reduce (lambda (acc d)
+;;                      (let* ((last-day (gethash :last-day acc))
+;;                             (days-since-last (when last-day (- d last-day)))
+;;                             (on-streak? (when days-since-last (= 1 days-since-last)))
+;;                             (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
+;;                             (streak-bonus (if on-streak?
+;;                                               (if (zerop (mod streak 3))
+;;                                                   (/ streak 3)
+;;                                                 0)
+;;                                             0))
+;;                             (score (gethash :score acc 0)))
+;;                        (puthash :last-day d acc)
+;;                        (puthash :streak streak acc)
+;;                        (puthash :score (max 1 (+ (or score 0)
+;;                                                  streak-bonus
+;;                                                  1
+;;                                                  (org-candera-habit-penalty days-since-last)))
+;;                                 acc)
+;;                        acc))
+;;                    days
+;;                    :initial-value initial-value)))
+;;       (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
+;;                                                          (first (last days))))))
+;;         (puthash :score
+;;                  (max 0 (+ (gethash :score score-info) today-penalty))
+;;                  score-info)
+;;         (unless (zerop today-penalty)
+;;           (puthash :streak 0 score-info))
+;;         score-info))))
+
+;; (defun org-collect-dates-for-element ()
+;;   "Gets all the dates for the element at point"
+;;   (let* ((element (org-element-at-point))
+;;          (start (org-element-property :begin element))
+;;          (end (org-element-property :end element)))
+;;     (org-get-all-dates start end nil nil t)))
+
+;; (defun org-collect-dates (match)
+;;   "Returns all the unique dates that appear in items that match MATCH"
+;;   ;; TODO: Figure how to keep it from scanning both parents and
+;;   ;; children, since that's redundant
+;;   ;; TODO: Skipping archived items doesn't seem to work,
+;;   ;; although skipping commented items does.
+;;   (let* ((dates (apply #'append
+;;                        (org-map-entries #'org-collect-dates-for-element
+;;                                         match
+;;                                         'file
+;;                                         'archive
+;;                                         'comment)))
+;;          (uniques (cl-remove-duplicates dates))
+;;          (sorted ))
+;;     (cl-sort uniques #'<)))
+
+;; (defun org-dblock-write:compute-habit-score (params)
+;;   "Returns a 'score' for entries that match `match` (e.g. a tag)
+;;   based on timestamps that appear in them.
+
+;;   One point is given for each consecutive day that appears. A day
+;;   without activity drops the score by (expt 2
+;;   days-since-last-activity). Every third day of a streak, a bonus
+;;   of (/ streak-length 3) is awarded.
+
+;;   If not all data is recorded in the org file initially, initial
+;;   values can be provided via :last-day, :initial-streak,
+;;   and :initial-score params."
+;;   (interactive)
+;;   (let* ((last-day-param (plist-get params :last-day))
+;;          (last-day (when last-day-param
+;;                      (time-to-days (org-time-string-to-time last-day-param))))
+;;          (initial-streak (plist-get params :initial-streak))
+;;          (initial-score (plist-get params :initial-score))
+;;          (initial-value (make-hash-table))
+;;          (match (plist-get params :match)))
+;;     (puthash :last-day last-day initial-value)
+;;     (puthash :streak initial-streak initial-value)
+;;     (puthash :score initial-score initial-value)
+;;     (save-excursion
+;;       (let* ((dates (org-collect-dates match))
+;;              (score-info (org-candera-habit-score
+;;                           (if last-day
+;;                               (remove-if (lambda (d) (<= d last-day)) dates)
+;;                             dates)
+;;                           (time-to-days (current-time))
+;;                           initial-value)))
+;;         (insert
+;;          (format "Score as of %s: %s\nStreak: %d"
+;;                  (format-time-string "%Y-%m-%d" (current-time))
+;;                  (if score-info (or (gethash :score score-info) "No score") "No score")
+;;                  (if score-info (or (gethash :streak score-info) 0) 0)))))))
+
+;; (defun candera:goal-achieved?
+;;   (achieved?)
+;;   (string-prefix-p achieved? "y" t))
+
+;; (defun candera:streak-game-compute-elapsed
+;;   (current-date prior-date current-achievement prior-achievement prior-elapsed)
+;;   (let ((date-difference (floor
+;;                           (/ (org-time-difference current-date prior-date)
+;;                              (* 24 60 60.0)))))
+;;     (if (candera:goal-achieved? current-achievement)
+;;         (+ prior-elapsed date-difference)))
+;;   )
+
+;; ;; I don't want to see days in cumulative durations, thanks
+;; (setq org-time-clocksum-format
+;;       '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
+
 
 ;; cl is deprecated as of Emacs 27
 (require 'cl-lib)
@@ -158,11 +500,11 @@
 
 ;; (require 'font-lock)
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; Save some buffers whenever emacs is idle
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Do stuff whenever emacs is idle
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar idle-save-buffer-list '())
 (defvar idle-save-buffer-time 10)
@@ -349,6 +691,12 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "M-]") 'next-buffer)
 (global-set-key (kbd "C-c d") 'sdcv-search)
 (global-set-key (kbd "C-c D") 'define-word-at-point)
+(global-unset-key (kbd "s-q"))
+(global-unset-key (kbd "s-w"))
+(global-unset-key (kbd "s-n"))
+(global-unset-key (kbd "s-N"))
+(global-unset-key (kbd "s-X"))
+(global-unset-key (kbd "s-e"))
 
 ;; Auto-complete customization. Might want to make this mode-specific
 ;; (global-set-key (kbd "M-/") 'auto-complete)
@@ -924,318 +1272,6 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;                        (region-end)))
 ;;     (error "The region is not active - nothing to evaluate")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; org-mode
-;; 
-;; OMFG: cider requires org-mode, which will pull in the default
-;; version built in to Emacs if I don't set it up before
-;; clojure-mode/cider.
-;;
-;; Set up later version of org-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package org :ensure t)
-
-(require 'org)
-;; (require 'org-install)
-
-;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
-(define-key org-mode-map (kbd "C-c w") 'org-refile-goto-last-stored)
-
-;; (global-set-key (kbd "C-c a") 'org-agenda-view-mode-dispatch)
-(global-set-key (kbd "C-c l") 'org-store-link)
-
-;; ;; Bizarrely, org-clock defaults to showing the current year only
-;; (setq org-clock-display-default-range 'untilnow)
-
-(add-hook 'org-mode-hook (lambda ()
-                           (turn-on-flyspell)
-			   (auto-fill-mode 1)
-                           ;; I always type this instead of C-c C-t
-                           (define-key org-mode-map (kbd "C-c t") 'org-todo)
-                           (auto-revert-mode 1)
-                           (add-to-list 'org-modules 'org-habit)
-                           ;; Org files can get big and have lots of
-                           ;; folded content. There's not much benefit
-                           ;; in line numbers, and they slow down org
-                           ;; noticably.
-                           (linum-mode 0)
-                           ;; Weird that I have to do this, but I
-                           ;; can't figure out how to get habits
-                           ;; turned on outside of the customization
-                           ;; interface, which I prefer not to use.
-                           (require 'org-habit)
-                           ;; Automatically save org-mode buffers when
-                           ;; idle. Important because I use Dropbox to
-                           ;; sync them, and forgetting to save when
-                           ;; switching computers means conflicts.
-                           (add-to-list 'idle-save-buffer-list (current-buffer))
-			   ;; Don't populate the initial input with
-			   ;; "^" when refiling - allows me just to
-			   ;; type what I'm after without having it
-			   ;; match the beginning of the string.
-			   (delete '(org-refile . "^") ivy-initial-inputs-alist)
-			   (delete '(org-agenda-refile . "^") ivy-initial-inputs-alist)
-			   (delete '(org-capture-refile . "^") ivy-initial-inputs-alist)
-			   (add-to-list 'ivy-initial-inputs-alist '(org-refile . ""))
-			   (add-to-list 'ivy-initial-inputs-alist '(org-agenda-refile . ""))
-			   (add-to-list 'ivy-initial-inputs-alist '(org-capture-refile . ""))))
-
-(add-hook 'org-agenda-mode-hook
-          (lambda ()
-            ;; I always type this instead of C-c C-t
-            (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)
-	    (display-line-numbers-mode 0)))
-
-;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
-(setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
-
-;; Skip items with the noagenda tag
-(defun org-init-skip-tags ()
-  "Skip the \"noagenda\" tags."
-  (let ((tags (org-get-tags-at (point))))
-    (when (member "noagenda" tags)
-      (save-excursion
-        (or
-         (ignore-errors (org-forward-element)
-                        (point))
-         (point-max))))))
-(setq org-agenda-skip-function-global 'org-init-skip-tags)
-
-(global-set-key
- (kbd "C-c a")
- (lambda ()
-   (interactive)
-   (if (get-buffer "*Org Agenda*")
-       (switch-to-buffer "*Org Agenda*")
-     (org-agenda))))
-
-;; ;; org-mode refuses to invoke org-indent-mode in emacs 23, claiming
-;; ;; that it might crash. So I set this variable, which gets me the same
-;; ;; effect.
-;; (setq org-hide-leading-stars t)
-
-;; Allow slash-separated paths when refiling
-;; (setq org-refile-use-outline-path 'file)
-;; (setq org-outline-path-complete-in-steps nil)
-(setq org-refile-use-outline-path 'file)
-(setq org-outline-path-complete-in-steps nil)
-(setq org-refile-targets  
-      '(
-	;; (org-agenda-files . (:tag . "active"))
-	(org-agenda-files . (:maxlevel . 3))
-	)
-      )
-
-;; Ivy breaks org-refile for some reason
-(defadvice org-refile-disable-ivy (around org-refile)
-  (ivy-mode 0)
-  (let ((result ad-do-it))
-    (ivy-mode 1)
-    result))
-
-;; ;; Log into a drawer, which is nice
-;; (setq org-log-into-drawer t)
-
-;; Include things in the diary file
-(setq org-agenda-include-diary t)
-
-;; Make events sort by newest first in the agenda view
-(setq org-agenda-sorting-strategy
-      '((agenda priority-down timestamp-down habit-down time-up category-keep)
-        (todo priority-down category-keep)
-        (tags priority-down category-keep)
-        (search category-keep)))
-
-;; Store captured notes in notes.org, and bind capture to C-c c
-(setq org-default-notes-file "~/notes.org")
-(define-key global-map (kbd "C-c c") 'org-capture)
-
-;; ;; Log time task was closed
-(setq org-log-done t)
-
-(setq org-agenda-log-mode-items '(closed clock state))
-
-;; ;; Turn off the annoying mouse highlight in agenda views
-;; (add-hook 'org-finalize-agenda-hook
-;;           (lambda () (remove-text-properties
-;;                       (point-min) (point-max) '(mouse-face t))))
-
-;; ;; Set up for agendas and mobile org
-;; (when (file-exists-p "~/Dropbox/org/")
-;;   ;; Set to the location of your Org files on your local system
-;;   (setq org-directory "~/Dropbox/org/")
-;;   ;; Set to the name of the file where new notes will be stored
-;;   (setq org-mobile-inbox-for-pull "~/Dropbox/org/flagged.org")
-;;   ;; Set to <your Dropbox root directory>/MobileOrg.
-;;   (setq org-mobile-directory "~/Dropbox/MobileOrg")
-;;   ;; A file that lists which org files should be pulled into the agenda
-;;   (setq org-agenda-files "~/Dropbox/org/agendas.org"))
-
-(defun org-time-difference (ts1 ts2)
-  "Given two org time strings, return the floating point time
-  difference between them."
-  (let* ((time1 (org-time-string-to-time ts1))
-         (time2 (org-time-string-to-time ts2))
-         (t1 (org-float-time time1))
-         (t2 (org-float-time time2)))
-    (- t2 t1)))
-
-(defun org-custom-todo-sort-fn ()
-  "Returns a value that sorts tasks according to my personal
-heuristic. Namely, by task state: INPROGRESS, then BLOCKED, then
-TODO, then PAUSED, then nothing, then DONE. Within the non-done
-states, sort by scheduled, or by deadline if not scheduled, with
-oldest dates first. Within in-progress tasks, sort by priority
-before scheduled. Within DONE, most-recently done first. Archived
-items are always last."
-  (format "%s/%s-%s/%s"
-          (if (member "ARCHIVE" (org-get-tags)) "1" "0")
-          (pcase (org-get-todo-state)
-            ("INPROGRESS" (format "1%s" (or (org-entry-get (point) "PRIORITY") "Z")))
-            ("BLOCKED" 2)
-            ("TODO" (format "3%s" (or (org-entry-get (point) "PRIORITY") "Z")))
-	    ("PAUSED" 4)
-            (`nil 5)
-            ("DONE" (format "6%20d" (let ((ct (org-entry-get (point) "CLOSED")))
-                                      (if ct
-                                          (org-time-difference ct "2038-01-01")
-                                        1.0e23))))
-            (otherwise 9))
-          (let ((etime (or (org-entry-get (point) "SCHEDULED")
-                           (org-entry-get (point) "DEADLINE"))))
-            (if etime
-                (format "%013.2f" (org-float-time (org-time-string-to-time etime)))
-              "zzzzzzzzzzzzzz"))
-
-          (org-get-heading :no-tags :no-todo)))
-
-(defun org-custom-entry-sort ()
-  "Sorts entries according to my personal heuristic"
-  (interactive)
-  (org-sort-entries nil ?f 'org-custom-todo-sort-fn))
-
-;; ;; Compute my own custom scores for habits
-
-;; (defun org-candera-habit-penalty (days-since-last)
-;;   (- (if days-since-last
-;;          (if (< 1 days-since-last)
-;;              (- (expt 2 days-since-last)
-;;                 2)
-;;            0)
-;;        0)))
-
-;; (defun org-candera-habit-score (days today initial-value)
-;;   (when days
-;;     (let ((score-info
-;;            (reduce (lambda (acc d)
-;;                      (let* ((last-day (gethash :last-day acc))
-;;                             (days-since-last (when last-day (- d last-day)))
-;;                             (on-streak? (when days-since-last (= 1 days-since-last)))
-;;                             (streak (if on-streak? (1+ (gethash :streak acc 0)) 1))
-;;                             (streak-bonus (if on-streak?
-;;                                               (if (zerop (mod streak 3))
-;;                                                   (/ streak 3)
-;;                                                 0)
-;;                                             0))
-;;                             (score (gethash :score acc 0)))
-;;                        (puthash :last-day d acc)
-;;                        (puthash :streak streak acc)
-;;                        (puthash :score (max 1 (+ (or score 0)
-;;                                                  streak-bonus
-;;                                                  1
-;;                                                  (org-candera-habit-penalty days-since-last)))
-;;                                 acc)
-;;                        acc))
-;;                    days
-;;                    :initial-value initial-value)))
-;;       (let ((today-penalty (org-candera-habit-penalty (- (1+ today)
-;;                                                          (first (last days))))))
-;;         (puthash :score
-;;                  (max 0 (+ (gethash :score score-info) today-penalty))
-;;                  score-info)
-;;         (unless (zerop today-penalty)
-;;           (puthash :streak 0 score-info))
-;;         score-info))))
-
-;; (defun org-collect-dates-for-element ()
-;;   "Gets all the dates for the element at point"
-;;   (let* ((element (org-element-at-point))
-;;          (start (org-element-property :begin element))
-;;          (end (org-element-property :end element)))
-;;     (org-get-all-dates start end nil nil t)))
-
-;; (defun org-collect-dates (match)
-;;   "Returns all the unique dates that appear in items that match MATCH"
-;;   ;; TODO: Figure how to keep it from scanning both parents and
-;;   ;; children, since that's redundant
-;;   ;; TODO: Skipping archived items doesn't seem to work,
-;;   ;; although skipping commented items does.
-;;   (let* ((dates (apply #'append
-;;                        (org-map-entries #'org-collect-dates-for-element
-;;                                         match
-;;                                         'file
-;;                                         'archive
-;;                                         'comment)))
-;;          (uniques (cl-remove-duplicates dates))
-;;          (sorted ))
-;;     (cl-sort uniques #'<)))
-
-;; (defun org-dblock-write:compute-habit-score (params)
-;;   "Returns a 'score' for entries that match `match` (e.g. a tag)
-;;   based on timestamps that appear in them.
-
-;;   One point is given for each consecutive day that appears. A day
-;;   without activity drops the score by (expt 2
-;;   days-since-last-activity). Every third day of a streak, a bonus
-;;   of (/ streak-length 3) is awarded.
-
-;;   If not all data is recorded in the org file initially, initial
-;;   values can be provided via :last-day, :initial-streak,
-;;   and :initial-score params."
-;;   (interactive)
-;;   (let* ((last-day-param (plist-get params :last-day))
-;;          (last-day (when last-day-param
-;;                      (time-to-days (org-time-string-to-time last-day-param))))
-;;          (initial-streak (plist-get params :initial-streak))
-;;          (initial-score (plist-get params :initial-score))
-;;          (initial-value (make-hash-table))
-;;          (match (plist-get params :match)))
-;;     (puthash :last-day last-day initial-value)
-;;     (puthash :streak initial-streak initial-value)
-;;     (puthash :score initial-score initial-value)
-;;     (save-excursion
-;;       (let* ((dates (org-collect-dates match))
-;;              (score-info (org-candera-habit-score
-;;                           (if last-day
-;;                               (remove-if (lambda (d) (<= d last-day)) dates)
-;;                             dates)
-;;                           (time-to-days (current-time))
-;;                           initial-value)))
-;;         (insert
-;;          (format "Score as of %s: %s\nStreak: %d"
-;;                  (format-time-string "%Y-%m-%d" (current-time))
-;;                  (if score-info (or (gethash :score score-info) "No score") "No score")
-;;                  (if score-info (or (gethash :streak score-info) 0) 0)))))))
-
-;; (defun candera:goal-achieved?
-;;   (achieved?)
-;;   (string-prefix-p achieved? "y" t))
-
-;; (defun candera:streak-game-compute-elapsed
-;;   (current-date prior-date current-achievement prior-achievement prior-elapsed)
-;;   (let ((date-difference (floor
-;;                           (/ (org-time-difference current-date prior-date)
-;;                              (* 24 60 60.0)))))
-;;     (if (candera:goal-achieved? current-achievement)
-;;         (+ prior-elapsed date-difference)))
-;;   )
-
-;; ;; I don't want to see days in cumulative durations, thanks
-;; (setq org-time-clocksum-format
-;;       '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -1988,14 +2024,14 @@ back to the original string."
 (use-package company-flx
   :ensure t)
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; flx
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; flx
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package flx
-;;   :ensure t)
+(use-package flx
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2033,27 +2069,27 @@ back to the original string."
 ;;   :config
 ;;   (global-set-key (kbd "C-=") 'er/expand-region))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; auto-complete-mode
-;; ;;   https://github.com/auto-complete/auto-complete
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; auto-complete-mode
+;;   https://github.com/auto-complete/auto-complete
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package auto-complete
-;;   :ensure t
-;;   :config
-;;   (ac-config-default)
-;;   ;; Turn off automatic start of auto-complete
-;;   (setq ac-auto-start nil)
+(use-package auto-complete
+  :ensure t
+  :config
+  (ac-config-default)
+  ;; Turn off automatic start of auto-complete
+  (setq ac-auto-start nil)
 
-;;   (add-hook 'auto-complete-mode-hook
-;;           (lambda ()
-;;             (local-set-key (kbd "M-/") 'auto-complete)
-;;             (define-key ac-completing-map (kbd "C-n") 'ac-next)
-;;             (define-key ac-completing-map (kbd "C-p") 'ac-previous)
-;;             (define-key ac-completing-map (kbd "C-g") 'ac-stop)
-;;             (define-key ac-completing-map (kbd "ESC") 'ac-stop))))
+  (add-hook 'auto-complete-mode-hook
+          (lambda ()
+            (local-set-key (kbd "M-/") 'auto-complete)
+            (define-key ac-completing-map (kbd "C-n") 'ac-next)
+            (define-key ac-completing-map (kbd "C-p") 'ac-previous)
+            (define-key ac-completing-map (kbd "C-g") 'ac-stop)
+            (define-key ac-completing-map (kbd "ESC") 'ac-stop))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2188,7 +2224,7 @@ back to the original string."
                               (cmd (read-string "Run Clojure: " program))
                               (name (read-buffer "REPL buffer name: " buffer)))
                  (when (get-buffer name)
-                    (when (y-or-n-p "REPL buffer exists. Delete existing?")
+                   (when (string= "y" (read-string "REPL buffer exists. Delete existing? (Y/n): " "y"))
                        (kill-buffer name)))
                  (list dir cmd name)))
   (inf-clojure cmd)
@@ -2307,14 +2343,20 @@ back to the original string."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; iedit
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package iedit
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; flyspell
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package flyspell
-  :ensure t)
-
-(use-package flyspell-popup
   :ensure t)
 
 (defun flyspell-popup-correct-previous-word ()
@@ -2324,8 +2366,15 @@ back to the original string."
   (cl-letf (((symbol-function 'flyspell-auto-correct-word) #'flyspell-popup-correct))
     (flyspell-auto-correct-previous-word (point))))
 
-(global-set-key (kbd "C-;") 'flyspell-popup-correct-previous-word)
-(define-key flyspell-mode-map (kbd "C-;") 'flyspell-popup-correct-previous-word)
+(use-package flyspell-popup
+  :ensure t
+
+  :bind
+  (:map flyspell-mode-map
+	("C-;" . 'flyspell-popup-correct-previous-word))
+
+  :config
+  (global-set-key (kbd "C-;") 'flyspell-popup-correct-previous-word))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -2398,8 +2447,9 @@ back to the original string."
 (use-package sql-mode
   :mode "\\.p?sql$"
   :config
+  ;; Not sure why this is not working
   (setq sql-use-indent-support nil)
-  )
+  (sqlind-minor-mode -1))
 
 ;; (use-package sqlup-mode
 ;;   :ensure t)
@@ -2464,9 +2514,12 @@ back to the original string."
                          (prepped-sql (sql-eval-prep-input sql)))
             (save-window-excursion
               (switch-to-buffer-other-window buf)
-              (vterm-send-string prepped-sql)
+              ;; (vterm-send-string prepped-sql)
+	      (mistty-send-string prepped-sql)
               (when (eq sql-eval-mode-style :sqlcmd)
-                (vterm-send-string (sql-eval-get-separator sql-product))))
+                ;; (vterm-send-string (sql-eval-get-separator sql-product))
+		(mistty-send-string (sql-eval-get-separator sql-product))
+		))
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
 (defun sql-eval-region (buffer)
@@ -2578,7 +2631,7 @@ With a prefix arg, prompts for the buffer to send to."
     "SCOPE_NAME" "SCOPE_SCHEMA" "SCROLL" "SEARCH" "SECOND" "SECOND_MICROSECOND" "SECTION" "SECURITY" "SELECT" "SELF" "SENSITIVE" "SEPARATOR" "SEQUENCE" "SERIALIZABLE" "SERVER_NAME" "SESSION"
     "SESSION_USER" "SET" "SETOF" "SETS" "SETUSER" "SHARE" "SHOW" "SHUTDOWN" "SIGNAL" "SIMILAR" "SIMPLE" "SIZE" "SMALLINT" "SOME" "SONAME" "SOURCE"
     "SPACE" "SPATIAL" "SPECIFIC" "SPECIFIC_NAME" "SPECIFICTYPE" "SQL" "SQL_BIG_RESULT" "SQL_BIG_SELECTS" "SQL_BIG_TABLES" "SQL_CALC_FOUND_ROWS" "SQL_LOG_OFF" "SQL_LOG_UPDATE" "SQL_LOW_PRIORITY_UPDATES" "SQL_SELECT_LIMIT" "SQL_SMALL_RESULT" "SQL_WARNINGS"
-    "SQLCA" "SQLCODE" "SQLERROR" "SQLEXCEPTION" "SQLSTATE" "SQLWARNING" "SQRT" "SSL" "STABLE" "START" "STARTING" "STATE" "STATEMENT" "STATIC" "STATISTICS" "STATUS"
+   "SQLCA" "SQLCODE" "SQLERROR" "SQLEXCEPTION" "SQLSTATE" "SQLWARNING" "SQRT" "SSL" "STABLE" "START" "STARTING" "STATE" "STATEMENT" "STATIC" "STATISTICS" "STATUS"
     "STDDEV_POP" "STDDEV_SAMP" "STDIN" "STDOUT" "STORAGE" "STRAIGHT_JOIN" "STRICT" "STRING" "STRUCTURE" "STYLE" "SUBCLASS_ORIGIN" "SUBLIST" "SUBMULTISET" "SUBSTRING" "SUCCESSFUL" "SUM"
     "SUPERUSER" "SYMMETRIC" "SYNONYM" "SYSDATE" "SYSID" "SYSTEM" "SYSTEM_USER" "TABLE" "TABLE_NAME" "TABLES" "TABLESAMPLE" "TABLESPACE" "TEMP" "TEMPLATE" "TEMPORARY" "TERMINATE"
     "TERMINATED" "TEXT" "TEXTSIZE" "THAN" "THEN" "TIES" "TIME" "TIMESTAMP" "TIMEZONE_HOUR" "TIMEZONE_MINUTE" "TINYBLOB" "TINYINT" "TINYTEXT" "TO" "TOAST" "TOP"
@@ -2668,7 +2721,8 @@ With a prefix arg, prompts for the buffer to send to."
           (lambda ()
             (sql-eval-mode 1)))
 
-(defun db-eval-start-process (interpreter sql-product system &optional name envs)
+;; Old. Can be removed once I'm happy with the new setup
+(defun db-eval-start-process-vterm (interpreter sql-product system &optional name envs)
   "Starts a shell that actually works with comint mode."
   ;; We need process-connection-type to be nil, or it chokes whenever
   ;; the input exceeds a certain length.
@@ -2718,19 +2772,66 @@ With a prefix arg, prompts for the buffer to send to."
       ;; (epa-decrypt-file "~/dummy.asc" "/dev/null")
       ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
       ;; (sleep-for 0.25)
-      (process-send-string vterm--process "bash -i\n")
-      (process-send-string vterm--process "zerk\n")
+;;       (process-send-string vterm--process "bash -i\n")
+      (process-send-string vterm--process (format "bash -i -c 'zerk; emacs-%s-setup --zone %s --deployment-name %s --user %s'\n" system zone deployment user)))))
+
+(defun db-eval-start-process (interpreter sql-product system &optional name envs)
+  "Starts a shell that actually works with comint mode."
+  ;; We need process-connection-type to be nil, or it chokes whenever
+  ;; the input exceeds a certain length.
+  (let* ((zone (read-string "Zone (mdev): " nil nil "mdev"))
+         (deployment (read-string "Deployment (default): " nil nil "default"))
+         (user (read-string "User (prod-user): " nil nil "prod-user"))
+         (default-name (format "%s-%s-%s%s"
+			       system
+			       zone
+			       deployment
+			       (cond ((string= user "sa")
+                                      "-sa")
+				     ((string= user "readonly")
+				      "-readonly")
+                                     (""))))
+         (name (or name (read-buffer (format "Buffer (%s): " default-name) default-name)))
+         (process-connection-type nil)
+         (temp-name (symbol-name (gensym)))
+         ;; (process (make-comint temp-name "bash" nil "-i"))
+         (starred-name (concat "*" temp-name "*"))
+         ;; (temp-file (make-temp-file "encrypt" nil nil "throwaway"))
+         (continue     (if (get-buffer name)
+			 (lexical-let ((answer (read-string (format "A buffer named %s already exists. (K)ill and recreate, (s)witch to, or (a)bort? " name))))
+			   (cond
+			    ((string= answer "k") (progn (kill-buffer name) t))
+			    ((string= answer "s") (progn (switch-to-buffer name) nil))
+			    (t nil)))
+			 t)))
+    (when continue 
+      (save-window-excursion
+	(switch-to-buffer (mistty-create))
+	(rename-buffer starred-name))
+      (switch-to-buffer-other-window starred-name)
+      ;; Override keys that vterm does weird stuff with
+      (local-set-key (kbd "M-N") 'candera-next-window)
+      (local-set-key (kbd "M-P") 'candera-previous-window)
+
+      (rename-buffer name)
+      (sql-set-product sql-product)
+      ;; (vterm-set-min-window-width 1000)
+      ;; Somehow inf-clojure is setting this variable in my SQL Eval
+      ;; buffers, which is screwing things up royally. Clobber it back.
+      (make-variable-buffer-local 'comint-input-sender)
+      (setq comint-input-sender 'comint-simple-send)
+      ;; This is a hack to get gpg-agent to have the keys we need. I
+      ;; haven't been able to figure out how to get zerkenv to do it
+      ;; correctly on its own when run under emacs
+      ;; (epa-decrypt-file "~/dummy.asc" "/dev/null")
+      ;; The sleeps give the prompt a chance to fully print, since otherwise we get weird coloring.
       ;; (sleep-for 0.25)
-      (process-send-string vterm--process (format "%s-env --zone %s --deployment-name %s %s\n"
-						  system
-						  zone
-						  deployment
-						  (if (string= "prod-user" user)
-						      ""
-						    (concat "--user " user))))
-      ;;(process-send-string process (concat "zerkenv --yes --source " envs "\n"))
-      ;; (sleep-for 0.25)
-      (process-send-string vterm--process (concat interpreter "\n")))))
+      ;;       (process-send-string vterm--process "bash -i\n")
+      (save-window-excursion
+	(switch-to-buffer name)
+	(local-set-key (kbd "C-c C-e") 'clsql-examine-last-result)
+	(local-set-key (kbd "C-c e") 'clsql-examine-last-result)
+	(mistty-send-string (format "bash -i -c 'zerk; emacs-%s-setup --zone %s --deployment-name %s --user %s'\n" system zone deployment user))))))
 
 (defun sql-eval-start-process (interpreter &optional name envs)
   "Starts a shell that actually works with comint mode. Defaults
@@ -2991,6 +3092,37 @@ buffer, respectively."
 (dir-locals-set-directory-class
  "~/adzerk/integration-tests/" 'integration-tests)
 
+(dir-locals-set-class-variables
+ 'pipeline-sandbox
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "clojure")
+                  (inf-clojure-buffer . "pipeline-sandbox-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/pipeline-sandbox/" 'pipeline-sandbox)
+
+(dir-locals-set-class-variables
+ 'adset-manager
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 5555")
+                  (inf-clojure-buffer . "adset-manager-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/adset-manager/" 'adset-manager)
+
+(dir-locals-set-class-variables
+ 'custom-relevancy
+ '((clojure-mode .
+                 ((use-inf-clojure-program . "nc localhost 5555")
+                  (inf-clojure-buffer . "custom-relevancy-repl")
+                  (use-inf-clojure . t)))))
+
+(dir-locals-set-directory-class
+ "~/adzerk/custom-relevancy/" 'custom-relevancy)
+
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
 ;; ;; image+
@@ -3031,34 +3163,34 @@ buffer, respectively."
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (setq confirm-nonexistent-file-or-buffer nil)
+(setq confirm-nonexistent-file-or-buffer nil)
 
-;; ;;(load "~/.emacs.d/custom/colors.el")
+;;(load "~/.emacs.d/custom/colors.el")
 
-;; (add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
-;; (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
+(add-to-list 'auto-mode-alist '("\\.az$" . java-mode))
+(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 
-;; (setq save-interprogram-paste-before-kill t)
+(setq save-interprogram-paste-before-kill t)
 
-;; ;; First indent, then complete
-;; (setq tab-always-indent 'complete)
+;; First indent, then complete
+(setq tab-always-indent 'complete)
 
-;; (defun clear-tags-tables ()
-;;   "Removes all tags from the active tags lists."
-;;   (interactive)
-;;   (setq tags-table-list '()))
+(defun clear-tags-tables ()
+  "Removes all tags from the active tags lists."
+  (interactive)
+  (setq tags-table-list '()))
 
-;; ;; This prevents Emacs from creating lockfiles, which prevent two
-;; ;; people from editing the same file at the same time. Since my setup
-;; ;; is single-user, all this does is occasionally confuse me by telling
-;; ;; me a file is locked, and would I like to steal it?
-;; (setq create-lockfiles nil)
+;; This prevents Emacs from creating lockfiles, which prevent two
+;; people from editing the same file at the same time. Since my setup
+;; is single-user, all this does is occasionally confuse me by telling
+;; me a file is locked, and would I like to steal it?
+(setq create-lockfiles nil)
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; Mac customizations
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Mac customizations
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar dock-mode nil)
 
@@ -3066,10 +3198,11 @@ buffer, respectively."
   "When the laptop is connected to my DasKeyboard, different
   bindings work better."
   (interactive)
-  (setq ns-command-modifier 'meta)      ; Command key is meta
-  ;; (setq ns-command-modifier 'super)     ; Command key is super
+  ;; (setq ns-command-modifier 'meta)      ; Command key is meta
+  (setq ns-command-modifier 'super)     ; Command key is super
   ;; (setq mac-right-option-modifier 'meta)
   (setq mac-right-option-modifier 'hyper)
+  (setq mac-right-command-modifier 'meta)
   (setq mac-option-modifier 'meta)
   ;; (setq mac-option-modifier 'super)
   ;; Sadly, doesn't seem to work
@@ -3082,7 +3215,8 @@ buffer, respectively."
   "When the laptop isn't connected to my DasKeyboard, different
   bindings work better."
   (interactive)
-  (setq ns-command-modifier 'meta)      ; Command key is meta
+  ;; (setq ns-command-modifier 'meta)      ; Command key is meta
+  (setq ns-command-modifier 'super)     ; Command key is super
   (setq mac-right-option-modifier 'control)
   (setq mac-option-modifier 'meta)
   (setq dock-mode 'undocked)
@@ -3118,6 +3252,18 @@ buffer, respectively."
 ;; ;; Caused more problems than it solved.
 ;; ;; (define-key input-decode-map [?\C-m] [C-m])
 ;; ;; (global-set-key (kbd "<C-m>") 'next-line)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; prog-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package prog-mode
+  :hook
+  ;; Show glyphless chars
+  (prog-mode . glyphless-display-mode)
+  )
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -3298,27 +3444,30 @@ buffer, respectively."
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package haki-theme
-  :ensure t
-  :config
-  (setq haki-region "#2e8b6d"
-	;; If you skip setting this, it will use 'default' font.
-	haki-heading-font "Maple Mono"
-	haki-sans-font "Iosevka Comfy Motion"
-	haki-title-font "Impress BT"
-	haki-link-font "VictorMono Nerd Font" ;; or Maple Mono looks good
-	haki-code-font "Maple Mono") ;; inline code/verbatim (org,markdown..)
-  (load-theme 'haki t)
-  (custom-theme-set-faces 'haki
-			  '(link ((t (:slant normal))))
-			  '(org-priority ((t (:foreground "grey")))))
-  (set-default-font-size 200))
+;; Customize it with (customize-create-theme 'candera nil)
+
+(load-theme 'candera t)
+
+;; (use-package haki-theme
+;;   :ensure t
+;;   :config
+;;   (setq haki-region "#2e8b6d"
+;; 	;; If you skip setting this, it will use 'default' font.
+;; 	haki-heading-font "Maple Mono"
+;; 	haki-sans-font "Iosevka Comfy Motion"
+;; 	haki-title-font "Impress BT"
+;; 	haki-link-font "VictorMono Nerd Font" ;; or Maple Mono looks good
+;; 	haki-code-font "Maple Mono") ;; inline code/verbatim (org,markdown..)
+;;   (load-theme 'haki t)
+;;   (custom-theme-set-faces 'haki
+;; 			  '(link ((t (:slant normal))))
+;; 			  '(org-priority ((t (:foreground "grey")))))
+;;   (set-default-font-size 200))
 
 ;; (use-package paganini-theme
 ;;   :ensure t
 ;;   :config
-;;   (load-theme 'paganini t)
-;;   (set-default-font-size 240))
+;;   (load-theme 'paganini t))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -3462,7 +3611,7 @@ buffer, respectively."
 
   :bind
   (:map forge-topic-mode-map
-	("r" . forge-edit-topic-review-requests)))
+	("r" . forge-topic-set-review-requests)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3959,6 +4108,7 @@ so we can check to see if flyspell is just lacking a definition."
 
 (use-package sdcv-mode)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; edit-with-emacs hammerspoon support
@@ -3969,33 +4119,125 @@ so we can check to see if flyspell is just lacking a definition."
 
 (load-file "~/.hammerspoon/Spoons/editWithEmacs.spoon/hammerspoon.el")
 
+
+;; Disabled 2023-10-09 because it was hanging emacs when opening files via TRAMP 
+;; 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; eglot - LSP server integration. 
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;; ;; Unfortunately the bundled version of project is old, overrides the
+;; ;; ;; one eglot depends on, and does not contain the project-root var.
+;; ;; ;; This is a backport workaround from
+;; ;; ;; [[here][https://github.com/hlissner/doom-emacs/issues/3269#issuecomment-637945554]]
+;; ;; (defun project-root (project)
+;; ;;   (car (project-roots project)))
+
+;; (use-package eglot
+;;   :ensure t
+;;   :config
+;;   (add-hook 'clojure-mode-hook
+;; 	    (lambda ()
+;; 	      (eglot-ensure))))
+
+
+;; As of [2023-11-02] Breaks paredit
+;; 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; lsp-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package lsp-mode
+;;   :ensure t
+;;   :init
+;;   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+;;   (setq lsp-keymap-prefix "C-c l")
+;;   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+;;          ;; (clojure-mode . lsp)
+;;          ;; if you want which-key integration
+;;          (lsp-mode . lsp-enable-which-key-integration))
+;;   :commands lsp)
+
+;; ;; optionally
+;; (use-package lsp-ui
+;;   :ensure t
+;;   :commands lsp-ui-mode)
+;; ;; if you are helm user
+;; ;;(use-package helm-lsp :commands helm-lsp-workspace-symbol)
+;; ;; if you are ivy user
+;; (use-package lsp-ivy
+;;   :ensure t
+;;   :commands lsp-ivy-workspace-symbol)
+
+;; (use-package lsp-treemacs
+;;   :ensure t
+;;   :commands lsp-treemacs-errors-list)
+
+;; ;; optionally if you want to use debugger
+;; (use-package dap-mode
+;;   :ensure t)
+
+;; ;; Add other languages with dap-LANGUAGE
+;; ;; Instructions for Java here: https://emacs-lsp.github.io/dap-mode/page/clojure/
+;; (use-package dap-java
+;;   :ensure t)
+
+;; ;; optional if you want which-key integration
+;; (use-package which-key
+;;   :config
+;;   (which-key-mode))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; eglot - LSP server integration. 
+;; lsp-bridge
+;;
+;; Supposedly faster LSP client
+;;
+;; https://github.com/manateelazycat/lsp-bridge
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ;; Unfortunately the bundled version of project is old, overrides the
-;; ;; one eglot depends on, and does not contain the project-root var.
-;; ;; This is a backport workaround from
-;; ;; [[here][https://github.com/hlissner/doom-emacs/issues/3269#issuecomment-637945554]]
-;; (defun project-root (project)
-;;   (car (project-roots project)))
+(use-package yasnippet
+  :ensure t)
 
-(use-package eglot
-  :ensure t
+(use-package markdown-mode
+  :ensure t)
+
+(defun lsp-bridge-popup-diagnostic ()
+  "Pops up a diagnostic for an error at point, if any."
+  (interactive)
+  (lsp-bridge-diagnostic-maybe-display-error-at-point))
+
+(use-package lsp-bridge
+  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+            :build (:not compile))
+  :init
+  (global-lsp-bridge-mode)
+
   :config
-  (add-hook 'clojure-mode-hook
-	    (lambda ()
-	      (eglot-ensure))))
+  (setq lsp-bridge-enable-with-tramp nil)
+  (setq lsp-bridge-complete-manually t)
+  (company-mode -1)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; shell-script-mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  :bind
+  (:map lsp-bridge-mode-map
+	("M-." . lsp-bridge-find-def)
+	("M-/" . lsp-bridge-popup-complete-menu)
+	("s-e" . lsp-bridge-popup-diagnostic)))
 
-;; (add-hook 'sh-mode-hook (lambda () (auto-complete-mode 1)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; shell-script-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'sh-mode-hook (lambda () (auto-complete-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4016,28 +4258,28 @@ so we can check to see if flyspell is just lacking a definition."
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; elfeed-tube
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; elfeed-tube
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package elfeed-tube
-  :ensure t
-  ;; :straight (:host github :repo "karthink/elfeed-tube")
-  :after elfeed
-  :demand t
-  :config
-  ;; (setq elfeed-tube-auto-save-p nil) ;; t is auto-save (not default)
-  ;; (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
-  (elfeed-tube-setup)
+;; (use-package elfeed-tube
+;;   :ensure t
+;;   ;; :straight (:host github :repo "karthink/elfeed-tube")
+;;   :after elfeed
+;;   :demand t
+;;   :config
+;;   ;; (setq elfeed-tube-auto-save-p nil) ;; t is auto-save (not default)
+;;   ;; (setq elfeed-tube-auto-fetch-p t) ;;  t is auto-fetch (default)
+;;   (elfeed-tube-setup)
 
-  :bind (:map elfeed-show-mode-map
-         ("F" . elfeed-tube-fetch)
-         ([remap save-buffer] . elfeed-tube-save)
-         :map elfeed-search-mode-map
-         ("F" . elfeed-tube-fetch)
-         ([remap save-buffer] . elfeed-tube-save)))
+;;   :bind (:map elfeed-show-mode-map
+;;          ("F" . elfeed-tube-fetch)
+;;          ([remap save-buffer] . elfeed-tube-save)
+;;          :map elfeed-search-mode-map
+;;          ("F" . elfeed-tube-fetch)
+;;          ([remap save-buffer] . elfeed-tube-save)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4078,6 +4320,8 @@ so we can check to see if flyspell is just lacking a definition."
 
 (use-package org-remark
   :ensure t
+
+  :pin gnu
 
   :config
   (org-remark-global-tracking-mode +1)
@@ -4134,24 +4378,15 @@ so we can check to see if flyspell is just lacking a definition."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; iedit
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package iedit
-  :ensure t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;; org-roam
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package org-roam
-  :ensure t
-  :config
-  (org-roam-db-autosync-enable)
-  (require 'org-roam-protocol))
+;; (use-package org-roam
+;;   :ensure t
+;;   :config
+;;   (org-roam-db-autosync-enable)
+;;   (require 'org-roam-protocol))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4212,6 +4447,210 @@ so we can check to see if flyspell is just lacking a definition."
   "A minor mode for following the current log message when
 navigating a logview buffer."
   :keymap logview-json-follow-mode-map)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; grammarly
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Doesn't work with TRAMP because Ubuntu 18 is too old
+
+;; (use-package lsp-grammarly
+;;   :ensure t
+;;   :hook (text-mode . (lambda ()
+;;                        (require 'lsp-grammarly)
+;;                        (lsp))))  ; or lsp-deferred
+
+;; (use-package flycheck-grammarly
+;;   :ensure t)
+
+(use-package langtool
+  :ensure t
+  :config
+  ;; (setq langtool-language-tool-jar "/Users/candera/bin/languagetool/languagetool-commandline.jar")
+  (setq langtool-language-tool-server-jar "~/bin/languagetool/languagetool-server.jar"))
+
+;; (use-package langtool-popup
+;;   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; mistty
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; 2023-10-15 doesn't work. Filed https://github.com/szermatt/mistty/issues/9
+
+(use-package mistty
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Tengwar (Elvish) face
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; M-x buffer-face-set tengwar-annatar
+(make-face 'tengwar-annatar)
+(set-face-font 'tengwar-annatar "-*-Tengwar Annatar-regular-normal-normal-*-*-*-*-*-p-0-iso10646-1")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Orderless
+;; 
+;; Provides completion without regard to order. The trick here is to
+;; use space instead of dash in e.g. M-x completion. So type `M-x org
+;; table insert`, not `M-x org-table-insert` to match everything with
+;; those words regardless of order.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; I didn't like the way it messed up fuzzy matching
+
+;; (use-package orderless
+;;   :ensure t
+;;   :custom
+;;   (completion-styles '(initials orderless basic))
+;;   (completion-category-overrides '((file (styles fuzzy basic partial-completion))))
+;;   :config
+;;   (setq ivy-re-builders-alist '((t . orderless-ivy-re-builder)))
+;;   (add-to-list 'ivy-highlight-functions-alist '(orderless-ivy-re-builder . orderless-ivy-highlight)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Yeetube
+;;
+;; YouTube integration in Emacs
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package yeetube
+  :ensure t
+  :config
+  (setf yeetube-display-thumbnails t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; clojure-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun inf-clojure-eval-ns-defun ()
+  "Evaluates the top-level at point in the namespace of its buffer."
+  (interactive)
+  (save-mark-and-excursion
+    (mark-defun)
+    (lexical-let ((expr (buffer-substring-no-properties (point) (mark)))
+		  (ns (clojure-find-ns)))
+      (inf-clojure--send-string inf-clojure-buffer (format "(in-ns '%s)" ns))
+      (inf-clojure--send-string inf-clojure-buffer expr)
+      (inf-clojure--send-string inf-clojure-buffer "(in-ns 'user)"))))
+
+(use-package clojure-mode
+  :ensure t
+  :bind
+  (:map clojure-mode-map
+	("C-M-z" . inf-clojure-eval-ns-defun)
+	("M-/" . complete-tag)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; typescript-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package typescript-mode
+  :ensure t
+  :config
+  (setq typescript-indent-level 2))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; casual-dired: Interactive menu for dired
+;;
+;; http://yummymelon.com/devnull/announcing-casual-dired---an-opinionated-porcelain-for-the-emacs-file-manager.html
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package casual-dired
+  :ensure t
+  :bind
+  (:map dired-mode-map
+	("C-o" . casual-dired-tmenu)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Eat: emulate a terminal
+;;
+;; https://codeberg.org/akib/emacs-eat
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package eat
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; auto-package-update: update packages on startup
+;;
+;; https://github.com/rranelli/auto-package-update.el
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Slows startup down way too much
+;; (use-package auto-package-update
+;;   :ensure t
+;;   :config
+;;   (setq auto-package-update-delete-old-versions t)
+;;   (setq auto-package-update-hide-results t)
+;;   (auto-package-update-maybe))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; pdf-tools : view and edit PDFs
+;;
+;; https://github.com/vedang/pdf-tools
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; I had to do this to get installation to work:
+;; https://github.com/politza/pdf-tools/issues/480#issuecomment-491440988
+
+(use-package pdf-tools
+  :ensure t
+
+  :config
+  (pdf-tools-install t)
+
+  :hook
+  (pdf-tools-enabled . (lambda ()
+			 (message "I got here")
+			 (display-line-numbers-mode -1)
+			 (iedit-mode -1))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; wgrep-ag: writable ag results
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package wgrep-ag
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; casual-calc - menu system for calc
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package casual-calc
+  :ensure t
+
+  :bind
+  (:map calc-mode-map
+	("?" . casual-calc-tmenu)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 if [ "$(which makeinfo)" == "" ]; then
   echo 'texinfo package is not installed. Run `apt-get install texinfo` or equivalent.'
@@ -10,13 +10,20 @@ fi
 # Use this on Mac to get the absolute path of the dir containing the
 # script since we can't use readlink -f
 
+CP_CMD=cp
+
 if [ "$(uname)" == "Darwin" ]; then
+    if [ "$(which gcp)" == "" ]; then
+	echo 'gcp package is not installed. Run `brew install coreutils` or equivalent.'
+	exit 1
+    fi
 # Get absolute path of the script by changing to that directory and
 # using $PWD, which is always an absolute path
     dir=`dirname $0`		
     pushd "$dir" > /dev/null    
     THIS_SCRIPT=$PWD/$(basename $0)            
-    popd > /dev/null           
+    popd > /dev/null
+    CP_CMD=gcp
 else
     THIS_SCRIPT=`readlink -f $0`
 fi
@@ -35,18 +42,17 @@ if [ "$1" == "--with-initial-setup" ]; then
     ln -fs $THIS_DIR ~/.emacs.d/custom
 
     if [ -f ~/.emacs ]; then
-        cp --backup=numbered ~/.emacs ~/your-old.emacs
+        $CP_CMD --backup=numbered ~/.emacs ~/your-old.emacs
         rm -f ~/.emacs
     fi
 
     if [ -f ~/.emacs.d/init.el ]; then
-        cp --backup=numbered ~/.emacs.d/init.el ~/.emacs.d/your-old-init.el
+        $CP_CMD --backup=numbered ~/.emacs.d/init.el ~/.emacs.d/your-old-init.el
         rm -f ~/.emacs.d/init.el
     fi
 
     echo '(load "~/.emacs.d/custom/init.el")' > ~/.emacs.d/init.el
 
-    emacs --eval '(package-install 'use-package)'
 fi
 
 

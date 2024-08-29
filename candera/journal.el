@@ -22,6 +22,23 @@
   ;; "2023-06-30"
   )
 
+(defvar journal-buffer-last-hash nil)
+
+(make-variable-buffer-local 'journal-buffer-last-hash)
+
+(defvar journal-langtool-enable-checking t)
+
+(make-variable-buffer-local 'journal-langtool-enable-checking)
+
+(defun journal-langtool-correct-previous ()
+  (interactive)
+  (let ((journal-langtool-enable-checking nil))
+    (save-excursion
+      (langtool-goto-previous-error)
+      (forward-char)
+      (langtool-correct-at-point)
+      (langtool-check-done))))
+
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
   (interactive "p")
@@ -36,12 +53,15 @@
          (new-logfile-directory (format-time-string (concat logfile-directory "%Y/%m-%b") logfile-date))
          (new-logfile-filename
           (format-time-string
-           (concat new-logfile-directory "/%Y%m%d.txt") logfile-date)))
+           (concat new-logfile-directory "/%Y%m%d.txt") logfile-date))
+	 (lsp-bridge-enable-predicates (append lsp-bridge-enable-predicates
+					       (lambda () nil))))
       (progn
         (make-directory new-logfile-directory t)
         (let ((existing?
                (or (find-buffer-visiting new-logfile-filename)
                    (file-exists-p new-logfile-filename))))
+
           (find-file new-logfile-filename)
           (unless existing?
             (insert (concat (format-time-string "%A, %B " logfile-date)
@@ -63,10 +83,32 @@
             (newline)
             (previous-line)
             (message (concat "Opened " new-logfile-filename)))
+	  (text-mode)
           (flyspell-mode 1)
           (auto-fill-mode 1)
           (setq show-trailing-whitespace t)
-	  (setq-local company-idle-delay nil))))))
+	  (setq buffer-read-only nil)
+	  (setq-local company-idle-delay nil)
+
+	  (keymap-local-set "M-;" 'journal-langtool-correct-previous)
+	  
+	  (lexical-let* ((this-buffer (current-buffer))
+			 (timer (run-with-idle-timer
+				 2
+				 t
+				 (lambda ()
+				   (lexical-let ((h (buffer-hash (current-buffer))))
+				     (when (and (eq this-buffer (current-buffer))
+						(not (eq h journal-buffer-last-hash))
+						journal-langtool-enable-checking)
+				       (setq journal-buffer-last-hash h)
+				       (langtool-check-buffer)))))))
+
+	    (add-hook 'kill-buffer-hook
+		      (lambda ()
+			(when (eq this-buffer (current-buffer))
+			  (cancel-timer timer))))
+	    ))))))
 
 (defun find-random-log-file ()
   (interactive)
@@ -88,7 +130,9 @@
   "Returns the first available directory from the list journal-roots"
   (interactive)
   (if journal-roots
-      (if (or (file-directory-p (expand-file-name (car journal-roots))))
+      (if (condition-case
+	      _ (file-directory-p (expand-file-name (car journal-roots)))
+	    (error nil))
           (expand-file-name (car journal-roots))
         (available-logfile-directory (cdr journal-roots)))
     nil))
