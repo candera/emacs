@@ -4227,6 +4227,7 @@ so we can check to see if flyspell is just lacking a definition."
   :bind
   (:map lsp-bridge-mode-map
 	("M-." . lsp-bridge-find-def)
+	("M-," . lsp-bridge-find-def-return)
 	("M-/" . lsp-bridge-popup-complete-menu)
 	("s-e" . lsp-bridge-popup-diagnostic)))
 
