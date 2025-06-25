@@ -41,6 +41,8 @@ if [ "$1" == "--with-initial-setup" ]; then
 
     ln -fs $THIS_DIR ~/.emacs.d/custom
 
+    ls -fs $THIS_DIR/early-init.el ~/.emacs.d/
+
     if [ -f ~/.emacs ]; then
         $CP_CMD --backup=numbered ~/.emacs ~/your-old.emacs
         rm -f ~/.emacs

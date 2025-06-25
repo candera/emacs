@@ -53,9 +53,6 @@
   (package-install 'use-package))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; org-mode
 ;; 
@@ -74,9 +71,10 @@
   (turn-on-flyspell)
   (auto-fill-mode 1)
   ;; I always type this instead of C-c C-t
-  (define-key org-mode-map (kbd "C-c t") 'org-todo)
   (auto-revert-mode 1)
   (add-to-list 'org-modules 'org-habit)
+  (when (fboundp 'lsp-bridge-mode)
+    (lsp-bridge-mode -1))
   ;; Org files can get big and have lots of
   ;; folded content. There's not much benefit
   ;; in line numbers, and they slow down org
@@ -127,6 +125,9 @@
   :bind
   (:map org-mode-map
 	("C-c w" . org-refile-goto-last-stored)
+	("C-c t" . org-todo)
+	("M-." . org-open-at-point)
+	("M-," . org-mark-ring-goto)
 	;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
 
 	))
@@ -753,6 +754,28 @@ width to 60% frame width, or 85, whichever is larger."
   (interactive)
   (set-cursor-type "box"))
 
+(defun json-unescape-region ()
+  "Replaces JSON escaped characters like newlines and quotes with their literal equivalents in the region."
+  (interactive)
+  (save-excursion 
+    (replace-string-in-region "\\n" "\n" (region-beginning) (region-end))
+    (replace-string-in-region "\\\"" "\"" (region-beginning) (region-end))))
+
+(defun set-random-background-color ()
+  "Set a random darkish background color for the current frame"
+  (interactive)
+  (set-background-color (format "#%02x%02x%02x" (random 60) (random 60) (random 60))))
+
+(defun candera-new-frame ()
+  "Makes a new frame, sets a random background color, and configures it the way Craig likes it."
+  (interactive)
+  (let ((frame (make-frame)))
+    (set-random-background-color)
+    (set-bar-cursor)
+    (set-frame-parameter frame 'fullscreen 'maximized)))
+
+(global-set-key (kbd "C-x 5 C") 'candera-new-frame)
+
 (defun google-word-at-point ()
   "Opens a browser for the word at point on google.co"
   (interactive)
@@ -1100,6 +1123,8 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 	    ))
 
 (setq dired-dwim-target t)
+
+(define-key dired-mode-map (kbd "O") 'dired-display-file)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1496,7 +1521,9 @@ back to the original string."
       (insert contents)
       (save-mark-and-excursion
         (mark-whole-buffer)
-        (replace-string "\\n" "\n"))
+        (replace-string "\\n" "\n")
+        (mark-whole-buffer)
+	(replace-string "\\\"" "\""))
       (normal-mode)
       (local-set-key (kbd "C-c C-c") finish)
       (local-set-key (kbd "C-c C-f") finish))))
@@ -2173,7 +2200,8 @@ back to the original string."
 
 (use-package csv-mode
   :ensure t
-  :mode "\\.[Cc][Ss][Vv]\\'")
+  :mode "\\.[Cc][Ss][Vv]\\'"
+  :hook (csv-mode . (lambda () (csv-align-mode 1))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -2497,6 +2525,20 @@ back to the original string."
    ((string= product "postgres") ";\n")
    (t ";\n")))
 
+(defvar sql-eval-term-processor :term)
+
+(defun sql-eval-send-string (string)
+  (case sql-eval-term-processor
+    ((:term)
+     (term-send-raw-string string)
+     (term-send-raw-string "\n"))
+
+    ((:vterm)
+     (vterm-send-string string))
+
+    ((:mistty)
+     (mistty-send-string string))))
+
 (defun sql-eval-buffer-subset (buf beg end)
   "Send the text in the buffer from `beg` to `end` to SQL eval buffer `buf`"
   (display-buffer buf)
@@ -2514,11 +2556,9 @@ back to the original string."
                          (prepped-sql (sql-eval-prep-input sql)))
             (save-window-excursion
               (switch-to-buffer-other-window buf)
-              ;; (vterm-send-string prepped-sql)
-	      (mistty-send-string prepped-sql)
+	      (sql-eval-send-string prepped-sql)
               (when (eq sql-eval-mode-style :sqlcmd)
-                ;; (vterm-send-string (sql-eval-get-separator sql-product))
-		(mistty-send-string (sql-eval-get-separator sql-product))
+              	(sql-eval-send-string (sql-eval-get-separator sql-product))
 		))
             (setq cur (if next-go (1+ next-go) block-end))))))))
 
@@ -2721,6 +2761,16 @@ With a prefix arg, prompts for the buffer to send to."
           (lambda ()
             (sql-eval-mode 1)))
 
+(defun sql-eval-create-term ()
+  "Create a terminal buffer. Return its name"
+  (case sql-eval-term-processor
+    ((:term)
+     (progn
+       (term "/usr/local/bin/bash")
+       "*terminal*"))
+    ;; TODO: Mistty and vterm if I ever need them
+    ))
+
 ;; Old. Can be removed once I'm happy with the new setup
 (defun db-eval-start-process-vterm (interpreter sql-product system &optional name envs)
   "Starts a shell that actually works with comint mode."
@@ -2806,7 +2856,7 @@ With a prefix arg, prompts for the buffer to send to."
 			 t)))
     (when continue 
       (save-window-excursion
-	(switch-to-buffer (mistty-create))
+	(switch-to-buffer (sql-eval-create-term))
 	(rename-buffer starred-name))
       (switch-to-buffer-other-window starred-name)
       ;; Override keys that vterm does weird stuff with
@@ -2831,7 +2881,7 @@ With a prefix arg, prompts for the buffer to send to."
 	(switch-to-buffer name)
 	(local-set-key (kbd "C-c C-e") 'clsql-examine-last-result)
 	(local-set-key (kbd "C-c e") 'clsql-examine-last-result)
-	(mistty-send-string (format "bash -i -c 'zerk; emacs-%s-setup --zone %s --deployment-name %s --user %s'\n" system zone deployment user))))))
+	(sql-eval-send-string (format "bash -i -c 'zerk; emacs-%s-setup --zone %s --deployment-name %s --user %s'\n" system zone deployment user))))))
 
 (defun sql-eval-start-process (interpreter &optional name envs)
   "Starts a shell that actually works with comint mode. Defaults
@@ -2846,6 +2896,11 @@ to `sql-eval-interpreter` for interpreter."
   "Starts a shell for use with ItemDB."
   (interactive)
   (db-eval-start-process "psql" "postgres" "itemdb"))
+
+(defun duckdb-eval-start-process ()
+  "Starts a shell for use with DuckDB."
+  (interactive)
+  (db-eval-start-process "duckdb" "postgres" "duckdb"))
 
 (define-key sql-mode-map (kbd "C-c s") 'sql-eval-start-process)
 
@@ -2948,6 +3003,21 @@ buffer, respectively."
   (interactive)
   (or adzerk-api-key-cache
       (setq adzerk-api-key-cache (get-adzerk-var "ADZERK_API_KEY"))))
+
+(defun read-gpg-file-to-string (filename)
+  "Decrypt the GPG-encrypted FILENAME and return its contents as a string.
+Uses a temporary file and ensures it is deleted afterward."
+  (let ((tempfile (make-temp-file "emacs-gpg-decrypt-")))
+    (unwind-protect
+        (progn
+          ;; Decrypt into a temporary buffer
+          (with-temp-buffer
+            (let ((coding-system-for-read 'binary)) ; ensure no decoding issues
+              (epa-decrypt-file filename tempfile))
+	    (insert-file-contents tempfile)
+            (buffer-string)))
+      ;; Always clean up
+      (delete-file tempfile))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -3185,6 +3255,40 @@ buffer, respectively."
 ;; is single-user, all this does is occasionally confuse me by telling
 ;; me a file is locked, and would I like to steal it?
 (setq create-lockfiles nil)
+
+(defun align-to-commas ()
+  "Aligns regions as if they were a CSV."
+  (interactive)
+  (let ((buffer-invisibility-spec '()))
+    (csv-align-fields nil (region-beginning) (region-end))))
+
+(defun edit-json-string-in-other-buffer ()
+  "Opens a temporary buffer and populates it with the contents of
+the string at point. Hitting C-c C-c in that buffer will save it
+back to the original string."
+  (interactive)
+  (save-mark-and-excursion
+    (lexical-let* ((orig (current-buffer))
+                   (start (region-beginning))
+                   (end (region-end))
+                   (contents (buffer-substring-no-properties start end))
+		   (finish (lambda ()
+                             (interactive)
+                             (save-mark-and-excursion
+                               (lexical-let* ((contents (buffer-substring-no-properties
+                                                         (point-min)
+                                                         (point-max))))
+                                 (switch-to-buffer orig)
+                                 (kill-region start end)
+                                 (goto-char start)
+                                 (insert contents))))))
+      (lexical-let* ((new-buffer (switch-to-buffer (make-temp-name "json-string")))))
+      (insert contents)
+      (replace-string "\\n" "")
+      (javascript-mode)
+      (local-set-key (kbd "C-c C-c") finish)
+      (local-set-key (kbd "C-c C-f") finish))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3891,16 +3995,16 @@ With a prefix arg, prompts for the mode to show."
   (global-set-key (kbd "C-c K") 'candera-which-key-show-keymap)
   (global-set-key (kbd "C-c k") 'which-key-show-top-level))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; exec-path-from-shell
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; exec-path-from-shell
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package exec-path-from-shell
-;;   :ensure t
-;;   :config
-;;   (exec-path-from-shell-initialize))
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (exec-path-from-shell-initialize))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3918,7 +4022,14 @@ With a prefix arg, prompts for the mode to show."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package coffee-mode
-  :ensure t)
+  :ensure t
+
+  ;; TODO: Not sure this works
+  :after eglot
+
+  :config
+  (add-to-list 'eglot-server-programs '(coffee-mode . ("coffeesense-language-server" "--stdio"))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4120,13 +4231,13 @@ so we can check to see if flyspell is just lacking a definition."
 (load-file "~/.hammerspoon/Spoons/editWithEmacs.spoon/hammerspoon.el")
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; eglot - LSP server integration. 
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Disabled 2023-10-09 because it was hanging emacs when opening files via TRAMP 
-;; 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; eglot - LSP server integration. 
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ;; ;; Unfortunately the bundled version of project is old, overrides the
 ;; ;; ;; one eglot depends on, and does not contain the project-root var.
@@ -4142,9 +4253,78 @@ so we can check to see if flyspell is just lacking a definition."
 ;; 	    (lambda ()
 ;; 	      (eglot-ensure))))
 
-
 ;; As of [2023-11-02] Breaks paredit
+
+;; Tried again [2025-02-11]. Hopefully better than lsp-bridge
 ;; 
+;; It's built-in now: no need to ensure
+(use-package eglot
+  :hook
+  ((python-mode . eglot-ensure)       ; Python
+   (js-mode . eglot-ensure)           ; JavaScript
+   (typescript-mode . eglot-ensure)   ; TypeScript
+   (c-mode . eglot-ensure)            ; C
+   (rust-mode . eglot-ensure)         ; Rust
+   (clojure-mode . eglot-ensure)	; Clojure
+   )
+  :config
+  (setq eglot-autoshutdown t) ;; Shutdown unused servers automatically
+  ;; (add-to-list 'eglot-server-programs '(python-mode . ("pyright")))
+  )
+
+;; I don't like that docstrings show up in the echo area
+(use-package eldoc-box
+  :ensure t
+  :hook (eglot-managed-mode . eldoc-box-hover-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; corfu - lightweight (supposedly) popup completion
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package corfu
+  :ensure t
+  ;; Optional customizations
+  ;; :custom
+  ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+  ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+
+  ;; Enable Corfu only for certain modes. See also `global-corfu-modes'.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
+  ;; be used globally (M-/).  See also the customization variable
+  ;; `global-corfu-modes' to exclude certain modes.
+  :init
+  (global-corfu-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :custom
+  ;; TAB cycle if there are only few candidates
+  ;; (completion-cycle-threshold 3)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (tab-always-indent 'complete)
+
+  ;; Emacs 30 and newer: Disable Ispell completion function.
+  ;; Try `cape-dict' as an alternative.
+  (text-mode-ispell-word-completion nil)
+
+  ;; Hide commands in M-x which do not apply to the current mode.  Corfu
+  ;; commands are hidden, since they are not used via M-x. This setting is
+  ;; useful beyond Corfu.
+  (read-extended-command-predicate #'command-completion-default-include-p))
+
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
 ;; ;; lsp-mode
@@ -4191,6 +4371,19 @@ so we can check to see if flyspell is just lacking a definition."
 ;;   :config
 ;;   (which-key-mode))
 
+
+;; Alternative formulation from https://emacs-lsp.github.io/lsp-mode/tutorials/clojure-guide/
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; lsp-mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package lsp-mode
+;;   :ensure t)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; lsp-bridge
@@ -4201,35 +4394,37 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package yasnippet
-  :ensure t)
+;; (use-package yasnippet
+;;   :ensure t)
 
-(use-package markdown-mode
-  :ensure t)
+;; (use-package markdown-mode
+;;   :ensure t)
 
-(defun lsp-bridge-popup-diagnostic ()
-  "Pops up a diagnostic for an error at point, if any."
-  (interactive)
-  (lsp-bridge-diagnostic-maybe-display-error-at-point))
+;; (defun lsp-bridge-popup-diagnostic ()
+;;   "Pops up a diagnostic for an error at point, if any."
+;;   (interactive)
+;;   (lsp-bridge-diagnostic-maybe-display-error-at-point))
 
-(use-package lsp-bridge
-  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-            :build (:not compile))
-  :init
-  (global-lsp-bridge-mode)
+;; (use-package lsp-bridge
+;;   :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+;;             :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+;;             :build (:not compile))
+;;   :init
+;;   (global-lsp-bridge-mode)
 
-  :config
-  (setq lsp-bridge-enable-with-tramp nil)
-  (setq lsp-bridge-complete-manually t)
-  (company-mode -1)
+;;   :config
+;;   (setq lsp-bridge-enable-with-tramp nil)
+;;   (setq lsp-bridge-complete-manually t)
+;;   (company-mode -1)
 
-  :bind
-  (:map lsp-bridge-mode-map
-	("M-." . lsp-bridge-find-def)
-	("M-," . lsp-bridge-find-def-return)
-	("M-/" . lsp-bridge-popup-complete-menu)
-	("s-e" . lsp-bridge-popup-diagnostic)))
+;;   :bind
+;;   (:map lsp-bridge-mode-map
+;; 	("M-." . lsp-bridge-find-def)
+;; 	("M-," . lsp-bridge-find-def-return)
+;; 	("M-/" . lsp-bridge-popup-complete-menu)
+;; 	("s-e" . lsp-bridge-popup-diagnostic)
+;; 	("s-n" . lsp-bridge-diagnostic-jump-next)
+;; 	("s-p" . lsp-bridge-diagnostic-jump-prev)))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4258,6 +4453,17 @@ so we can check to see if flyspell is just lacking a definition."
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; elfeed
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package elfeed
+  :ensure t
+  :bind (:map elfeed-search-mode-map
+	      ("/" . elfeed-search-set-filter)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -4297,8 +4503,8 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package multi-vterm
-  :ensure t)
+;; (use-package multi-vterm
+;;   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4470,7 +4676,9 @@ navigating a logview buffer."
   :ensure t
   :config
   ;; (setq langtool-language-tool-jar "/Users/candera/bin/languagetool/languagetool-commandline.jar")
-  (setq langtool-language-tool-server-jar "~/bin/languagetool/languagetool-server.jar"))
+  ;;(setq langtool-language-tool-server-jar "  ~/bin/languagetool/languagetool-server.jar")
+  (setq langtool-language-tool-server-jar "/opt/homebrew/opt/languagetool/libexec/languagetool-server.jar")
+)
 
 ;; (use-package langtool-popup
 ;;   :ensure t)
@@ -4549,12 +4757,25 @@ navigating a logview buffer."
       (inf-clojure--send-string inf-clojure-buffer expr)
       (inf-clojure--send-string inf-clojure-buffer "(in-ns 'user)"))))
 
+(defun clojure-pretty-print-region ()
+  "Pretty-prints the region. Requires use of external tool `jet`."
+  (interactive)
+  (shell-command-on-region (region-beginning) (region-end) "jet --pretty" :replace t))
+
 (use-package clojure-mode
   :ensure t
   :bind
+  :config
+  (when (fboundp 'lsp-bridge-mode)
+    (lsp-bridge-mode 1))
+
+  :bind
   (:map clojure-mode-map
 	("C-M-z" . inf-clojure-eval-ns-defun)
-	("M-/" . complete-tag)))
+	("M-/" . complete-tag)
+	("C-M-/" . hippie-expand)
+	("s-n" . flymake-goto-next-error)
+	("s-p" . flymake-goto-prev-error)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4619,6 +4840,11 @@ navigating a logview buffer."
 ;; I had to do this to get installation to work:
 ;; https://github.com/politza/pdf-tools/issues/480#issuecomment-491440988
 
+;; Later, this:
+;;
+;; export PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:/opt/homebrew/Cellar/libffi/3.4.8/lib/pkgconfig/
+;; /Users/candera/.emacs.d/elpa/pdf-tools-20240429.407/build/server/autobuild -i /Users/candera/.emacs.d/elpa/pdf-tools-20240429.407/
+
 (use-package pdf-tools
   :ensure t
 
@@ -4652,6 +4878,159 @@ navigating a logview buffer."
   :bind
   (:map calc-mode-map
 	("?" . casual-calc-tmenu)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Ultra-scroll: smooth mouse scrolling
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Prereq: evaluate `(package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll"))`
+
+(use-package ultra-scroll
+  ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of package-vc-install
+  :init
+  (setq scroll-conservatively 101 ; important!
+        scroll-margin 0) 
+  :config
+  (ultra-scroll-mode 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; term-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Built-in, no need for ensuring
+
+(defun term-clear-to-beginning ()
+  "Clears a term mode buffer from beginning of current line to top of buffer."
+  (interactive)
+  (save-excursion 
+    (move-beginning-of-line nil)
+    (push-mark)
+    (beginning-of-buffer)
+    (kill-region (point) (mark))))
+
+;; Line mode
+(define-key term-mode-map (kbd "C-c C-l") 'term-clear-to-beginning)
+
+;; Char mode
+(define-key term-raw-map (kbd "C-c C-l") 'term-clear-to-beginning)
+(define-key term-raw-map (kbd "M-N") 'candera-next-window)
+(define-key term-raw-map (kbd "M-P") 'candera-previous-window)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; gcmh - Garbage Collection Magic Hack
+;;   Runs more GC when idle
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package gcmh
+  :ensure t
+  :config
+  (gcmh-mode 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; fold-region
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun fold-region ()
+  "Hides region using outline-minor-mode."
+  (interactive)
+  (unless outline-minor-mode
+    (outline-minor-mode 1))
+  (outline-flag-region (region-beginning) (region-end) t))
+
+(defun unfold-region ()
+  "Hides region using outline-minor-mode."
+  (interactive)
+  (unless outline-minor-mode
+    (outline-minor-mode 1))
+  (outline-flag-region (region-beginning) (region-end) nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; diff-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Fix some keys
+(define-key diff-mode-map (kbd "M-N") 'candera-next-window)
+(define-key diff-mode-map (kbd "M-P") 'candera-previous-window)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; expand-region : expands region around point by incrementally larger
+;; units of text
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package expand-region
+  :ensure t
+
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Aider.el - AI assistive coding
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package aider
+  :ensure t
+  :config
+  ;; For latest claude sonnet model
+  ;; (setq aider-args '("--model" "sonnet" "--no-auto-accept-architect"))
+  ;; (setenv "ANTHROPIC_API_KEY" anthropic-api-key)
+  ;; Or chatgpt model
+  (setq aider-args '("--model" "o4-mini" "--no-auto-commits"))
+  (setenv "OPENAI_API_KEY" (read-gpg-file-to-string "~/.config/openapi-api-key.asc"))
+  ;; Or gemini model
+  ;; (setq aider-args '("--model" "gemini-exp"))
+  ;; (setenv "GEMINI_API_KEY" <your-gemini-api-key>)
+  ;; Or use your personal config file
+  ;; (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
+  ;; ;;
+  ;; Optional: Set a key binding for the transient menu
+  (global-set-key (kbd "C-c a") 'aider-transient-menu))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; copilot.el
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package copilot
+  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  :ensure t
+  :bind
+  (:map copilot-mode-map
+	("C-c TAB" . copilot-complete)
+	("C-c c" . copilot-accept-completion)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; ace-jump-mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package ace-jump-mode
+  :ensure t
+  :config
+  (global-set-key (kbd "C-c C-j") 'ace-jump-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; tramp-rclone
+;;
+;; Use rclone to open remote files like on S3
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

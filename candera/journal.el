@@ -54,8 +54,9 @@
          (new-logfile-filename
           (format-time-string
            (concat new-logfile-directory "/%Y%m%d.txt") logfile-date))
-	 (lsp-bridge-enable-predicates (append lsp-bridge-enable-predicates
-					       (lambda () nil))))
+	 (lsp-bridge-enable-predicates (when (fboundp 'lsp-bridge-enable-predicates)
+					 (append lsp-bridge-enable-predicates
+						 (lambda () nil)))))
       (progn
         (make-directory new-logfile-directory t)
         (let ((existing?
@@ -91,6 +92,7 @@
 	  (setq-local company-idle-delay nil)
 
 	  (keymap-local-set "M-;" 'journal-langtool-correct-previous)
+	  (keymap-local-set "M-'" 'langtool-correct-buffer)
 	  
 	  (lexical-let* ((this-buffer (current-buffer))
 			 (timer (run-with-idle-timer

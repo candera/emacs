@@ -32,6 +32,7 @@
 (defun view-visited-file ()
   "Displays the visited file in the minibuffer"
   (interactive)
+  (kill-new buffer-file-name)
   (message buffer-file-name))
 
 (global-set-key (kbd "C-c v") 'view-visited-file)
