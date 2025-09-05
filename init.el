@@ -685,6 +685,7 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-x 4 2") 'temporarily-display-two-windows)
 (global-set-key (kbd "C-x 4 3") 'temporarily-display-three-windows)
 (global-set-key (kbd "C-x 4 4") 'temporarily-display-four-windows)
+(global-set-key (kbd "C-x 5 n") 'select-frame-by-name)
 (global-set-key (kbd "M-N") 'candera-next-window)
 (global-set-key (kbd "M-P") 'candera-previous-window)
 (global-set-key (kbd "M-`") 'other-frame)
@@ -766,13 +767,38 @@ width to 60% frame width, or 85, whichever is larger."
   (interactive)
   (set-background-color (format "#%02x%02x%02x" (random 60) (random 60) (random 60))))
 
-(defun candera-new-frame ()
-  "Makes a new frame, sets a random background color, and configures it the way Craig likes it."
-  (interactive)
+
+(defun my/do-something (&optional user-str)
+  "Do something. With a prefix arg (C-u), prompt for USER-STR; without, don't."
+  (interactive
+   ;; Only prompt if a prefix argument was supplied.
+   (if current-prefix-arg
+       (list (read-string "String: "))
+     (list nil)))
+  ;; Example behavior: just report what we got (or that we didn't prompt).
+  (if user-str
+      (message "You entered: %s" user-str)
+    (message "No prompt; running with defaults.")))
+
+
+(defun candera-new-frame (&optional frame-name)
+  "Makes a new frame, sets a random background color, and configures it the
+way Craig likes it. If called with a prefix argument, does not prompts
+for a frame name."
+  (interactive
+   (if (not current-prefix-arg)
+       (list (read-string "Frame name: "))
+     (list nil)))
+  (when (and frame-name
+	     (cl-some (lambda (n) (string= n frame-name))
+		      (cl-map 'list 'car (make-frame-names-alist))))
+    (error "Frame with name %s already exists" frame-name))
   (let ((frame (make-frame)))
     (set-random-background-color)
     (set-bar-cursor)
-    (set-frame-parameter frame 'fullscreen 'maximized)))
+    (set-frame-parameter frame 'fullscreen 'maximized)
+    (when frame-name
+      (set-frame-name frame-name))))
 
 (global-set-key (kbd "C-x 5 C") 'candera-new-frame)
 
@@ -1343,7 +1369,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;; ;; Require clojure-mode to load and associate it to all .clj files.
 
 (use-package clojure-mode
-  :ensure t)
+  :ensure t
+
+  :bind
+  (:map clojure-mode-map
+	("C-x C-e" . inf-clojure-eval-last-sexp)))
 
 ;; (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
 ;; (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
@@ -1430,7 +1460,7 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 (setq comment-multi-line t)
 
 ;; For core.match
-(put-clojure-indent 'match 1) ; Like let
+;; (put-clojure-indent 'match 1) ; Like let
 
 ;; ;; clojure-fill-docstring got changed rather radically in a newer
 ;; ;; version of clojure-mode than the one I use. I prefer the one I
@@ -4275,7 +4305,9 @@ so we can check to see if flyspell is just lacking a definition."
 ;; I don't like that docstrings show up in the echo area
 (use-package eldoc-box
   :ensure t
-  :hook (eglot-managed-mode . eldoc-box-hover-mode))
+  :bind
+  (:map eglot-mode-map
+	("C-h C-b" . eldoc-box-help-at-point)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4460,10 +4492,27 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar my-elfeed-sort-newest-first t
+  "Whether to sort elfeed entries newest first.")
+
+(defun my-elfeed-toggle-sort-order ()
+  "Toggle between newest-first and oldest-first sorting."
+  (interactive)
+  (setq my-elfeed-sort-newest-first (not my-elfeed-sort-newest-first))
+  (if my-elfeed-sort-newest-first
+      (setq elfeed-search-sort-function 
+            (lambda (a b) (> (elfeed-entry-date a) (elfeed-entry-date b))))
+    (setq elfeed-search-sort-function 
+          (lambda (a b) (< (elfeed-entry-date a) (elfeed-entry-date b)))))
+  (elfeed-search-update--force)
+  (message "Elfeed sort order: %s first" 
+           (if my-elfeed-sort-newest-first "newest" "oldest")))
+
 (use-package elfeed
   :ensure t
   :bind (:map elfeed-search-mode-map
-	      ("/" . elfeed-search-set-filter)))
+	      ("/" . elfeed-search-set-filter)
+	      ("s" . my-elfeed-toggle-sort-order)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
