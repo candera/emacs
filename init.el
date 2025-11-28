@@ -54,6 +54,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; el-get
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package el-get
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; org-mode
 ;; 
 ;; OMFG: cider requires org-mode, which will pull in the default
@@ -128,6 +137,7 @@
 	("C-c t" . org-todo)
 	("M-." . org-open-at-point)
 	("M-," . org-mark-ring-goto)
+	("C-c a" . org-agenda)
 	;; (define-key org-mode-map (kbd "H-g") 'counsel-org-goto)
 
 	))
@@ -410,10 +420,6 @@ items are always last."
 ;;   ;; for discoverability:
 ;;   (defalias 'flatten-list 'flatten-tree))
 
-(use-package el-get
-  :ensure t)
-
-
 ;; ;; This would be great if it didn't just cause cider to completely disappear
 ;; ;; (add-to-list 'package-pinned-packages '(cider . "melpa-stable") t)
 
@@ -434,6 +440,128 @@ items are always last."
 
 ;; (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
 ;; (add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)
+
+(require 'calendar)  ;; for calendar-absolute-from-gregorian
+
+(defface my-org-agenda-current-block-face
+  '((t :background "gray20"))
+  "Face used to highlight the currently active scheduled block in the agenda.")
+
+(defun my-org-agenda-highlight-current-block ()
+  "Highlight today's agenda item whose time range includes the current time.
+
+Only touches lines for the current day, highlights the whole line,
+and shows a leading * without changing indentation."
+  (when (eq org-agenda-type 'agenda)
+    (let* ((today-abs (org-today))
+           (now-minutes (let ((hh (string-to-number (format-time-string "%H")))
+                              (mm (string-to-number (format-time-string "%M"))))
+                          (+ (* hh 60) mm))))
+      ;; Clear older highlights (line + star overlays)
+      (remove-overlays (point-min) (point-max) 'my-current-block t)
+      (save-excursion
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let* ((date-prop  (get-text-property (point) 'date))
+                 (date-abs   (when (consp date-prop)
+                               (calendar-absolute-from-gregorian date-prop)))
+                 (start-hhmm (get-text-property (point) 'time-of-day))
+                 (duration   (get-text-property (point) 'duration)))
+            ;; Only consider lines belonging to *today* with a time + duration
+            (when (and date-abs
+                       (= date-abs today-abs)
+                       start-hhmm
+                       duration)
+              (let* ((hh (/ start-hhmm 100))
+                     (mm (% start-hhmm 100))
+                     (start-minutes (+ (* hh 60) mm))
+                     (end-minutes   (+ start-minutes duration)))
+                (when (and (>= now-minutes start-minutes)
+                           (<  now-minutes end-minutes))
+                  ;; 1) Highlight the whole line
+                  (let* ((line-beg (line-beginning-position))
+                         (line-end (line-end-position))
+                         (ov      (make-overlay line-beg line-end)))
+                    (overlay-put ov 'face 'my-org-agenda-current-block-face)
+                    (overlay-put ov 'my-current-block t))
+                  ;; 2) Replace the first character (usually a space) with "*"
+                  (let* ((line-beg (line-beginning-position))
+                         (star-ov (make-overlay line-beg (1+ line-beg))))
+                    (overlay-put star-ov 'display "*")
+                    (overlay-put star-ov 'my-current-block t)))))
+            (forward-line 1)))))))
+
+(add-hook 'org-agenda-finalize-hook #'my-org-agenda-highlight-current-block)
+
+(setq org-agenda-use-time-grid nil)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; org-gcal
+;;
+;; Sync an org file with Google Calendar
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq org-gcal-default-calendar "7d9f481f8f2db790af8a25b1c87036285fc3ea1eaf6b97d4a187e6fccba632a7@group.calendar.google.com")
+
+(defmacro when-not (cond &rest body)
+  "Execute BODY when COND is nil (the inverse of `when')."
+  `(unless ,cond
+     ,@body))
+
+;; Indent it like `unless`
+(put 'when-not 'lisp-indent-function '1)
+
+(use-package org-gcal
+  :ensure t
+
+  :config
+  (setq org-gcal-client-id (encrypted-file-contents "~/.emacs.d/org-gcal/client-id.asc")
+	org-gcal-client-secret (encrypted-file-contents "~/.emacs.d/org-gcal/client-secret.asc")
+	org-gcal-fetch-file-alist `((,org-gcal-default-calendar .  "~/personal.org")))
+  (org-gcal-reload-client-id-secret)
+  (setq plstore-cache-passphrase-for-symmetric-encryption t))
+
+(defun my/org-gcal-post-all-scheduled-in-buffer ()
+  "Create or update Google Calendar events for all SCHEDULED/DEADLINE
+headings in the current buffer using org-gcal."
+  (interactive)
+  (save-excursion
+    (org-map-entries
+     (lambda ()
+       (when (org-get-scheduled-time (point))
+	 (when-not (org-entry-get (point) org-gcal-calendar-id-property)
+	   (org-entry-put (point) org-gcal-calendar-id-property org-gcal-default-calendar))
+	 (when-not (string= "DONE" (org-get-todo-state))
+	   (org-gcal-post-at-point))))
+     nil 'file)))
+
+(defun my/debug-org-heading-enumeration ()
+  "Sometimes org-map-entries hangs. Use this to figure out where."
+  (interactive)
+  (delete-file "/tmp/progress.txt")
+  (setq my/testing-counter 0)
+  (save-excursion
+    (org-map-entries
+     (lambda ()
+       (setq my/testing-counter (1+ my/testing-counter))
+       (when (zerop (mod my/testing-counter 100))
+	 (message "Counter %d" my/testing-counter))
+       (append-to-file (s-concat (org-get-heading) "\n") nil "/tmp/progress.txt")
+       (when (org-get-scheduled-time (point))
+	 (when-not (string= "DONE" (org-get-todo-state))
+	   (message "Found one %s" (org-get-heading)))))
+     nil 'file)))
+
+(defun my/org-gcal-post-all-scheduled-in-subtree ()
+  "Post all scheduled/deadline entries in the current subtree."
+  (interactive)
+  (save-restriction
+    (org-narrow-to-subtree)
+    (my/org-gcal-post-all-scheduled-in-buffer)))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -1971,7 +2099,7 @@ back to the original string."
   :ensure t
   :config
   (setq ivy-re-builders-alist
-	'((t . ivy--regex-fuzzy)))
+	'((t . ivy--regex-plus)))
   ;; ivy-sort-functions-alist controls the initial sort;
   ;; (add-to-list 'ivy-sort-functions-alist
   ;; 	       '(ivy-switch-buffer    . candera-ivy-sort-by-length))
@@ -2000,6 +2128,22 @@ back to the original string."
   (global-set-key (kbd "C-x C-f") 'counsel-find-file)
   ;; (global-set-key (kbd "C-y") 'counsel-yank-pop)
   )
+
+(use-package prescient
+  :ensure t
+  :config
+  (prescient-persist-mode 1)
+  (setq prescient-filter-method '(literal fuzzy regexp initialism)))
+
+(use-package ivy-prescient
+  :ensure t
+  :after (ivy prescient counsel)
+  :config
+  (ivy-prescient-mode 1)
+  (prescient-persist-mode 1)
+  :custom
+  (ivy-prescient-enable-filtering t)
+  (ivy-prescient-enable-sorting   t))
 
 (require 'ivy)
 (ivy-mode 1)
@@ -2079,15 +2223,6 @@ back to the original string."
 
 ;; Better sorting for company
 (use-package company-flx
-  :ensure t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; flx
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package flx
   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3341,9 +3476,7 @@ back to the original string."
   ;; (setq mac-option-modifier 'super)
   ;; Sadly, doesn't seem to work
   ;; (setq ns-function-modifier 'hyper)
-  (setq dock-mode 'docked)
-  (when (y-or-n-p "Switched to docked laptop mode. Increase font size?")
-    (set-default-font-size 200)))
+  (setq dock-mode 'docked))
 
 (defun undocked-laptop-mode ()
   "When the laptop isn't connected to my DasKeyboard, different
@@ -3353,9 +3486,7 @@ back to the original string."
   (setq ns-command-modifier 'super)     ; Command key is super
   (setq mac-right-option-modifier 'control)
   (setq mac-option-modifier 'meta)
-  (setq dock-mode 'undocked)
-  (when (y-or-n-p "Switched to undocked laptop mode. Decrease font size?")
-    (set-default-font-size 140)))
+  (setq dock-mode 'undocked))
 
 ;; Never really got this to work right
 ;; (defvar dock-mode-timer
@@ -4543,8 +4674,194 @@ so we can check to see if flyspell is just lacking a definition."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; ===== Mach3 G-code help in Emacs (gcode-mode) ===============================
+
+;; Core dictionary (Mach3 mill/router focus; many lathe codes included but marked)
+(defvar gcode-mach3-docs
+  '(;; --- Motion / Interp / Planes / Units ---
+    ("G0"    . "Rapid positioning")
+    ("G00"   . "Rapid positioning (same as G0)")
+    ("G1"    . "Linear interpolation (feed move)")
+    ("G01"   . "Linear interpolation (feed move)")
+    ("G2"    . "CW arc move (I/J/K for center; R for radius)")
+    ("G02"   . "CW arc move (I/J/K for center; R for radius)")
+    ("G3"    . "CCW arc move (I/J/K for center; R for radius)")
+    ("G03"   . "CCW arc move (I/J/K for center; R for radius)")
+    ("G4"    . "Dwell (P seconds or X seconds in Mach3)")
+    ("G04"   . "Dwell (P seconds or X seconds in Mach3)")
+    ("G5"    . "Cubic spline (Mach3 optional/plug-in; often unsupported)")
+    ("G17"   . "Select XY plane")
+    ("G18"   . "Select ZX plane")
+    ("G19"   . "Select YZ plane")
+    ("G20"   . "Units: inches")
+    ("G21"   . "Units: millimeters")
+    ("G28"   . "Return to machine home (via optional intermediate in G91)")
+    ("G28.1" . "Home axis/axes (Mach3: execute homing for specified axes)")
+    ("G30"   . "Return to secondary reference position")
+    ("G40"   . "Cancel cutter radius compensation (CRC)")
+    ("G41"   . "CRC left of path (requires D/tool dia table)")
+    ("G41.1" . "Dynamic CRC left using specified D value")
+    ("G42"   . "CRC right of path (requires D/tool dia table)")
+    ("G42.1" . "Dynamic CRC right using specified D value")
+    ("G43"   . "Apply tool length offset (H#). Z moves are to tool tip.")
+    ("G43.1" . "Set tool length offset to given value directly (Z comp)")
+    ("G49"   . "Cancel tool length compensation")
+    ("G52"   . "Local coordinate system shift (temporary work offset)")
+    ("G53"   . "Move in machine coordinates (non-modal)")
+    ("G54"   . "Work offset 1")
+    ("G55"   . "Work offset 2")
+    ("G56"   . "Work offset 3")
+    ("G57"   . "Work offset 4")
+    ("G58"   . "Work offset 5")
+    ("G59"   . "Work offset 6")
+    ("G59.1" . "Extended work offset 7 (Mach3)")
+    ("G59.2" . "Extended work offset 8 (Mach3)")
+    ("G59.3" . "Extended work offset 9 (Mach3)")
+    ("G61"   . "Exact stop mode (no blending at corners)")
+    ("G61.1" . "Exact path mode (Mach3)")
+    ("G64"   . "Constant velocity mode (path blending)")
+    ("G68"   . "Coordinate rotation (Mach3; A = angle, about current origin)")
+    ("G69"   . "Cancel coordinate rotation")
+    ("G70"   . "[Lathe] Finish cycle or inch units (Fanuc). Mach3 mill: N/A.")
+    ("G71"   . "[Lathe] Roughing cycle or mm units (Fanuc). Mach3 mill: N/A.")
+    ("G73"   . "High-speed peck drilling cycle")
+    ("G80"   . "Cancel canned cycle")
+    ("G81"   . "Drill (simple) canned cycle")
+    ("G82"   . "Counterbore (drill with dwell) canned cycle")
+    ("G83"   . "Peck drilling canned cycle")
+    ("G84"   . "Right-hand tapping cycle (requires sync / rigid tapping config)")
+    ("G85"   . "Bore, feed in / feed out")
+    ("G86"   . "Bore, feed in / spindle stop / rapid out")
+    ("G88"   . "Bore, manual dwell / manual retract (rarely used)")
+    ("G89"   . "Bore with dwell, feed in / feed out")
+    ("G90"   . "Absolute distance mode (programmed coords are absolute)")
+    ("G91"   . "Incremental distance mode")
+    ("G91.1" . "Arc center mode: I/J/K incremental (Mach3 default)")
+    ("G92"   . "Set current position (coord system shift)")
+    ("G92.1" . "Cancel G92 offsets")
+    ("G92.2" . "Suspend G92 (store), set shift to zero")
+    ("G92.3" . "Restore previously suspended G92")
+    ("G94"   . "Feed rate: units per minute")
+    ("G95"   . "Feed rate: units per revolution (Mach3 supports with spindle)")
+    ("G96"   . "[Lathe] Constant surface speed (CSS)")
+    ("G97"   . "[Lathe] Cancel CSS; use RPM")
+    ("G98"   . "Canned cycle return to initial level")
+    ("G99"   . "Canned cycle return to R level")
+    ;; --- Probing (Mach3) ---
+    ("G31"   . "Probe move (stop on trip). Axes with distances move at F.")
+    ;; --- Misc / Overrides / Subroutines ---
+    ("M0"    . "Program stop")
+    ("M00"   . "Program stop")
+    ("M1"    . "Optional stop (executes if optional stop enabled)")
+    ("M01"   . "Optional stop (executes if optional stop enabled)")
+    ("M2"    . "Program end")
+    ("M02"   . "Program end")
+    ("M3"    . "Spindle on clockwise (S = RPM)")
+    ("M03"   . "Spindle on clockwise (S = RPM)")
+    ("M4"    . "Spindle on counter-clockwise")
+    ("M04"   . "Spindle on counter-clockwise")
+    ("M5"    . "Spindle stop")
+    ("M05"   . "Spindle stop")
+    ("M6"    . "Tool change (T# must be set)")
+    ("M06"   . "Tool change (T# must be set)")
+    ("M7"    . "Mist coolant on (if configured)")
+    ("M07"   . "Mist coolant on (if configured)")
+    ("M8"    . "Flood coolant on")
+    ("M08"   . "Flood coolant on")
+    ("M9"    . "Coolant off")
+    ("M09"   . "Coolant off")
+    ("M30"   . "Program end and rewind")
+    ("M48"   . "Enable feed/speed overrides")
+    ("M49"   . "Disable feed/speed overrides")
+    ("M98"   . "Call subprogram (P=sub id, L=repeat)")
+    ("M99"   . "Return from subprogram / loop to start in subs")
+    ;; --- Parameters / Notes (not codes but helpful) ---
+    ("I"     . "Arc center X or incremental X distance (with G2/G3)")
+    ("J"     . "Arc center Y or incremental Y distance (with G2/G3)")
+    ("K"     . "Arc center Z or incremental Z distance (with G2/G3)")
+    ("R"     . "Arc radius (alternative to IJK); canned-cycle R-plane")
+    ("P"     . "Dwell seconds (G4); subprogram ID (M98); canned-cycle params")
+    ("Q"     . "Peck depth (e.g., G83)")
+    ("F"     . "Feed rate (G94 units/min, G95 units/rev)")
+    ("S"     . "Spindle speed (RPM)")
+    ("T"     . "Tool number")
+    ("H"     . "Tool length offset register (for G43/G43.1)")
+    ("D"     . "Diameter offset register (for G41/G42)")
+    )
+  "Alist mapping Mach3 G/M codes (strings) to short descriptions.")
+
+(defun gcode-mach3--normalize-token (tok)
+  "Normalize TOK like \"G01\" -> \"G1\"; keep decimals, upcase."
+  (when tok
+    (let* ((u (upcase tok))
+           (m (string-match "\\`\\([GMT]\\)0*\\([0-9]+\\)\\(\\.[0-9]+\\)?\\'" u)))
+      (if m
+          (concat (match-string 1 u)
+                  (number-to-string (string-to-number (match-string 2 u)))
+                  (or (match-string 3 u) ""))
+        u))))
+
+(defun gcode-mach3--code-at-point ()
+  "Return G/M/T code token at point like G1, G91.1, M3, T6, or parameter I/J/K/R/P."
+  (save-excursion
+    (let ((sym (thing-at-point 'symbol t)))
+      ;; If point isn't on the token, try scanning around
+      (or (and sym
+               (when (string-match-p "\\`[GMTgmt][0-9]+\\(\\.[0-9]+\\)?\\'\\|\\`[IJKRPFSDHTD]\\'" sym)
+                 sym))
+          (progn
+            (skip-chars-backward "A-Za-z0-9._")
+            (when (looking-at "[GMTgmt][0-9]+\\(\\.[0-9]+\\)?\\|[IJKRPFSDHTD]")
+              (match-string 0)))))))
+
+(defun gcode-mach3-lookup (token)
+  "Lookup TOKEN in `gcode-mach3-docs' with normalization and fallbacks."
+  (let* ((norm (gcode-mach3--normalize-token token)))
+    (or (cdr (assoc norm gcode-mach3-docs))
+        (cdr (assoc (upcase token) gcode-mach3-docs)))))
+
+(defun gcode-mach3-describe-at-point ()
+  "Echo a short Mach3 description for the code/param at point."
+  (interactive)
+  (let* ((tok (gcode-mach3--code-at-point))
+         (desc (and tok (gcode-mach3-lookup tok))))
+    (if desc
+        (message "%s — %s" (gcode-mach3--normalize-token tok) desc)
+      (message "No Mach3 doc for token at point."))))
+
+(defun gcode-mach3-describe (code)
+  "Prompt for a code (e.g., G43, M3, G83) and show its description."
+  (interactive
+   (list (completing-read "Mach3 code: "
+                          (delete-dups (mapcar #'car gcode-mach3-docs))
+                          nil t)))
+  (let* ((norm (gcode-mach3--normalize-token code))
+         (desc (gcode-mach3-lookup code)))
+    (if desc
+        (message "%s — %s" norm desc)
+      (message "No Mach3 doc for %s" norm))))
+
+;; Eldoc integration: show help automatically in minibuffer
+(defun gcode-mach3-eldoc ()
+  (let* ((tok (gcode-mach3--code-at-point))
+         (desc (and tok (gcode-mach3-lookup tok))))
+    (when desc
+      (format "%s — %s" (gcode-mach3--normalize-token tok) desc))))
+
+(defun gcode-mach3-eldoc-setup ()
+  (setq-local eldoc-documentation-function #'gcode-mach3-eldoc)
+  (eldoc-mode 1)
+  ;; Handy key to describe token under cursor:
+  (local-set-key (kbd "C-c h") #'gcode-mach3-describe-at-point)
+  ;; And a prompt-based describe:
+  (local-set-key (kbd "C-c H") #'gcode-mach3-describe))
+
 (use-package gcode
-  :straight (:host github :repo "jasapp/gcode-emacs"))
+  :straight (:host github :repo "jasapp/gcode-emacs")
+  :config (eldoc-box-hover-at-point-mode 1)
+  :mode (("\\.tap)?$" . gcode-mode)
+	 ("\\.TAP)?$" . gcode-mode))
+  :hook (gcode-mode . gcode-mach3-eldoc-setup))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4891,8 +5208,42 @@ navigating a logview buffer."
 
 ;; Later, this:
 ;;
-;; export PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:/opt/homebrew/Cellar/libffi/3.4.8/lib/pkgconfig/
+;; export PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig:$(brew --prefix libffi)/lib/pkgconfig/
 ;; /Users/candera/.emacs.d/elpa/pdf-tools-20240429.407/build/server/autobuild -i /Users/candera/.emacs.d/elpa/pdf-tools-20240429.407/
+
+;; At some point, this also became necessary
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; # Make a per-user pkgconfig dir
+;; mkdir -p ~/.pkgconfig
+
+;; # Fill in a minimal bzip2.pc using Homebrew’s paths
+;; BREW_BZ2_PREFIX="$(brew --prefix bzip2)"
+;; cat > ~/.pkgconfig/bzip2.pc <<'EOF'
+;; prefix=__PREFIX__
+;; exec_prefix=${prefix}
+;; libdir=${exec_prefix}/lib
+;; includedir=${prefix}/include
+
+;; Name: bzip2
+;; Description: bzip2 compression library (Homebrew shim)
+;; Version: 1.0.8
+;; Libs: -L${libdir} -lbz2
+;; Cflags: -I${includedir}
+;; EOF
+
+;; # Substitute the prefix
+;; sed -i.bak "s#__PREFIX__#${BREW_BZ2_PREFIX}#g" ~/.pkgconfig/bzip2.pc
+;; rm -f ~/.pkgconfig/bzip2.pc.bak
+
+;; # Ensure pkg-config can see it (prepend is safest)
+;; export PKG_CONFIG_PATH="$HOME/.pkgconfig:${PKG_CONFIG_PATH}"
+
+;; # (Optional) also add common Homebrew pkgconfig dirs
+;; export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:${PKG_CONFIG_PATH}"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Put that in e.g. /tmp/mkpc.sh then run `source /tmp/mkpc.sh` and then compile
 
 (use-package pdf-tools
   :ensure t
