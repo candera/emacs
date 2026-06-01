@@ -47,7 +47,7 @@
 
 ;; Bug in 28 means that SVG is inadvertantly not included
 (when (= emacs-major-version 28)
-  (setq iamge-types (append image-types '(svg))))
+  (setq image-types (append image-types '(svg))))
 
 (unless (fboundp 'use-package)
   (package-install 'use-package))
@@ -78,7 +78,7 @@
 
 (defun setup-org-mode ()
   (turn-on-flyspell)
-  (auto-fill-mode 1)
+  (visual-line-mode 1)
   ;; I always type this instead of C-c C-t
   (auto-revert-mode 1)
   (add-to-list 'org-modules 'org-habit)
@@ -199,6 +199,10 @@
         (todo priority-down category-keep)
         (tags priority-down category-keep)
         (search category-keep)))
+
+(setq org-agenda-custom-commands
+      '(("A" "Active projects" alltodo ""
+         ((org-agenda-files '("~/projects/planning/active.org"))))))
 
 ;; Store captured notes in notes.org, and bind capture to C-c c
 (setq org-default-notes-file "~/notes.org")
@@ -528,6 +532,8 @@ and shows a leading * without changing indentation."
   "Create or update Google Calendar events for all SCHEDULED/DEADLINE
 headings in the current buffer using org-gcal."
   (interactive)
+  ;; Cache gets horked sometimes. Freezes the function
+  (org-element-cache-reset)
   (save-excursion
     (org-map-entries
      (lambda ()
@@ -541,19 +547,21 @@ headings in the current buffer using org-gcal."
 (defun my/debug-org-heading-enumeration ()
   "Sometimes org-map-entries hangs. Use this to figure out where."
   (interactive)
-  (delete-file "/tmp/progress.txt")
-  (setq my/testing-counter 0)
-  (save-excursion
-    (org-map-entries
-     (lambda ()
-       (setq my/testing-counter (1+ my/testing-counter))
-       (when (zerop (mod my/testing-counter 100))
-	 (message "Counter %d" my/testing-counter))
-       (append-to-file (s-concat (org-get-heading) "\n") nil "/tmp/progress.txt")
-       (when (org-get-scheduled-time (point))
-	 (when-not (string= "DONE" (org-get-todo-state))
-	   (message "Found one %s" (org-get-heading)))))
-     nil 'file)))
+  ;; If the cache is messed up, try setting this to nil. This does fix it sometimes. M-x org-element-cache-reset
+  (let ((org-element-use-cache t))
+    (delete-file "/tmp/progress.txt")
+    (setq my/testing-counter 0)
+    (save-excursion
+      (org-map-entries
+       (lambda ()
+	 (setq my/testing-counter (1+ my/testing-counter))
+	 (when (zerop (mod my/testing-counter 100))
+	   (message "Counter %d" my/testing-counter))
+	 (append-to-file (s-concat (org-get-heading) "\n") nil "/tmp/progress.txt")
+	 (when (org-get-scheduled-time (point))
+	   (when-not (string= "DONE" (org-get-todo-state))
+	     (message "Found one %s" (org-get-heading)))))
+       nil 'file))))
 
 (defun my/org-gcal-post-all-scheduled-in-subtree ()
   "Post all scheduled/deadline entries in the current subtree."
@@ -673,8 +681,20 @@ headings in the current buffer using org-gcal."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Show search counts
+(setopt isearch-lazy-count t)
+
+;; Don't make me type out 'yes' or 'no'
+(setopt use-short-answers t)
+
+;; Don't pop up dialog boxes
+(setopt use-dialog-box nil)
+
 ;; Display line numbers
 (global-display-line-numbers-mode t)
+;; And make sure they line up properly
+(setq display-line-numbers-width-start t)
+(setq display-line-numbers-grow-only t)
 
 ;; Highlight current line
 (global-hl-line-mode 1)
@@ -823,7 +843,7 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-c D") 'define-word-at-point)
 (global-unset-key (kbd "s-q"))
 (global-unset-key (kbd "s-w"))
-(global-unset-key (kbd "s-n"))
+(global-set-key (kbd "s-n") 'select-frame-by-name)
 (global-unset-key (kbd "s-N"))
 (global-unset-key (kbd "s-X"))
 (global-unset-key (kbd "s-e"))
@@ -2368,19 +2388,22 @@ back to the original string."
   :mode "\\.[Cc][Ss][Vv]\\'"
   :hook (csv-mode . (lambda () (csv-align-mode 1))))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;
-;; ;; inf-clojure
-;; ;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; inf-clojure
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; The mainline version has a bug (#152) where it collapses
-;; consecutive spaces. Although the bug itself bonkers, the maintainer
-;; is too busy to investigate fully to fix it. Easier just to use my
-;; own fork.
-(el-get-bundle candera/inf-clojure)
+;; ;; The mainline version has a bug (#152) where it collapses
+;; ;; consecutive spaces. Although the bug itself bonkers, the maintainer
+;; ;; is too busy to investigate fully to fix it. Easier just to use my
+;; ;; own fork.
+;;
+;; 2026-03-03 Fixed?
+;; (el-get-bundle candera/inf-clojure)
 
-(use-package inf-clojure)
+(use-package inf-clojure
+  :ensure t)
 
 (add-hook 'inf-clojure-mode-hook
           (lambda ()
@@ -4256,92 +4279,92 @@ so we can check to see if flyspell is just lacking a definition."
     (flyspell-goto-previous-error)
     (define-word-at-point nil)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; slack mode
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; slack mode
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun encrypted-file-contents (path)
-  (save-mark-and-excursion
-   (lexical-let ((temp-file (make-temp-file "epa-temp")))
-     (message temp-file)
-     (unwind-protect
-         (progn
-           (epa-decrypt-file path temp-file)
-           (lexical-let ((s (with-temp-buffer
-			      (insert-file-contents temp-file)
-			      (buffer-string))))
-	     (delete-file temp-file)
-	     s))))))
+;; (defun encrypted-file-contents (path)
+;;   (save-mark-and-excursion
+;;    (lexical-let ((temp-file (make-temp-file "epa-temp")))
+;;      (message temp-file)
+;;      (unwind-protect
+;;          (progn
+;;            (epa-decrypt-file path temp-file)
+;;            (lexical-let ((s (with-temp-buffer
+;; 			      (insert-file-contents temp-file)
+;; 			      (buffer-string))))
+;; 	     (delete-file temp-file)
+;; 	     s))))))
 
 
-(el-get-bundle yuya373/emacs-slack)
-;; (el-get-bundle yuya373/helm-slack) ;; optional
-;; (use-package helm-slack :after (slack)) ;; optional
+;; (el-get-bundle yuya373/emacs-slack)
+;; ;; (el-get-bundle yuya373/helm-slack) ;; optional
+;; ;; (use-package helm-slack :after (slack)) ;; optional
 
-(use-package alert
-  :ensure t)
-(use-package circe
-  :ensure t)
-(use-package oauth
-  :ensure t)
-(use-package request
-  :ensure t)
-(use-package websocket
-  :ensure t)
+;; (use-package alert
+;;   :ensure t)
+;; (use-package circe
+;;   :ensure t)
+;; (use-package oauth
+;;   :ensure t)
+;; (use-package request
+;;   :ensure t)
+;; (use-package websocket
+;;   :ensure t)
 
-;; Get token following instructions at https://github.com/yuya373/emacs-slack/blob/9fbad25af792d1dee88aae0fc9550bd29dabe269/README.md
+;; ;; Get token following instructions at https://github.com/yuya373/emacs-slack/blob/9fbad25af792d1dee88aae0fc9550bd29dabe269/README.md
 
-(use-package slack
-  :commands (slack-start)
-  :init
-  (setq slack-buffer-emojify t) ;; if you want to enable emoji, default nil
-  (setq slack-prefer-current-team t)
-  :config
-  (slack-register-team
-   :name "Kevel"
-   :default t
-   ;; :token (encrypted-file-contents "~/.config/slack-token.asc")
-   ;; :cookie (encrypted-file-contents "~/.config/slack-cookie.asc")
-   :subscribed-channels '(teammgmt)
-   :full-and-display-names t)
+;; (use-package slack
+;;   :commands (slack-start)
+;;   :init
+;;   (setq slack-buffer-emojify t) ;; if you want to enable emoji, default nil
+;;   (setq slack-prefer-current-team t)
+;;   :config
+;;   (slack-register-team
+;;    :name "Kevel"
+;;    :default t
+;;    ;; :token (encrypted-file-contents "~/.config/slack-token.asc")
+;;    ;; :cookie (encrypted-file-contents "~/.config/slack-cookie.asc")
+;;    :subscribed-channels '(teammgmt)
+;;    :full-and-display-names t)
 
-  ;; (slack-register-team
-  ;;  :name "test"
-  ;;  :token "xoxs-yyyyyyyyyy-zzzzzzzzzzz-hhhhhhhhhhh-llllllllll"
-  ;;  :subscribed-channels '(hoge fuga))
+;;   ;; (slack-register-team
+;;   ;;  :name "test"
+;;   ;;  :token "xoxs-yyyyyyyyyy-zzzzzzzzzzz-hhhhhhhhhhh-llllllllll"
+;;   ;;  :subscribed-channels '(hoge fuga))
 
-  ;; (evil-define-key 'normal slack-info-mode-map
-  ;;   ",u" 'slack-room-update-messages)
-  ;; (evil-define-key 'normal slack-mode-map
-  ;;   ",c" 'slack-buffer-kill
-  ;;   ",ra" 'slack-message-add-reaction
-  ;;   ",rr" 'slack-message-remove-reaction
-  ;;   ",rs" 'slack-message-show-reaction-users
-  ;;   ",pl" 'slack-room-pins-list
-  ;;   ",pa" 'slack-message-pins-add
-  ;;   ",pr" 'slack-message-pins-remove
-  ;;   ",mm" 'slack-message-write-another-buffer
-  ;;   ",me" 'slack-message-edit
-  ;;   ",md" 'slack-message-delete
-  ;;   ",u" 'slack-room-update-messages
-  ;;   ",2" 'slack-message-embed-mention
-  ;;   ",3" 'slack-message-embed-channel
-  ;;   "\C-n" 'slack-buffer-goto-next-message
-  ;;   "\C-p" 'slack-buffer-goto-prev-message)
-  ;;  (evil-define-key 'normal slack-edit-message-mode-map
-  ;;   ",k" 'slack-message-cancel-edit
-  ;;   ",s" 'slack-message-send-from-buffer
-  ;;   ",2" 'slack-message-embed-mention
-  ;;   ",3" 'slack-message-embed-channel
+;;   ;; (evil-define-key 'normal slack-info-mode-map
+;;   ;;   ",u" 'slack-room-update-messages)
+;;   ;; (evil-define-key 'normal slack-mode-map
+;;   ;;   ",c" 'slack-buffer-kill
+;;   ;;   ",ra" 'slack-message-add-reaction
+;;   ;;   ",rr" 'slack-message-remove-reaction
+;;   ;;   ",rs" 'slack-message-show-reaction-users
+;;   ;;   ",pl" 'slack-room-pins-list
+;;   ;;   ",pa" 'slack-message-pins-add
+;;   ;;   ",pr" 'slack-message-pins-remove
+;;   ;;   ",mm" 'slack-message-write-another-buffer
+;;   ;;   ",me" 'slack-message-edit
+;;   ;;   ",md" 'slack-message-delete
+;;   ;;   ",u" 'slack-room-update-messages
+;;   ;;   ",2" 'slack-message-embed-mention
+;;   ;;   ",3" 'slack-message-embed-channel
+;;   ;;   "\C-n" 'slack-buffer-goto-next-message
+;;   ;;   "\C-p" 'slack-buffer-goto-prev-message)
+;;   ;;  (evil-define-key 'normal slack-edit-message-mode-map
+;;   ;;   ",k" 'slack-message-cancel-edit
+;;   ;;   ",s" 'slack-message-send-from-buffer
+;;   ;;   ",2" 'slack-message-embed-mention
+;;   ;;   ",3" 'slack-message-embed-channel
 
-) 
+;; ) 
 
-(use-package alert
-  :commands (alert)
-  :init
-  (setq alert-default-style 'notifier))
+;; (use-package alert
+;;   :commands (alert)
+;;   :init
+;;   (setq alert-default-style 'notifier))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4370,15 +4393,15 @@ so we can check to see if flyspell is just lacking a definition."
 ;; (use-package code-review
 ;;   :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; sdcv-mode - StarDict dictionary support
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; sdcv-mode - StarDict dictionary support
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(el-get-bundle gucong/emacs-sdcv)
+;; (el-get-bundle gucong/emacs-sdcv)
 
-(use-package sdcv-mode)
+;; (use-package sdcv-mode)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4644,6 +4667,13 @@ so we can check to see if flyspell is just lacking a definition."
   :bind (:map elfeed-search-mode-map
 	      ("/" . elfeed-search-set-filter)
 	      ("s" . my-elfeed-toggle-sort-order)))
+
+(defun my-elfeed-fix-db-issue ()
+    "Fix a broken or stuck elfeed setup.
+
+Somtimes elfeed loses its brains and gives an error like 'wrong type argument: plistp blah. This appears to be because something is setting `elfeed-db` to a string. This resets it to nil."
+  (interactive)
+  (setq elfeed-db nil))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
@@ -5044,7 +5074,7 @@ navigating a logview buffer."
   ;; (setq langtool-language-tool-jar "/Users/candera/bin/languagetool/languagetool-commandline.jar")
   ;;(setq langtool-language-tool-server-jar "  ~/bin/languagetool/languagetool-server.jar")
   (setq langtool-language-tool-server-jar "/opt/homebrew/opt/languagetool/libexec/languagetool-server.jar")
-)
+  )
 
 ;; (use-package langtool-popup
 ;;   :ensure t)
@@ -5245,6 +5275,8 @@ navigating a logview buffer."
 
 ;; Put that in e.g. /tmp/mkpc.sh then run `source /tmp/mkpc.sh` and then compile
 
+;; [2026-01-15] I did all the above and put it into ~/bin/pdf-tools-rebuild. Just run that.
+
 (use-package pdf-tools
   :ensure t
 
@@ -5431,6 +5463,47 @@ navigating a logview buffer."
 ;; Use rclone to open remote files like on S3
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; claude-code-ide.el
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package claude-code-ide
+  :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
+  :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
+  :config
+  (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
+
+;; Disable line numbers in the claude-code-ide terminal buffer
+(add-hook 'vterm-mode-hook
+          (lambda ()
+            (when (string-match-p "\\*claude-code" (buffer-name))
+              (display-line-numbers-mode -1))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; repeat-mode
+;;
+;; Allows repeating commands that have compound key sequences by
+;; hitting only the final key again.
+;;
+;; Built-ins:
+;; C-x o o o – keep cycling windows
+;; C-x { { { / C-x } } } – shrink/grow window horizontally
+;; C-x ^ ^ ^ – grow window vertically
+;; C-x u u u – keep undoing
+;; C-x <left> <left> / C-x <right> <right> – cycle through buffer history
+;; M-g n n n / M-g p p p – jump through next-error results
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(repeat-mode 1)
+
+(setq repeat-exit-timeout 3) ;; exit after 3 seconds of inactivity
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

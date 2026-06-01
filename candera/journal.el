@@ -18,8 +18,13 @@
   (message (format "%d" (days-to-date (time-n-days-ago 0) date))))
 
 (defvar candera:log-file-target-date
-  nil
-  ;; "2023-06-30"
+  ;; nil
+  "2026-12-18"
+  )
+
+(defvar candera:log-file-target-type
+  ;; nil
+  "retirement"
   )
 
 (defvar journal-buffer-last-hash nil)
@@ -38,6 +43,20 @@
       (forward-char)
       (langtool-correct-at-point)
       (langtool-check-done))))
+
+(defun my-langtool-correct-buffer-safe ()
+  "Run langtool-correct-buffer, skipping any dead overlays."
+  (interactive)
+  (let ((overlays (seq-filter
+                   (lambda (ov)
+                     (and (overlay-buffer ov)        ; overlay is live
+                          (overlay-start ov)         ; has a valid start
+                          (overlay-end ov)))          ; has a valid end
+                   (langtool--overlays-region
+                    (point-min) (point-max)))))
+    (if overlays
+        (langtool--correction overlays)
+      (message "No valid LangTool overlays found."))))
 
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
@@ -71,7 +90,9 @@
                               (format-time-string "%e" logfile-date)))
                             (format-time-string ", %Y." logfile-date)
 			    (if candera:log-file-target-date
-				(format "\n\n%d days remaining." (days-to-date logfile-date candera:log-file-target-date))
+				(format "\n\n%d days remaining%s." (days-to-date logfile-date candera:log-file-target-date)
+					(when candera:log-file-target-type
+					  (concat " until " candera:log-file-target-type)))
 			      "")
 			    ))
             ;; Auto save over SSH is a PITA. This will still auto-save
@@ -86,13 +107,15 @@
             (message (concat "Opened " new-logfile-filename)))
 	  (text-mode)
           (flyspell-mode 1)
-          (auto-fill-mode 1)
+          (auto-fill-mode 0)
+	  (visual-line-mode 1)
+	  (visual-fill-column-mode 1)
           (setq show-trailing-whitespace t)
 	  (setq buffer-read-only nil)
 	  (setq-local company-idle-delay nil)
 
 	  (keymap-local-set "M-;" 'journal-langtool-correct-previous)
-	  (keymap-local-set "M-'" 'langtool-correct-buffer)
+	  (keymap-local-set "M-'" 'my-langtool-correct-buffer-safe)
 	  
 	  (lexical-let* ((this-buffer (current-buffer))
 			 (timer (run-with-idle-timer
