@@ -1904,11 +1904,11 @@ back to the original string."
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (use-package markdown-mode
-;;   :ensure t
-;;   :mode "\\.md"
-;;   :config
-;;   (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1))))
+(use-package markdown-mode
+  :ensure t
+  :mode "\\.md"
+  :config
+  (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1))))
 
 
 
@@ -5503,7 +5503,17 @@ navigating a logview buffer."
 
 (setq repeat-exit-timeout 3) ;; exit after 3 seconds of inactivity
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Difftron
+;;
+;; Better diffing in magit. https://github.com/lynaghk/difftron/
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(load "~/projects/difftron/emacs/difftron.el")
+(setq difftron-executable "~/projects/difftron/scripts/difftron_dev")
+(difftron-bindings-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
