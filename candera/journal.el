@@ -47,13 +47,16 @@
 (defun my-langtool-correct-buffer-safe ()
   "Run langtool-correct-buffer, skipping any dead overlays."
   (interactive)
-  (let ((overlays (seq-filter
-                   (lambda (ov)
-                     (and (overlay-buffer ov)        ; overlay is live
-                          (overlay-start ov)         ; has a valid start
-                          (overlay-end ov)))          ; has a valid end
-                   (langtool--overlays-region
-                    (point-min) (point-max)))))
+  (let ((overlays (sort
+                   (seq-filter
+                    (lambda (ov)
+                      (and (overlay-get ov 'langtool-message)
+                           (overlay-get ov 'face)
+                           (integerp (overlay-start ov))
+                           (integerp (overlay-end ov))))
+                    (overlays-in (point-min) (point-max)))
+                   (lambda (a b)
+                     (< (overlay-start a) (overlay-start b))))))
     (if overlays
         (langtool--correction overlays)
       (message "No valid LangTool overlays found."))))
@@ -108,6 +111,7 @@
 	  (text-mode)
           (flyspell-mode 1)
           (auto-fill-mode 0)
+	  (setq fill-column 80)
 	  (visual-line-mode 1)
 	  (visual-fill-column-mode 1)
           (setq show-trailing-whitespace t)
