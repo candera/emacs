@@ -5484,6 +5484,20 @@ navigating a logview buffer."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; agent-shell
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package agent-shell
+  :ensure t
+  :init
+  (setq agent-shell-header-style 'text
+        agent-shell-tool-use-expand-by-default t
+        agent-shell-user-message-expand-by-default t
+        agent-shell-thought-process-expand-by-default t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; repeat-mode
 ;;
 ;; Allows repeating commands that have compound key sequences by
