@@ -2,3 +2,5 @@
 *~
 nxhtml/etc/schema/xhtml-loader.rnc
 repl-port
+/.agent-shell/
+/.claude/

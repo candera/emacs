@@ -949,6 +949,7 @@ for a frame name."
       (set-frame-name frame-name))))
 
 (global-set-key (kbd "C-x 5 C") 'candera-new-frame)
+(global-set-key (kbd "s-N") 'candera-new-frame)
 
 (defun google-word-at-point ()
   "Opens a browser for the word at point on google.co"
