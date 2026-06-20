@@ -5516,18 +5516,26 @@ navigating a logview buffer."
   ;; isolation, that throw aborts agent-shell's entire event dispatch and
   ;; the turn hangs.  Instead we rely on agent-shell calling :on-event with
   ;; the shell buffer current, and read it via (current-buffer).
+  ;;
+  ;; Each handler body is wrapped in `with-demoted-errors' so that ANY
+  ;; failure (e.g. terminal-notifier uninstalled, making `call-process'
+  ;; signal) is demoted to a *Messages* log instead of propagating back
+  ;; through emit-event and hanging the shell.  This is our own safety net
+  ;; until agent-shell isolates subscribers (xenodium/agent-shell#663).
   (defun candera/agent-shell--on-turn-complete (_event)
     "Notify when a turn finishes, unless the shell buffer is visible."
-    (let ((shell-buffer (current-buffer)))
-      (unless (get-buffer-window shell-buffer 'visible)
-        (candera/agent-shell-notify
-         "Agent Shell"
-         (format "%s finished" (buffer-name shell-buffer))))))
+    (with-demoted-errors "agent-shell turn-complete handler error: %S"
+      (let ((shell-buffer (current-buffer)))
+        (unless (get-buffer-window shell-buffer 'visible)
+          (candera/agent-shell-notify
+           "Agent Shell"
+           (format "%s finished" (buffer-name shell-buffer)))))))
   (defun candera/agent-shell--on-permission-request (_event)
     "Notify when the agent is waiting on a permission prompt."
-    (candera/agent-shell-notify
-     "Agent Shell"
-     (format "%s needs permission" (buffer-name))))
+    (with-demoted-errors "agent-shell permission-request handler error: %S"
+      (candera/agent-shell-notify
+       "Agent Shell"
+       (format "%s needs permission" (buffer-name)))))
   ;; Subscribe each new agent-shell buffer to the events we care about.
   (add-hook 'agent-shell-mode-hook
             (lambda ()
