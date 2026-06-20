@@ -1,3 +1,8 @@
+;; Raise the GC threshold well above the 800KB default.  agent-shell
+;; streams MB-scale buffers, and at the default Emacs spends a large
+;; fraction of its time in GC, which shows up as stalls in the shells.
+(setq gc-cons-threshold (* 100 1024 1024)) ; 100 MB
+
 (defun load-file-if-exists (path)
   (if (file-exists-p path)
       (load-file path)))
@@ -5493,9 +5498,47 @@ navigating a logview buffer."
   :ensure t
   :init
   (setq agent-shell-header-style 'text
-        agent-shell-tool-use-expand-by-default t
-        agent-shell-user-message-expand-by-default t
-        agent-shell-thought-process-expand-by-default t))
+        agent-shell-tool-use-expand-by-default nil
+        agent-shell-user-message-expand-by-default nil
+        agent-shell-thought-process-expand-by-default nil)
+  :config
+  (defun candera/agent-shell-notify (title message)
+    "Show a macOS notification with TITLE and MESSAGE via terminal-notifier."
+    (call-process "terminal-notifier" nil nil nil
+                  "-title" title
+                  "-message" message
+                  "-sound" "Glass"
+                  "-group" "agent-shell"))
+  ;; NOTE: this file is loaded under dynamic binding (no lexical-binding
+  ;; cookie), so a lexical-let/closure does NOT capture the shell buffer --
+  ;; the handler then throws `void-variable', and because
+  ;; `agent-shell--emit-event' funcalls subscribers with no error
+  ;; isolation, that throw aborts agent-shell's entire event dispatch and
+  ;; the turn hangs.  Instead we rely on agent-shell calling :on-event with
+  ;; the shell buffer current, and read it via (current-buffer).
+  (defun candera/agent-shell--on-turn-complete (_event)
+    "Notify when a turn finishes, unless the shell buffer is visible."
+    (let ((shell-buffer (current-buffer)))
+      (unless (get-buffer-window shell-buffer 'visible)
+        (candera/agent-shell-notify
+         "Agent Shell"
+         (format "%s finished" (buffer-name shell-buffer))))))
+  (defun candera/agent-shell--on-permission-request (_event)
+    "Notify when the agent is waiting on a permission prompt."
+    (candera/agent-shell-notify
+     "Agent Shell"
+     (format "%s needs permission" (buffer-name))))
+  ;; Subscribe each new agent-shell buffer to the events we care about.
+  (add-hook 'agent-shell-mode-hook
+            (lambda ()
+              (agent-shell-subscribe-to
+               :shell-buffer (current-buffer)
+               :event 'turn-complete
+               :on-event #'candera/agent-shell--on-turn-complete)
+              (agent-shell-subscribe-to
+               :shell-buffer (current-buffer)
+               :event 'permission-request
+               :on-event #'candera/agent-shell--on-permission-request))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
