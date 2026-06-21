@@ -5502,13 +5502,43 @@ navigating a logview buffer."
         agent-shell-user-message-expand-by-default nil
         agent-shell-thought-process-expand-by-default nil)
   :config
+  (defvar candera/agent-shell-notify-timeout 30
+    "Seconds before an agent-shell notification auto-dismisses.
+Nil keeps the notification until dismissed (manually or by returning
+focus to its originating buffer).")
+  (defun candera/agent-shell--notify-group (&optional buffer)
+    "Return the terminal-notifier group id for BUFFER (default current)."
+    (format "agent-shell:%s" (buffer-name (or buffer (current-buffer)))))
+  (defun candera/agent-shell--remove-notification (group)
+    "Remove any pending terminal-notifier notification for GROUP."
+    ;; GROUP is a plain string, so this is safe to hand to a bare timer
+    ;; under dynamic binding -- no closure needed.
+    (call-process "terminal-notifier" nil nil nil "-remove" group))
   (defun candera/agent-shell-notify (title message)
-    "Show a macOS notification with TITLE and MESSAGE via terminal-notifier."
-    (call-process "terminal-notifier" nil nil nil
-                  "-title" title
-                  "-message" message
-                  "-sound" "Glass"
-                  "-group" "agent-shell"))
+    "Show a macOS notification with TITLE and MESSAGE via terminal-notifier.
+The notification is grouped per originating buffer so it can be
+dismissed individually, and (per `candera/agent-shell-notify-timeout')
+auto-removed after a delay."
+    (let ((group (candera/agent-shell--notify-group)))
+      (call-process "terminal-notifier" nil nil nil
+                    "-title" title
+                    "-message" message
+                    "-sound" "Glass"
+                    "-group" group)
+      (when candera/agent-shell-notify-timeout
+        (run-at-time candera/agent-shell-notify-timeout nil
+                     #'candera/agent-shell--remove-notification group))))
+  (defun candera/agent-shell--dismiss-on-focus (&optional _frame)
+    "Dismiss the notification for the selected window's agent-shell buffer.
+Added to `window-selection-change-functions' so that returning focus to
+an agent-shell window clears its pending notification."
+    (let ((buffer (window-buffer (selected-window))))
+      (when (and (buffer-live-p buffer)
+                 (with-current-buffer buffer (derived-mode-p 'agent-shell-mode)))
+        (candera/agent-shell--remove-notification
+         (candera/agent-shell--notify-group buffer)))))
+  (add-hook 'window-selection-change-functions
+            #'candera/agent-shell--dismiss-on-focus)
   ;; NOTE: this file is loaded under dynamic binding (no lexical-binding
   ;; cookie), so a lexical-let/closure does NOT capture the shell buffer --
   ;; the handler then throws `void-variable', and because
