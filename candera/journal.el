@@ -58,7 +58,8 @@
                    (lambda (a b)
                      (< (overlay-start a) (overlay-start b))))))
     (if overlays
-        (langtool--correction overlays)
+        (let ((journal-langtool-enable-checking nil))
+          (langtool--correction overlays))
       (message "No valid LangTool overlays found."))))
 
 (defun find-yesterday-log-file (&optional days-ago)
