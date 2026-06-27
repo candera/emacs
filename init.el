@@ -505,75 +505,75 @@ and shows a leading * without changing indentation."
 (setq org-agenda-use-time-grid nil)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; org-gcal
-;;
-;; Sync an org file with Google Calendar
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; org-gcal
+;; ;;
+;; ;; Sync an org file with Google Calendar
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq org-gcal-default-calendar "7d9f481f8f2db790af8a25b1c87036285fc3ea1eaf6b97d4a187e6fccba632a7@group.calendar.google.com")
+;; (setq org-gcal-default-calendar "7d9f481f8f2db790af8a25b1c87036285fc3ea1eaf6b97d4a187e6fccba632a7@group.calendar.google.com")
 
-(defmacro when-not (cond &rest body)
-  "Execute BODY when COND is nil (the inverse of `when')."
-  `(unless ,cond
-     ,@body))
+;; (defmacro when-not (cond &rest body)
+;;   "Execute BODY when COND is nil (the inverse of `when')."
+;;   `(unless ,cond
+;;      ,@body))
 
-;; Indent it like `unless`
-(put 'when-not 'lisp-indent-function '1)
+;; ;; Indent it like `unless`
+;; (put 'when-not 'lisp-indent-function '1)
 
-(use-package org-gcal
-  :ensure t
+;; (use-package org-gcal
+;;   :ensure t
 
-  :config
-  (setq org-gcal-client-id (encrypted-file-contents "~/.emacs.d/org-gcal/client-id.asc")
-	org-gcal-client-secret (encrypted-file-contents "~/.emacs.d/org-gcal/client-secret.asc")
-	org-gcal-fetch-file-alist `((,org-gcal-default-calendar .  "~/personal.org")))
-  (org-gcal-reload-client-id-secret)
-  (setq plstore-cache-passphrase-for-symmetric-encryption t))
+;;   :config
+;;   (setq org-gcal-client-id (encrypted-file-contents "~/.emacs.d/org-gcal/client-id.asc")
+;; 	org-gcal-client-secret (encrypted-file-contents "~/.emacs.d/org-gcal/client-secret.asc")
+;; 	org-gcal-fetch-file-alist `((,org-gcal-default-calendar .  "~/personal.org")))
+;;   (org-gcal-reload-client-id-secret)
+;;   (setq plstore-cache-passphrase-for-symmetric-encryption t))
 
-(defun my/org-gcal-post-all-scheduled-in-buffer ()
-  "Create or update Google Calendar events for all SCHEDULED/DEADLINE
-headings in the current buffer using org-gcal."
-  (interactive)
-  ;; Cache gets horked sometimes. Freezes the function
-  (org-element-cache-reset)
-  (save-excursion
-    (org-map-entries
-     (lambda ()
-       (when (org-get-scheduled-time (point))
-	 (when-not (org-entry-get (point) org-gcal-calendar-id-property)
-	   (org-entry-put (point) org-gcal-calendar-id-property org-gcal-default-calendar))
-	 (when-not (string= "DONE" (org-get-todo-state))
-	   (org-gcal-post-at-point))))
-     nil 'file)))
+;; (defun my/org-gcal-post-all-scheduled-in-buffer ()
+;;   "Create or update Google Calendar events for all SCHEDULED/DEADLINE
+;; headings in the current buffer using org-gcal."
+;;   (interactive)
+;;   ;; Cache gets horked sometimes. Freezes the function
+;;   (org-element-cache-reset)
+;;   (save-excursion
+;;     (org-map-entries
+;;      (lambda ()
+;;        (when (org-get-scheduled-time (point))
+;; 	 (when-not (org-entry-get (point) org-gcal-calendar-id-property)
+;; 	   (org-entry-put (point) org-gcal-calendar-id-property org-gcal-default-calendar))
+;; 	 (when-not (string= "DONE" (org-get-todo-state))
+;; 	   (org-gcal-post-at-point))))
+;;      nil 'file)))
 
-(defun my/debug-org-heading-enumeration ()
-  "Sometimes org-map-entries hangs. Use this to figure out where."
-  (interactive)
-  ;; If the cache is messed up, try setting this to nil. This does fix it sometimes. M-x org-element-cache-reset
-  (let ((org-element-use-cache t))
-    (delete-file "/tmp/progress.txt")
-    (setq my/testing-counter 0)
-    (save-excursion
-      (org-map-entries
-       (lambda ()
-	 (setq my/testing-counter (1+ my/testing-counter))
-	 (when (zerop (mod my/testing-counter 100))
-	   (message "Counter %d" my/testing-counter))
-	 (append-to-file (s-concat (org-get-heading) "\n") nil "/tmp/progress.txt")
-	 (when (org-get-scheduled-time (point))
-	   (when-not (string= "DONE" (org-get-todo-state))
-	     (message "Found one %s" (org-get-heading)))))
-       nil 'file))))
+;; (defun my/debug-org-heading-enumeration ()
+;;   "Sometimes org-map-entries hangs. Use this to figure out where."
+;;   (interactive)
+;;   ;; If the cache is messed up, try setting this to nil. This does fix it sometimes. M-x org-element-cache-reset
+;;   (let ((org-element-use-cache t))
+;;     (delete-file "/tmp/progress.txt")
+;;     (setq my/testing-counter 0)
+;;     (save-excursion
+;;       (org-map-entries
+;;        (lambda ()
+;; 	 (setq my/testing-counter (1+ my/testing-counter))
+;; 	 (when (zerop (mod my/testing-counter 100))
+;; 	   (message "Counter %d" my/testing-counter))
+;; 	 (append-to-file (s-concat (org-get-heading) "\n") nil "/tmp/progress.txt")
+;; 	 (when (org-get-scheduled-time (point))
+;; 	   (when-not (string= "DONE" (org-get-todo-state))
+;; 	     (message "Found one %s" (org-get-heading)))))
+;;        nil 'file))))
 
-(defun my/org-gcal-post-all-scheduled-in-subtree ()
-  "Post all scheduled/deadline entries in the current subtree."
-  (interactive)
-  (save-restriction
-    (org-narrow-to-subtree)
-    (my/org-gcal-post-all-scheduled-in-buffer)))
+;; (defun my/org-gcal-post-all-scheduled-in-subtree ()
+;;   "Post all scheduled/deadline entries in the current subtree."
+;;   (interactive)
+;;   (save-restriction
+;;     (org-narrow-to-subtree)
+;;     (my/org-gcal-post-all-scheduled-in-buffer)))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3897,9 +3897,6 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package sqlite3
-  :ensure t)
-
 (use-package forge
   :ensure t
 
@@ -5419,23 +5416,23 @@ navigating a logview buffer."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package aider
-  :ensure t
-  :config
-  ;; For latest claude sonnet model
-  ;; (setq aider-args '("--model" "sonnet" "--no-auto-accept-architect"))
-  ;; (setenv "ANTHROPIC_API_KEY" anthropic-api-key)
-  ;; Or chatgpt model
-  (setq aider-args '("--model" "o4-mini" "--no-auto-commits"))
-  (setenv "OPENAI_API_KEY" (read-gpg-file-to-string "~/.config/openapi-api-key.asc"))
-  ;; Or gemini model
-  ;; (setq aider-args '("--model" "gemini-exp"))
-  ;; (setenv "GEMINI_API_KEY" <your-gemini-api-key>)
-  ;; Or use your personal config file
-  ;; (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
-  ;; ;;
-  ;; Optional: Set a key binding for the transient menu
-  (global-set-key (kbd "C-c a") 'aider-transient-menu))
+;; (use-package aider
+;;   :ensure t
+;;   :config
+;;   ;; For latest claude sonnet model
+;;   ;; (setq aider-args '("--model" "sonnet" "--no-auto-accept-architect"))
+;;   ;; (setenv "ANTHROPIC_API_KEY" anthropic-api-key)
+;;   ;; Or chatgpt model
+;;   (setq aider-args '("--model" "o4-mini" "--no-auto-commits"))
+;;   (setenv "OPENAI_API_KEY" (read-gpg-file-to-string "~/.config/openapi-api-key.asc"))
+;;   ;; Or gemini model
+;;   ;; (setq aider-args '("--model" "gemini-exp"))
+;;   ;; (setenv "GEMINI_API_KEY" <your-gemini-api-key>)
+;;   ;; Or use your personal config file
+;;   ;; (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
+;;   ;; ;;
+;;   ;; Optional: Set a key binding for the transient menu
+;;   (global-set-key (kbd "C-c a") 'aider-transient-menu))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5475,6 +5472,10 @@ navigating a logview buffer."
 ;; claude-code-ide.el
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
+(straight-use-package
+ '(transient :type git :host github :repo "magit/transient" :branch "main"))
 
 (use-package claude-code-ide
   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
@@ -5599,17 +5600,17 @@ an agent-shell window clears its pending notification."
 
 (setq repeat-exit-timeout 3) ;; exit after 3 seconds of inactivity
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Difftron
-;;
-;; Better diffing in magit. https://github.com/lynaghk/difftron/
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; Difftron
+;; ;;
+;; ;; Better diffing in magit. https://github.com/lynaghk/difftron/
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(load "~/projects/difftron/emacs/difftron.el")
-(setq difftron-executable "~/projects/difftron/scripts/difftron_dev")
-(difftron-bindings-mode)
+;; (load "~/projects/difftron/emacs/difftron.el")
+;; (setq difftron-executable "~/projects/difftron/scripts/difftron_dev")
+;; (difftron-bindings-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
