@@ -5619,7 +5619,11 @@ an agent-shell window clears its pending notification."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package vulpea
-  :ensure t)
+  :ensure t
+
+  :config
+  (setq vulpea-db-sync-directories '("~/Sync/default/org/"
+				     "~/projects/planning")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
