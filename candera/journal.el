@@ -62,6 +62,35 @@
           (langtool--correction overlays))
       (message "No valid LangTool overlays found."))))
 
+;; PERFORMANCE NOTE — first-run delay when the journal root is remote
+;; (e.g. /scp:candera.sytes.net:daily/).
+;;
+;; The noticeable lag the first time this command runs in an Emacs session
+;; comes from TWO sources, only one of which is TRAMP:
+;;
+;;   1. ~1.5s — TRAMP cold connection setup (SSH handshake + remote shell
+;;      probing). Inherent to TRAMP; paid once per session, then the
+;;      connection is reused, so re-running the command is fast.
+;;
+;;   2. ~1.0s — a hardcoded (sit-for 1 t) inside the built-in `after-find-file'.
+;;      It is NOT a TRAMP round-trip. `after-find-file' finds that this file's
+;;      auto-save file (a local /var/folders/.../T/#!scp:...# copy) exists and
+;;      is NEWER than the remote file, so it prints
+;;         "<file> has auto save data; consider M-x recover-this-file"
+;;      and deliberately pauses one second so you can read it. Journal entries
+;;      trigger this constantly because they get auto-saved locally but not
+;;      always saved through to the remote, leaving a perpetually-newer
+;;      auto-save file. This pause only occurs on the initial visit (later
+;;      invocations just switch to the existing buffer).
+;;
+;; Ruled out as causes: VC backend detection, dir-locals lookup, GC, and
+;; undo-tree's remote .~undo-tree~ history writes (extra round-trips, but not
+;; the source of the delay).
+;;
+;; The ~1s pause is eliminable by opening via (find-file-noselect FILE t) —
+;; the NOWARN arg makes `after-find-file' skip the warning and the sit-for —
+;; at the cost of losing the recover-this-file hint for journal files.
+;; (Left unchanged intentionally.)
 (defun find-yesterday-log-file (&optional days-ago)
   "Open a file that has the default settings for yesterday's entry"
   (interactive "p")
