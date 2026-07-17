@@ -5577,6 +5577,37 @@ an agent-shell window clears its pending notification."
       (candera/agent-shell-notify
        "Agent Shell"
        (format "%s needs permission" (buffer-name)))))
+  ;; Called from the Claude Code SubagentStop hook in
+  ;; ~/.claude/settings.json via emacsclient.  ACP clients like
+  ;; agent-shell are never re-prompted when a *background* subagent
+  ;; finishes (the CLI does this itself; ACP sessions only get turns
+  ;; when the client sends one), so without this the agent sits on
+  ;; finished background work until asked.
+  (defun candera/agent-shell-notify-subagent-stop (cwd)
+    "Notify the agent-shell session in CWD that a Claude Code subagent finished.
+If that shell is idle, auto-submit a nudge so the agent reports the
+subagent's results without being asked.  If it is busy (a foreground
+subagent -- the main loop receives the result itself), just show a
+message."
+    (let* ((dir (file-name-as-directory (expand-file-name cwd)))
+           (buffer (seq-find (lambda (b)
+                               (with-current-buffer b
+                                 (string= (file-name-as-directory
+                                           (expand-file-name default-directory))
+                                          dir)))
+                             (agent-shell-buffers))))
+      (cond
+       ((null buffer)
+        (message "Claude subagent finished in %s (no agent-shell buffer)" cwd))
+       ((eq (agent-shell-status :shell-buffer buffer) 'ready)
+        (with-current-buffer buffer
+          (agent-shell--send-command
+           :prompt "[hook] A background subagent just finished. Check and report its results."
+           :shell-buffer buffer))
+        (message "Claude subagent finished — nudged %s" (buffer-name buffer)))
+       (t
+        (message "Claude subagent finished (%s is busy; it will pick up the result)"
+                 (buffer-name buffer))))))
   ;; Subscribe each new agent-shell buffer to the events we care about.
   (add-hook 'agent-shell-mode-hook
             (lambda ()
