@@ -5685,6 +5685,19 @@ message."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; eww - emacs browser
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Add borders around tables and table cells. Note: creates a weird double border. I looked into fixing it, but I think
+;; it's kind of a hack, and it's pretty readable the way it is.
+(setq shr-table-horizontal-line ?-
+      shr-table-vertical-line   ?|
+      shr-table-corner          ?+)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Run deferred setup
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
