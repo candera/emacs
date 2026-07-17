@@ -5668,6 +5668,23 @@ message."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; grip-mode
+;;
+;; Instant GitHub-flavored Markdown/Org preview using a grip subprocess.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package grip-mode
+  :ensure t
+  ;; If you enable it, it launches immediately on opening a file, which is annoying. Just use M-x grip-browse-preview if
+  ;; you want to look at a better rendering.
+  ;; :hook (markdown-mode . grip-mode)
+  :custom
+  ;; Local renderer, avoiding the GitHub API:
+  (grip-command 'go-grip))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Run deferred setup
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
