@@ -5512,6 +5512,7 @@ navigating a logview buffer."
         agent-shell-user-message-expand-by-default nil
         agent-shell-thought-process-expand-by-default nil)
   :config
+  (display-line-numbers-mode -1)
   (defvar candera/agent-shell-notify-timeout 30
     "Seconds before an agent-shell notification auto-dismisses.
 Nil keeps the notification until dismissed (manually or by returning
