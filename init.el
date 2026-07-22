@@ -955,6 +955,8 @@ for a frame name."
 
 (global-set-key (kbd "C-x 5 C") 'candera-new-frame)
 (global-set-key (kbd "s-N") 'candera-new-frame)
+;; Because this is the key in Chromium, and I can't stop typing it
+(global-set-key (kbd "s-A") 'select-frame-by-name)
 
 (defun google-word-at-point ()
   "Opens a browser for the word at point on google.co"
