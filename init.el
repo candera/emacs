@@ -955,6 +955,8 @@ for a frame name."
 
 (global-set-key (kbd "C-x 5 C") 'candera-new-frame)
 (global-set-key (kbd "s-N") 'candera-new-frame)
+;; Because this is the key in Chromium, and I can't stop typing it
+(global-set-key (kbd "s-A") 'select-frame-by-name)
 
 (defun google-word-at-point ()
   "Opens a browser for the word at point on google.co"
@@ -1822,6 +1824,15 @@ back to the original string."
 
 (load-file "~/.emacs.d/custom/candera/journal.el")
 (global-set-key (kbd "C-x y") 'find-yesterday-log-file)
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;
+;; ;; This section sets up Craig's text-to-speech (read aloud)
+;; ;;
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'tts)
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5504,6 +5515,7 @@ navigating a logview buffer."
         agent-shell-user-message-expand-by-default nil
         agent-shell-thought-process-expand-by-default nil)
   :config
+  (display-line-numbers-mode -1)
   (defvar candera/agent-shell-notify-timeout 30
     "Seconds before an agent-shell notification auto-dismisses.
 Nil keeps the notification until dismissed (manually or by returning
@@ -5568,6 +5580,37 @@ an agent-shell window clears its pending notification."
       (candera/agent-shell-notify
        "Agent Shell"
        (format "%s needs permission" (buffer-name)))))
+  ;; Called from the Claude Code SubagentStop hook in
+  ;; ~/.claude/settings.json via emacsclient.  ACP clients like
+  ;; agent-shell are never re-prompted when a *background* subagent
+  ;; finishes (the CLI does this itself; ACP sessions only get turns
+  ;; when the client sends one), so without this the agent sits on
+  ;; finished background work until asked.
+  (defun candera/agent-shell-notify-subagent-stop (cwd)
+    "Notify the agent-shell session in CWD that a Claude Code subagent finished.
+If that shell is idle, auto-submit a nudge so the agent reports the
+subagent's results without being asked.  If it is busy (a foreground
+subagent -- the main loop receives the result itself), just show a
+message."
+    (let* ((dir (file-name-as-directory (expand-file-name cwd)))
+           (buffer (seq-find (lambda (b)
+                               (with-current-buffer b
+                                 (string= (file-name-as-directory
+                                           (expand-file-name default-directory))
+                                          dir)))
+                             (agent-shell-buffers))))
+      (cond
+       ((null buffer)
+        (message "Claude subagent finished in %s (no agent-shell buffer)" cwd))
+       ((eq (agent-shell-status :shell-buffer buffer) 'ready)
+        (with-current-buffer buffer
+          (agent-shell--send-command
+           :prompt "[hook] A background subagent just finished. Check and report its results."
+           :shell-buffer buffer))
+        (message "Claude subagent finished — nudged %s" (buffer-name buffer)))
+       (t
+        (message "Claude subagent finished (%s is busy; it will pick up the result)"
+                 (buffer-name buffer))))))
   ;; Subscribe each new agent-shell buffer to the events we care about.
   (add-hook 'agent-shell-mode-hook
             (lambda ()
@@ -5625,10 +5668,47 @@ an agent-shell window clears its pending notification."
   :ensure t
 
   :config
-  (setq vulpea-db-sync-directories '("~/Sync/default/org/"))
-  (vulpea-db-autosync-mode +1))
+  (setq vulpea-db-sync-directories '("~/Sync/default/org/"
+				     "~/projects/planning")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; grip-mode
+;;
+;; Instant GitHub-flavored Markdown/Org preview using a grip subprocess.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package grip-mode
+  :ensure t
+  ;; If you enable it, it launches immediately on opening a file, which is annoying. Just use M-x grip-browse-preview if
+  ;; you want to look at a better rendering.
+  ;; :hook (markdown-mode . grip-mode)
+  :custom
+  ;; Local renderer, avoiding the GitHub API:
+  (grip-command 'go-grip))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; eww - emacs browser
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Add borders around tables and table cells. Note: creates a weird double border. I looked into fixing it, but I think
+;; it's kind of a hack, and it's pretty readable the way it is.
+(setq shr-table-horizontal-line ?-
+      shr-table-vertical-line   ?|
+      shr-table-corner          ?+)
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; mermaid - draw graphs from text
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package mermaid-mode
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
