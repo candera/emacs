@@ -1914,7 +1914,8 @@ back to the original string."
   :ensure t
   :mode "\\.md"
   :config
-  (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1))))
+  (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1)))
+  (setq fill-column 130))
 
 
 
@@ -5607,10 +5608,27 @@ an agent-shell window clears its pending notification."
 ;; ;; Better diffing in magit. https://github.com/lynaghk/difftron/
 ;; ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Disabled 2026-Jun after some difficulties running it. Seems like it only supports a limited number of languages at the moment.
 
 ;; (load "~/projects/difftron/emacs/difftron.el")
 ;; (setq difftron-executable "~/projects/difftron/scripts/difftron_dev")
 ;; (difftron-bindings-mode)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; vulpea - index and access to org files as a database
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package vulpea
+  :ensure t
+
+  :config
+  (setq vulpea-db-sync-directories '("~/Sync/default/org/"))
+  (vulpea-db-autosync-mode +1))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
