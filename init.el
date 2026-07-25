@@ -2276,7 +2276,7 @@ back to the original string."
   (projectile-mode 1)
   (projectile-load-known-projects)
   (setq projectile-tags-command "/usr/local/bin/ctags -Re -f \"%s\" %s")
-  (setq projectile-switch-project-action 'projectile-commander)
+  (setq projectile-switch-project-action 'projectile-dispatch)
   (setq projectile-current-project-on-switch 'keep))
 
 (require 'projectile)
