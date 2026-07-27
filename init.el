@@ -613,6 +613,13 @@ and shows a leading * without changing indentation."
               server-process))
   (server-start))
 
+;; Subprocesses that want an editor should get this Emacs, not vi. Claude Code
+;; checks $VISUAL then $EDITOR for `chat:externalEditor'; with both unset it
+;; falls back to vi, which is how C-g used to drop into a vim-like buffer.
+;; emacsclient blocks the caller until C-x # (`server-edit').
+(setenv "EDITOR" "emacsclient")
+(setenv "VISUAL" "emacsclient")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Do any initialization that's specific to this machine
@@ -5485,21 +5492,105 @@ navigating a logview buffer."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
-(straight-use-package
- '(transient :type git :host github :repo "magit/transient" :branch "main"))
+;; C-/ is undo-tree-undo everywhere else in Emacs, but it is useless in a
+;; ghostel buffer: `buffer-undo-list' is disabled there, and ghostty's key
+;; encoder emits nothing at all for ctrl+/ once a program turns on the Kitty
+;; keyboard protocol (Claude Code does), so the keypress vanishes. Send the C0
+;; undo byte instead — 0x1f is what Claude Code binds as chat:undo and what
+;; readline/zle treat as undo, and it survives both key-encoding modes.
+(defun candera-ghostel-send-undo ()
+  "Send the terminal undo key (C-_, 0x1f) to the ghostel terminal."
+  (interactive)
+  (ghostel-send-string "\C-_"))
+
+;; Claude Code's TUI runs on the terminal's alternate screen, which has no
+;; scrollback of its own — the app handles PageUp/PageDown itself and scrolls
+;; its own transcript. An Apple wireless keyboard has no PageUp/PageDown keys,
+;; so send the xterm escape sequences (ESC [ 5 ~ / ESC [ 6 ~) directly rather
+;; than relying on physical keys. Mirrors Emacs's own C-v/M-v scroll direction.
+(defun candera-ghostel-send-page-down ()
+  "Send the terminal PageDown key to the ghostel terminal."
+  (interactive)
+  (ghostel-send-string "\e[6~"))
+
+(defun candera-ghostel-send-page-up ()
+  "Send the terminal PageUp key to the ghostel terminal."
+  (interactive)
+  (ghostel-send-string "\e[5~"))
+
+;; Let `C-c C-v'/`C-c M-v' repeat with a bare `C-v'/`M-v' afterward, the same
+;; way `repeat-mode' lets `C-x o o o' cycle windows. `:repeat t' tags both
+;; commands' `repeat-map' property automatically.
+(defvar-keymap candera-ghostel-scroll-repeat-map
+  :repeat t
+  "C-v" #'candera-ghostel-send-page-down
+  "M-v" #'candera-ghostel-send-page-up)
+
+(use-package ghostel
+  :ensure t
+  :custom
+  ;; Keys listed here are skipped when `ghostel--rebuild-semi-char-keymap'
+  ;; populates the semi-char keymap, so they fall through to the global map.
+  ;; M-N / M-P are candera-next-window / candera-previous-window. C-/ falls
+  ;; through to the `ghostel-mode-map' binding below. C-s / M-w are kept so
+  ;; isearch and kill-ring-save work over the terminal's own text (Claude
+  ;; Code's chat:stash and chat:workflowKeywordToggle are remapped off them in
+  ;; ~/.claude/keybindings.json).
+  (ghostel-keymap-exceptions '("C-c" "C-x" "C-u" "C-h" "M-x" "M-:" "C-\\"
+                               "M-N" "M-P" "C-/" "C-s" "M-w"))
+  ;; Claude's TUI (and other full-screen programs) ask the terminal for a block
+  ;; cursor via DECSCUSR, and ghostel faithfully mirrors that into
+  ;; `cursor-type'. Ignore the request so the global bar cursor wins.
+  (ghostel-ignore-cursor-change t)
+  :custom-face
+  ;; The `ghostel-color-*' faces seed the terminal's 16-slot palette; they
+  ;; default to the `ansi-color-*' faces, whose blues (blue2 / blue1) are
+  ;; unreadable against a dark background. Run `ghostel-sync-theme' after
+  ;; changing these — the palette is pushed into the native terminal, so
+  ;; already-painted cells keep their old color until they repaint.
+  ;;
+  ;; That said, it's not clear this does anything. I changed the theme in
+  ;; claude code itself, which means these might not be getting picked
+  ;; up. Going to leave it for now and come back to it if I have more
+  ;; readability problems.
+  (ghostel-color-blue ((t (:foreground "#4a90d9"))))
+  (ghostel-color-bright-blue ((t (:foreground "#7aa2f7"))))
+  :bind
+  ;; `ghostel-mode-map' is the parent of `ghostel-semi-char-mode-map', so this
+  ;; is what the C-/ exception above falls through to.
+  (:map ghostel-mode-map
+        ("C-/" . candera-ghostel-send-undo)
+        ("C-c C-v" . candera-ghostel-send-page-down)
+        ("C-c M-v" . candera-ghostel-send-page-up)))
 
 (use-package claude-code-ide
-  :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
-  :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
+  :vc (:url "https://github.com/manzaltu/claude-code-ide.el"
+       :rev :newest)
+  :custom
+  (claude-code-ide-terminal-backend 'ghostel)
+  ;; Start conservatively: Claude otherwise may evaluate Elisp directly.
+  (claude-code-ide-enable-execute-code nil)
+  (claude-code-ide--toggle-use-side-window nil)
+  :bind
+  ("C-c C-'" . claude-code-ide-menu)
   :config
-  (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
+  (claude-code-ide-emacs-tools-setup))
 
-;; Disable line numbers in the claude-code-ide terminal buffer
-(add-hook 'vterm-mode-hook
-          (lambda ()
-            (when (string-match-p "\\*claude-code" (buffer-name))
-              (display-line-numbers-mode -1))))
+;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
+;; (straight-use-package
+;;  '(transient :type git :host github :repo "magit/transient" :branch "main"))
+
+;; (use-package claude-code-ide
+;;   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
+;;   :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
+;;   :config
+;;   (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
+
+;; ;; Disable line numbers in the claude-code-ide terminal buffer
+;; (add-hook 'vterm-mode-hook
+;;           (lambda ()
+;;             (when (string-match-p "\\*claude-code" (buffer-name))
+;;               (display-line-numbers-mode -1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
