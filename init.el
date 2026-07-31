@@ -5770,6 +5770,11 @@ message."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package markdown-mode
+  :bind
+  (:map markdown-mode-map
+	("s-p" . grip-browse-preview)))
+
 (use-package grip-mode
   :ensure t
   ;; If you enable it, it launches immediately on opening a file, which is annoying. Just use M-x grip-browse-preview if
@@ -5778,6 +5783,7 @@ message."
   :custom
   ;; Local renderer, avoiding the GitHub API:
   (grip-command 'go-grip))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
