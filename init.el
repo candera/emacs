@@ -5575,7 +5575,44 @@ navigating a logview buffer."
   :bind
   ("C-c C-'" . claude-code-ide-menu)
   :config
-  (claude-code-ide-emacs-tools-setup))
+  (claude-code-ide-emacs-tools-setup)
+  ;; Desktop notifications when Claude needs input, mirroring the
+  ;; agent-shell notification setup below. claude-code-ide has no ACP
+  ;; event stream (it just drives the CLI in a terminal buffer), so we
+  ;; get "needs input" signals from the CLI's own Notification/Stop
+  ;; hooks in ~/.claude/settings.json instead of a subscribe-to API.
+  (defun candera/claude-code-ide--find-session-buffer (cwd)
+    "Return the claude-code-ide session buffer whose working directory is CWD."
+    (let ((target (file-name-as-directory (expand-file-name cwd))))
+      (catch 'candera/found
+        (maphash (lambda (dir _proc)
+                   (when (string= (file-name-as-directory (expand-file-name dir)) target)
+                     (throw 'candera/found
+                            (get-buffer (funcall claude-code-ide-buffer-name-function dir)))))
+                 claude-code-ide--processes)
+        nil)))
+  ;; Called from the Claude Code Notification/Stop hooks in
+  ;; ~/.claude/settings.json via emacsclient. The hook's JSON payload is
+  ;; passed as an extra positional arg after the --eval form, which
+  ;; Emacs's server protocol makes available here via
+  ;; `server-eval-args-left' -- same trick the old claude-code.el hook
+  ;; wiring used (see `claude-code-handle-hook').
+  (defun candera/claude-code-ide-handle-hook (hook-type)
+    "Handle a Claude Code CLI hook of HOOK-TYPE for a claude-code-ide session."
+    (with-demoted-errors "claude-code-ide hook handler error: %S"
+      (let* ((json-text (when server-eval-args-left (pop server-eval-args-left)))
+             (data (and json-text (ignore-errors (json-parse-string json-text))))
+             (cwd (and data (gethash "cwd" data)))
+             (hook-message (and data (gethash "message" data)))
+             (buffer (and cwd (candera/claude-code-ide--find-session-buffer cwd))))
+        (setq server-eval-args-left nil)
+        (when (and buffer (not (get-buffer-window buffer 'visible)))
+          (candera/agent-shell-notify
+           "Claude Code"
+           (or hook-message
+               (format "%s: %s" (buffer-name buffer)
+                       (if (string= hook-type "Stop") "finished" "needs input")))
+           buffer))))))
 
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
 ;; (straight-use-package
@@ -5620,12 +5657,12 @@ focus to its originating buffer).")
     ;; GROUP is a plain string, so this is safe to hand to a bare timer
     ;; under dynamic binding -- no closure needed.
     (call-process "terminal-notifier" nil nil nil "-remove" group))
-  (defun candera/agent-shell-notify (title message)
+  (defun candera/agent-shell-notify (title message &optional buffer)
     "Show a macOS notification with TITLE and MESSAGE via terminal-notifier.
-The notification is grouped per originating buffer so it can be
-dismissed individually, and (per `candera/agent-shell-notify-timeout')
-auto-removed after a delay."
-    (let ((group (candera/agent-shell--notify-group)))
+The notification is grouped per originating buffer (BUFFER, default
+`current-buffer') so it can be dismissed individually, and (per
+`candera/agent-shell-notify-timeout') auto-removed after a delay."
+    (let ((group (candera/agent-shell--notify-group buffer)))
       (call-process "terminal-notifier" nil nil nil
                     "-title" title
                     "-message" message
@@ -5635,12 +5672,14 @@ auto-removed after a delay."
         (run-at-time candera/agent-shell-notify-timeout nil
                      #'candera/agent-shell--remove-notification group))))
   (defun candera/agent-shell--dismiss-on-focus (&optional _frame)
-    "Dismiss the notification for the selected window's agent-shell buffer.
+    "Dismiss the notification for the selected window's Claude buffer.
 Added to `window-selection-change-functions' so that returning focus to
-an agent-shell window clears its pending notification."
+an agent-shell or claude-code-ide window clears its pending notification."
     (let ((buffer (window-buffer (selected-window))))
       (when (and (buffer-live-p buffer)
-                 (with-current-buffer buffer (derived-mode-p 'agent-shell-mode)))
+                 (with-current-buffer buffer
+                   (or (derived-mode-p 'agent-shell-mode)
+                       (string-prefix-p "*claude-code[" (buffer-name)))))
         (candera/agent-shell--remove-notification
          (candera/agent-shell--notify-group buffer)))))
   (add-hook 'window-selection-change-functions
