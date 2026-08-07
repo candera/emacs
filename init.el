@@ -111,6 +111,7 @@
   (delete '(org-refile . "^") ivy-initial-inputs-alist)
   (delete '(org-agenda-refile . "^") ivy-initial-inputs-alist)
   (delete '(org-capture-refile . "^") ivy-initial-inputs-alist)
+  (unbind-key (kbd "o") org-agenda-mode-map)
   (add-to-list 'ivy-initial-inputs-alist '(org-refile . ""))
   (add-to-list 'ivy-initial-inputs-alist '(org-agenda-refile . ""))
   (add-to-list 'ivy-initial-inputs-alist '(org-capture-refile . "")))
