@@ -5619,12 +5619,12 @@ navigating a logview buffer."
         ;; A permission prompt blocks the CLI right now and needs an answer
         ;; before the turn can continue, so -- like
         ;; `candera/agent-shell--on-permission-request' -- always notify,
-        ;; even if the session buffer happens to have a window (it may not
-        ;; be the focused one). Other hook types keep the "only if not
-        ;; visible" gate, matching `candera/agent-shell--on-turn-complete'.
+        ;; even if the session buffer's frame happens to be focused. Other
+        ;; hook types keep the "only if not focused" gate, matching
+        ;; `candera/agent-shell--on-turn-complete'.
         (when (and buffer
                    (or (string= hook-type "permission_prompt")
-                       (not (get-buffer-window buffer 'visible))))
+                       (not (candera/agent-shell--buffer-focused-p buffer))))
           ;; `candera/agent-shell-notify' already prefixes the buffer/frame
           ;; onto the message, so keep this to the event itself -- appending
           ;; Claude's own hook message (e.g. "Bash command needs approval")
@@ -5688,6 +5688,17 @@ focus to its originating buffer).")
     "Return the name of the frame currently showing BUFFER, or nil."
     (when-let* ((window (get-buffer-window buffer 'visible)))
       (frame-parameter (window-frame window) 'name)))
+  (defun candera/agent-shell--buffer-focused-p (buffer)
+    "Return non-nil if BUFFER is showing in the currently focused frame.
+`get-buffer-window' with `visible' is the wrong test here: with
+several frames open at once, nearly every buffer has a live window on
+some frame nearly all the time, so that check almost never suppresses
+a notification. What actually matters is whether the frame showing
+BUFFER is the one with input focus right now -- approximated here by
+`selected-frame', which tracks whichever frame most recently
+processed a command (including a plain frame-switch click)."
+    (when-let* ((window (get-buffer-window buffer 'visible)))
+      (eq (window-frame window) (selected-frame))))
   (defun candera/agent-shell-raise-buffer-frame (buffer-name)
     "Raise and focus whatever frame is currently showing BUFFER-NAME.
 Meant to be invoked from a terminal-notifier click action via
@@ -5782,10 +5793,10 @@ an agent-shell or claude-code-ide window clears its pending notification."
   ;; through emit-event and hanging the shell.  This is our own safety net
   ;; until agent-shell isolates subscribers (xenodium/agent-shell#663).
   (defun candera/agent-shell--on-turn-complete (_event)
-    "Notify when a turn finishes, unless the shell buffer is visible."
+    "Notify when a turn finishes, unless the shell buffer's frame is focused."
     (with-demoted-errors "agent-shell turn-complete handler error: %S"
       (let ((shell-buffer (current-buffer)))
-        (unless (get-buffer-window shell-buffer 'visible)
+        (unless (candera/agent-shell--buffer-focused-p shell-buffer)
           (candera/agent-shell-notify "Agent Shell" "finished" shell-buffer)))))
   (defun candera/agent-shell--on-permission-request (_event)
     "Notify when the agent is waiting on a permission prompt."
