@@ -5602,7 +5602,11 @@ navigating a logview buffer."
   ;; passed as an extra positional arg after the --eval form, which
   ;; Emacs's server protocol makes available here via
   ;; `server-eval-args-left' -- same trick the old claude-code.el hook
-  ;; wiring used (see `claude-code-handle-hook').
+  ;; wiring used (see `claude-code-handle-hook'). HOOK-TYPE is "Stop" or
+  ;; one of the Notification hook's matcher values ("permission_prompt",
+  ;; "idle_prompt", ...) -- see settings.json, which routes each
+  ;; matcher to its own emacsclient call so we don't have to sniff the
+  ;; JSON payload to tell them apart.
   (defun candera/claude-code-ide-handle-hook (hook-type)
     "Handle a Claude Code CLI hook of HOOK-TYPE for a claude-code-ide session."
     (with-demoted-errors "claude-code-ide hook handler error: %S"
@@ -5612,12 +5616,23 @@ navigating a logview buffer."
              (hook-message (and data (gethash "message" data)))
              (buffer (and cwd (candera/claude-code-ide--find-session-buffer cwd))))
         (setq server-eval-args-left nil)
-        (when (and buffer (not (get-buffer-window buffer 'visible)))
+        ;; A permission prompt blocks the CLI right now and needs an answer
+        ;; before the turn can continue, so -- like
+        ;; `candera/agent-shell--on-permission-request' -- always notify,
+        ;; even if the session buffer happens to have a window (it may not
+        ;; be the focused one). Other hook types keep the "only if not
+        ;; visible" gate, matching `candera/agent-shell--on-turn-complete'.
+        (when (and buffer
+                   (or (string= hook-type "permission_prompt")
+                       (not (get-buffer-window buffer 'visible))))
           (candera/agent-shell-notify
            "Claude Code"
            (or hook-message
-               (format "%s: %s" (buffer-name buffer)
-                       (if (string= hook-type "Stop") "finished" "needs input")))
+               (pcase hook-type
+                 ("Stop" (format "%s finished" (buffer-name buffer)))
+                 ("permission_prompt" (format "%s needs your permission" (buffer-name buffer)))
+                 ("idle_prompt" (format "%s is waiting for input" (buffer-name buffer)))
+                 (_ (format "%s: %s" (buffer-name buffer) hook-type))))
            buffer))))))
 
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
