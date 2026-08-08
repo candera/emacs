@@ -5603,10 +5603,14 @@ navigating a logview buffer."
   ;; Emacs's server protocol makes available here via
   ;; `server-eval-args-left' -- same trick the old claude-code.el hook
   ;; wiring used (see `claude-code-handle-hook'). HOOK-TYPE is "Stop" or
-  ;; one of the Notification hook's matcher values ("permission_prompt",
-  ;; "idle_prompt", ...) -- see settings.json, which routes each
-  ;; matcher to its own emacsclient call so we don't have to sniff the
-  ;; JSON payload to tell them apart.
+  ;; the Notification hook's "permission_prompt" matcher value -- see
+  ;; settings.json, which routes each matcher to its own emacsclient
+  ;; call so we don't have to sniff the JSON payload to tell them
+  ;; apart. The "idle_prompt" matcher (fires periodically -- interval
+  ;; undocumented -- while a turn has ended and nothing new has
+  ;; happened) is deliberately NOT wired here: notifying on it turned
+  ;; out to be pure noise, since a finished/blocked task is exactly
+  ;; what `Stop'/`permission_prompt' already cover.
   (defun candera/claude-code-ide-handle-hook (hook-type)
     "Handle a Claude Code CLI hook of HOOK-TYPE for a claude-code-ide session."
     (with-demoted-errors "claude-code-ide hook handler error: %S"
@@ -5636,7 +5640,6 @@ navigating a logview buffer."
                    (pcase hook-type
                      ("Stop" "finished")
                      ("permission_prompt" "needs your permission")
-                     ("idle_prompt" "is waiting for input")
                      (_ hook-type))
                    (if hook-message (format " (%s)" hook-message) ""))
            buffer))))))
