@@ -5625,14 +5625,20 @@ navigating a logview buffer."
         (when (and buffer
                    (or (string= hook-type "permission_prompt")
                        (not (get-buffer-window buffer 'visible))))
+          ;; `candera/agent-shell-notify' already prefixes the buffer/frame
+          ;; onto the message, so keep this to the event itself -- appending
+          ;; Claude's own hook message (e.g. "Bash command needs approval")
+          ;; as detail rather than letting it replace the event text, which
+          ;; is what made earlier notifications here look generic.
           (candera/agent-shell-notify
            "Claude Code"
-           (or hook-message
-               (pcase hook-type
-                 ("Stop" (format "%s finished" (buffer-name buffer)))
-                 ("permission_prompt" (format "%s needs your permission" (buffer-name buffer)))
-                 ("idle_prompt" (format "%s is waiting for input" (buffer-name buffer)))
-                 (_ (format "%s: %s" (buffer-name buffer) hook-type))))
+           (format "%s%s"
+                   (pcase hook-type
+                     ("Stop" "finished")
+                     ("permission_prompt" "needs your permission")
+                     ("idle_prompt" "is waiting for input")
+                     (_ hook-type))
+                   (if hook-message (format " (%s)" hook-message) ""))
            buffer))))))
 
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
@@ -5678,17 +5684,74 @@ focus to its originating buffer).")
     ;; GROUP is a plain string, so this is safe to hand to a bare timer
     ;; under dynamic binding -- no closure needed.
     (call-process "terminal-notifier" nil nil nil "-remove" group))
+  (defun candera/agent-shell--frame-name-for-buffer (buffer)
+    "Return the name of the frame currently showing BUFFER, or nil."
+    (when-let* ((window (get-buffer-window buffer 'visible)))
+      (frame-parameter (window-frame window) 'name)))
+  (defun candera/agent-shell-raise-buffer-frame (buffer-name)
+    "Raise and focus whatever frame is currently showing BUFFER-NAME.
+Meant to be invoked from a terminal-notifier click action via
+emacsclient. Looks up the frame fresh at call time rather than
+raising a frame snapshotted when the notification fired -- by the
+time a notification is clicked the buffer may have moved to a
+different frame, or (for a Stop/idle notification, which by design
+only fires while the buffer has no window at all) may still have
+none. Always going by the current state means this never raises a
+frame the buffer isn't actually in anymore; it either goes to
+wherever the buffer lives right now, or does nothing."
+    (when-let* ((buffer (get-buffer buffer-name))
+                (window (get-buffer-window buffer 'visible))
+                (frame (window-frame window)))
+      (raise-frame frame)
+      (select-frame-set-input-focus frame)
+      (select-window window)))
   (defun candera/agent-shell-notify (title message &optional buffer)
     "Show a macOS notification with TITLE and MESSAGE via terminal-notifier.
-The notification is grouped per originating buffer (BUFFER, default
-`current-buffer') so it can be dismissed individually, and (per
-`candera/agent-shell-notify-timeout') auto-removed after a delay."
-    (let ((group (candera/agent-shell--notify-group buffer)))
+BUFFER (default `current-buffer') identifies the originating session:
+its name, and the name of the frame currently showing it (if any),
+are prefixed onto MESSAGE so the notification says where to look.
+The notification is grouped per BUFFER so it can be dismissed
+individually, and (per `candera/agent-shell-notify-timeout')
+auto-removed after a delay. Clicking the notification calls
+`candera/agent-shell-raise-buffer-frame' via emacsclient.
+
+NOTE: terminal-notifier silently delivers an empty message body when
+`-message' starts with `[' or `(' (confirmed via `terminal-notifier
+-list' showing the stored notification's Message column empty) --
+some quirk in its own argument parsing, since `-list' proves macOS
+itself received whatever terminal-notifier handed it. So the buffer
+name always leads and any bracketed frame name comes after it, never
+first.
+
+The `-execute' command also needs an explicit `--socket-name': it
+runs in whatever environment terminal-notifier's own click handler
+gets (confirmed via testing to have a different $TMPDIR than this
+Emacs session), so a bare `emacsclient' there can't find the server
+socket via its normal lookup and silently does nothing."
+    (let* ((buffer (or buffer (current-buffer)))
+           (group (candera/agent-shell--notify-group buffer))
+           (frame-name (candera/agent-shell--frame-name-for-buffer buffer))
+           (full-message (format "%s%s: %s"
+                                  (buffer-name buffer)
+                                  (if frame-name (format " [%s]" frame-name) "")
+                                  message))
+           (raise-command
+            (format "%s%s --eval %s"
+                    (or (executable-find "emacsclient") "emacsclient")
+                    (if-let* ((socket (and (bound-and-true-p server-socket-dir)
+                                            (bound-and-true-p server-name)
+                                            (expand-file-name server-name server-socket-dir))))
+                        (format " --socket-name=%s" (shell-quote-argument socket))
+                      "")
+                    (shell-quote-argument
+                     (prin1-to-string
+                      `(candera/agent-shell-raise-buffer-frame ,(buffer-name buffer)))))))
       (call-process "terminal-notifier" nil nil nil
                     "-title" title
-                    "-message" message
+                    "-message" full-message
                     "-sound" "Glass"
-                    "-group" group)
+                    "-group" group
+                    "-execute" raise-command)
       (when candera/agent-shell-notify-timeout
         (run-at-time candera/agent-shell-notify-timeout nil
                      #'candera/agent-shell--remove-notification group))))
@@ -5723,15 +5786,11 @@ an agent-shell or claude-code-ide window clears its pending notification."
     (with-demoted-errors "agent-shell turn-complete handler error: %S"
       (let ((shell-buffer (current-buffer)))
         (unless (get-buffer-window shell-buffer 'visible)
-          (candera/agent-shell-notify
-           "Agent Shell"
-           (format "%s finished" (buffer-name shell-buffer)))))))
+          (candera/agent-shell-notify "Agent Shell" "finished" shell-buffer)))))
   (defun candera/agent-shell--on-permission-request (_event)
     "Notify when the agent is waiting on a permission prompt."
     (with-demoted-errors "agent-shell permission-request handler error: %S"
-      (candera/agent-shell-notify
-       "Agent Shell"
-       (format "%s needs permission" (buffer-name)))))
+      (candera/agent-shell-notify "Agent Shell" "needs permission")))
   ;; Called from the Claude Code SubagentStop hook in
   ;; ~/.claude/settings.json via emacsclient.  ACP clients like
   ;; agent-shell are never re-prompted when a *background* subagent
