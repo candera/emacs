@@ -5530,6 +5530,12 @@ navigating a logview buffer."
 (use-package ghostel
   :ensure t
   :custom
+  ;; Keep the native module outside package.el's `elpa/ghostel-<version>'
+  ;; tree. Otherwise a package reinstall/upgrade can delete or overwrite
+  ;; the module file while it's still mmap'd into a running Emacs (see
+  ;; `ghostel-module-directory''s docstring) -- that's what was causing
+  ;; the recurring "native module not found" re-download prompts.
+  (ghostel-module-directory (expand-file-name "ghostel-module/" user-emacs-directory))
   ;; Keys listed here are skipped when `ghostel--rebuild-semi-char-keymap'
   ;; populates the semi-char keymap, so they fall through to the global map.
   ;; M-N / M-P are candera-next-window / candera-previous-window. C-/ falls
