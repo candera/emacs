@@ -5723,6 +5723,20 @@ an agent-shell or claude-code-ide window clears its pending notification."
   ;; finishes (the CLI does this itself; ACP sessions only get turns
   ;; when the client sends one), so without this the agent sits on
   ;; finished background work until asked.
+  (defun candera/claude-code-ide-terminal-live-p (dir)
+    "Return non-nil if a live `claude-code-ide' terminal is running in DIR.
+That terminal runs the interactive CLI directly and already surfaces
+background subagent completions in its own UI, so a SubagentStop event
+attributable to it needs no nudge -- it only shares DIR by coincidence
+with an unrelated agent-shell buffer."
+    (seq-some (lambda (b)
+                (and (string-prefix-p "*claude-code[" (buffer-name b))
+                     (buffer-live-p b)
+                     (with-current-buffer b
+                       (string= (file-name-as-directory
+                                 (expand-file-name default-directory))
+                                dir))))
+              (buffer-list)))
   (defun candera/agent-shell-notify-subagent-stop (cwd)
     "Notify the agent-shell session in CWD that a Claude Code subagent finished.
 If that shell is idle, auto-submit a nudge so the agent reports the
@@ -5737,6 +5751,8 @@ message."
                                           dir)))
                              (agent-shell-buffers))))
       (cond
+       ((candera/claude-code-ide-terminal-live-p dir)
+        (message "Claude subagent finished in %s (claude-code-ide terminal owns it; not nudging agent-shell)" cwd))
        ((null buffer)
         (message "Claude subagent finished in %s (no agent-shell buffer)" cwd))
        ((eq (agent-shell-status :shell-buffer buffer) 'ready)
