@@ -846,7 +846,7 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-x 4 2") 'temporarily-display-two-windows)
 (global-set-key (kbd "C-x 4 3") 'temporarily-display-three-windows)
 (global-set-key (kbd "C-x 4 4") 'temporarily-display-four-windows)
-(global-set-key (kbd "C-x 5 n") 'select-frame-by-name)
+(global-set-key (kbd "C-x 5 n") 'candera/select-frame-by-name)
 (global-set-key (kbd "M-N") 'candera-next-window)
 (global-set-key (kbd "M-P") 'candera-previous-window)
 (global-set-key (kbd "M-`") 'other-frame)
@@ -856,7 +856,7 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "C-c D") 'define-word-at-point)
 (global-unset-key (kbd "s-q"))
 (global-unset-key (kbd "s-w"))
-(global-set-key (kbd "s-n") 'select-frame-by-name)
+(global-set-key (kbd "s-n") 'candera/select-frame-by-name)
 (global-unset-key (kbd "s-N"))
 (global-unset-key (kbd "s-X"))
 (global-unset-key (kbd "s-e"))
@@ -942,6 +942,43 @@ width to 60% frame width, or 85, whichever is larger."
     (message "No prompt; running with defaults.")))
 
 
+(defvar candera/frame-mru-list nil
+  "Live frames, most recently selected first.
+Updated by `candera/frame-mru--record' on every window/frame selection
+change; consumed by `candera/select-frame-by-name' so the frame you
+were on right before this one is offered as the default choice.")
+
+(defun candera/frame-mru--record (&optional _window)
+  "Move the newly selected frame to the front of `candera/frame-mru-list'.
+Also drops any frames that no longer exist, so the list can't grow
+without bound over a long-running session."
+  (let ((frame (selected-frame)))
+    (setq candera/frame-mru-list
+          (cons frame (seq-filter (lambda (f) (and (frame-live-p f) (not (eq f frame))))
+                                   candera/frame-mru-list)))))
+
+(add-hook 'window-selection-change-functions #'candera/frame-mru--record)
+
+(defun candera/select-frame-by-name ()
+  "Like `select-frame-by-name', but ordered most-recently-used first
+and without the current frame in the list -- switching to the frame
+you're already in is a no-op, and the frame you were on right before
+this one is usually the one you actually want, so it's the default
+\(just hit RET)."
+  (interactive)
+  (let* ((current (selected-frame))
+         (ordered (delete-dups (append candera/frame-mru-list (frame-list))))
+         (others (seq-filter (lambda (f) (and (frame-live-p f) (not (eq f current))))
+                              ordered))
+         (alist (mapcar (lambda (f) (cons (frame-parameter f 'name) f)) others)))
+    (unless alist
+      (user-error "No other frame to select"))
+    (let* ((default (car (car alist)))
+           (input (completing-read (format-prompt "Select Frame" default)
+                                    alist nil t nil 'frame-name-history)))
+      (select-frame-set-input-focus
+       (cdr (assoc (if (= (length input) 0) default input) alist))))))
+
 (defun candera-new-frame (&optional frame-name)
   "Makes a new frame, sets a random background color, and configures it the
 way Craig likes it. If called with a prefix argument, does not prompts
@@ -964,7 +1001,7 @@ for a frame name."
 (global-set-key (kbd "C-x 5 C") 'candera-new-frame)
 (global-set-key (kbd "s-N") 'candera-new-frame)
 ;; Because this is the key in Chromium, and I can't stop typing it
-(global-set-key (kbd "s-A") 'select-frame-by-name)
+(global-set-key (kbd "s-A") 'candera/select-frame-by-name)
 
 (defun google-word-at-point ()
   "Opens a browser for the word at point on google.co"
