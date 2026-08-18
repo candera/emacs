@@ -5728,17 +5728,36 @@ focus to its originating buffer).")
     "Return the name of the frame currently showing BUFFER, or nil."
     (when-let* ((window (get-buffer-window buffer 'visible)))
       (frame-parameter (window-frame window) 'name)))
+  (defun candera/agent-shell--os-frontmost-p ()
+    "Return non-nil if this Emacs process is the frontmost macOS app.
+`frame-focus-state' is unreliable for this: querying it across all
+frames at once showed several simultaneously reporting focus, so it
+does not track OS-level frontmost status cleanly. Shelling out to
+System Events and comparing unix ids sidesteps that, and comparing by
+pid (rather than app name) avoids any ambiguity between Emacs builds
+or bundle names."
+    (when-let* ((frontmost-pid
+                 (ignore-errors
+                   (string-to-number
+                    (shell-command-to-string
+                     "osascript -e 'tell application \"System Events\" to unix id of first application process whose frontmost is true'")))))
+      (eql frontmost-pid (emacs-pid))))
   (defun candera/agent-shell--buffer-focused-p (buffer)
-    "Return non-nil if BUFFER is showing in the currently focused frame.
+    "Return non-nil if BUFFER is showing in the currently focused frame
+of the frontmost macOS application.
 `get-buffer-window' with `visible' is the wrong test here: with
 several frames open at once, nearly every buffer has a live window on
 some frame nearly all the time, so that check almost never suppresses
 a notification. What actually matters is whether the frame showing
 BUFFER is the one with input focus right now -- approximated here by
 `selected-frame', which tracks whichever frame most recently
-processed a command (including a plain frame-switch click)."
+processed a command (including a plain frame-switch click) -- AND
+whether Emacs itself currently has OS input focus, so that a window
+covering the Emacs frame (without switching away from it inside
+Emacs) still counts as unfocused and triggers a notification."
     (when-let* ((window (get-buffer-window buffer 'visible)))
-      (eq (window-frame window) (selected-frame))))
+      (and (eq (window-frame window) (selected-frame))
+           (candera/agent-shell--os-frontmost-p))))
   (defun candera/agent-shell-raise-buffer-frame (buffer-name)
     "Raise and focus whatever frame is currently showing BUFFER-NAME.
 Meant to be invoked from a terminal-notifier click action via
