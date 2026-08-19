@@ -948,14 +948,32 @@ Updated by `candera/frame-mru--record' on every window/frame selection
 change; consumed by `candera/select-frame-by-name' so the frame you
 were on right before this one is offered as the default choice.")
 
+(defun candera/frame-selectable-p (frame)
+  "Return non-nil if FRAME is a real, user-switchable top-level frame.
+Excludes dead frames, child frames (any frame with a `parent-frame'),
+and frames marked `no-other-frame' -- the standard convention a
+package uses to hide an auxiliary frame it manages internally from
+frame-switching commands. Corfu's terminal backend, for instance,
+keeps one such frame alive and reparents it to whichever real frame
+last showed a completion popup, so without this filter it shows up in
+`candera/select-frame-by-name' under its own fixed name (e.g.
+\"EmacsCorfuGUI\"), and selecting it just raises whatever frame it's
+currently parented to."
+  (and (frame-live-p frame)
+       (not (frame-parameter frame 'parent-frame))
+       (not (frame-parameter frame 'no-other-frame))))
+
 (defun candera/frame-mru--record (&optional _window)
   "Move the newly selected frame to the front of `candera/frame-mru-list'.
-Also drops any frames that no longer exist, so the list can't grow
-without bound over a long-running session."
+Also drops any frame that's no longer selectable per
+`candera/frame-selectable-p' (dead, or a hidden/child frame), so the
+list can't grow without bound over a long-running session and never
+accumulates auxiliary frames a package manages internally."
   (let ((frame (selected-frame)))
     (setq candera/frame-mru-list
-          (cons frame (seq-filter (lambda (f) (and (frame-live-p f) (not (eq f frame))))
-                                   candera/frame-mru-list)))))
+          (append (and (candera/frame-selectable-p frame) (list frame))
+                  (seq-filter (lambda (f) (and (candera/frame-selectable-p f) (not (eq f frame))))
+                              candera/frame-mru-list)))))
 
 (add-hook 'window-selection-change-functions #'candera/frame-mru--record)
 
@@ -968,7 +986,7 @@ this one is usually the one you actually want, so it's the default
   (interactive)
   (let* ((current (selected-frame))
          (ordered (delete-dups (append candera/frame-mru-list (frame-list))))
-         (others (seq-filter (lambda (f) (and (frame-live-p f) (not (eq f current))))
+         (others (seq-filter (lambda (f) (and (candera/frame-selectable-p f) (not (eq f current))))
                               ordered))
          (alist (mapcar (lambda (f) (cons (frame-parameter f 'name) f)) others)))
     (unless alist
