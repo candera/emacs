@@ -2797,7 +2797,7 @@ back to the original string."
 (defvar sql-eval-term-processor :term)
 
 (defun sql-eval-send-string (string)
-  (case sql-eval-term-processor
+  (cl-case sql-eval-term-processor
     ((:term)
      (term-send-raw-string string)
      (term-send-raw-string "\n"))
@@ -3032,7 +3032,7 @@ With a prefix arg, prompts for the buffer to send to."
 
 (defun sql-eval-create-term ()
   "Create a terminal buffer. Return its name"
-  (case sql-eval-term-processor
+  (cl-case sql-eval-term-processor
     ((:term)
      (progn
        (term "/usr/local/bin/bash")
@@ -5637,6 +5637,20 @@ navigating a logview buffer."
   ("C-c C-'" . claude-code-ide-menu)
   :config
   (claude-code-ide-emacs-tools-setup)
+  ;; Workaround for https://github.com/manzaltu/claude-code-ide.el/pull/217:
+  ;; claude-code-ide-mcp-http-server--dispatch signals 'json-rpc-error for
+  ;; unrecognized MCP methods (e.g. resources/list, prompts/list, ping), but
+  ;; that condition is never registered with `define-error'. An unregistered
+  ;; error symbol isn't a subclass of `error', so the surrounding
+  ;; condition-case's (error ...) handler doesn't catch it, and it escapes the
+  ;; process filter as "peculiar error: -32601, ...". Registering it here
+  ;; makes it a proper `error' subclass so the existing handler catches it and
+  ;; sends a real JSON-RPC error response instead. Once PR 217 merges, upstream
+  ;; will register it before this :config form runs, so the check below will
+  ;; skip re-registering and log that this shim can be deleted.
+  (if (get 'json-rpc-error 'error-conditions)
+      (message "claude-code-ide: json-rpc-error already registered upstream; remove the workaround in init.el")
+    (define-error 'json-rpc-error "JSON-RPC Error" 'error))
   ;; Desktop notifications when Claude needs input, mirroring the
   ;; agent-shell notification setup below. claude-code-ide has no ACP
   ;; event stream (it just drives the CLI in a terminal buffer), so we
