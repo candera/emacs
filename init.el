@@ -5639,10 +5639,11 @@ navigating a logview buffer."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar candera/dock-badge-groups (make-hash-table :test 'equal)
-  "Set (as hash-table keys, values ignored) of notification groups
-currently showing a Dock badge dot. Tracked so the badge only clears
-once every pending notification -- not just the one just dismissed --
-is gone.")
+  "Hash table of pending Claude notifications, keyed by notification
+group (see `candera/agent-shell--notify-group'). Each value is a plist
+of :buffer, :title, :message, and :time -- the badge clears once the
+last entry is gone, and `candera/list-pending-notifications' uses the
+rest to describe and jump to each one.")
 
 (defun candera/dock-badge-set (label)
   "Set Emacs's Dock badge to LABEL; an empty string clears it.
@@ -5657,9 +5658,13 @@ tell current application
   (its NSApplication's sharedApplication)'s dockTile's setBadgeLabel:\"%s\"
 end tell" label)))
 
-(defun candera/dock-badge-add (group)
-  "Record GROUP as having a pending notification and show the badge dot."
-  (puthash group t candera/dock-badge-groups)
+(defun candera/dock-badge-add (group &optional buffer title message)
+  "Record GROUP as a pending notification and show the badge dot.
+BUFFER, TITLE, and MESSAGE are stored so
+`candera/list-pending-notifications' can describe and jump to it."
+  (puthash group (list :buffer buffer :title title :message message
+                        :time (current-time))
+           candera/dock-badge-groups)
   (candera/dock-badge-set "●"))
 
 (defun candera/dock-badge-remove (group)
@@ -5667,6 +5672,64 @@ end tell" label)))
   (remhash group candera/dock-badge-groups)
   (when (zerop (hash-table-count candera/dock-badge-groups))
     (candera/dock-badge-set "")))
+
+(defun candera/dock-badge--live-entries ()
+  "Return pending notifications as an alist of (GROUP . PLIST), most
+recent first, dropping (and forgetting) any whose buffer has since
+been killed."
+  (let (dead live)
+    (maphash (lambda (group info)
+               (if (buffer-live-p (plist-get info :buffer))
+                   (push (cons group info) live)
+                 (push group dead)))
+             candera/dock-badge-groups)
+    (dolist (group dead)
+      (candera/dock-badge-remove group))
+    (sort live (lambda (a b)
+                 (time-less-p (plist-get (cdr b) :time)
+                              (plist-get (cdr a) :time))))))
+
+(defun candera/goto-notification-buffer (buffer)
+  "Switch to BUFFER, raising and focusing its frame if it's visible
+there, or showing it in the selected window otherwise."
+  (if-let* ((window (get-buffer-window buffer 'visible)))
+      (progn
+        (raise-frame (window-frame window))
+        (select-frame-set-input-focus (window-frame window))
+        (select-window window))
+    (switch-to-buffer buffer)))
+
+(defun candera/list-pending-notifications ()
+  "Prompt for one of the buffers with a pending Claude notification and
+jump to it, dismissing that notification (and its terminal-notifier
+alert and Dock badge, if it's the last one pending). Defaults to the
+most recently fired notification."
+  (interactive)
+  (let ((entries (candera/dock-badge--live-entries)))
+    (unless entries
+      (user-error "No pending Claude notifications"))
+    (let* ((candidates
+            (mapcar (lambda (entry)
+                      (let* ((info (cdr entry))
+                             (buffer (plist-get info :buffer)))
+                        (cons (format "%s: %s%s"
+                                      (buffer-name buffer)
+                                      (plist-get info :title)
+                                      (if (plist-get info :message)
+                                          (format " (%s)" (plist-get info :message))
+                                        ""))
+                              entry)))
+                    entries))
+           (default (caar candidates))
+           (choice (completing-read (format-prompt "Pending notification" default)
+                                     candidates nil t nil nil default)))
+      (let* ((entry (cdr (assoc choice candidates)))
+             (group (car entry))
+             (buffer (plist-get (cdr entry) :buffer)))
+        (candera/goto-notification-buffer buffer)
+        (candera/agent-shell--remove-notification group)))))
+
+(global-set-key (kbd "C-c C-n") #'candera/list-pending-notifications)
 
 (use-package claude-code-ide
   :vc (:url "https://github.com/manzaltu/claude-code-ide.el"
@@ -5903,7 +5966,7 @@ socket via its normal lookup and silently does nothing."
                     "-sound" "Glass"
                     "-group" group
                     "-execute" raise-command)
-      (candera/dock-badge-add group)
+      (candera/dock-badge-add group buffer title message)
       (when candera/agent-shell-notify-timeout
         (run-at-time candera/agent-shell-notify-timeout nil
                      #'candera/agent-shell--remove-notification group))))
