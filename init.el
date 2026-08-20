@@ -5625,6 +5625,49 @@ navigating a logview buffer."
         ("C-c C-v" . candera-ghostel-send-page-down)
         ("C-c M-v" . candera-ghostel-send-page-up)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Dock badge
+;;
+;; Shows a small dot on Emacs's Dock icon whenever a Claude
+;; notification (agent-shell or claude-code-ide, below) is pending,
+;; and clears it once the last one is dismissed. Shared by both
+;; use-package blocks, so it's defined here rather than inside either
+;; one's :config, where load order could leave it undefined when the
+;; other block's handlers run.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar candera/dock-badge-groups (make-hash-table :test 'equal)
+  "Set (as hash-table keys, values ignored) of notification groups
+currently showing a Dock badge dot. Tracked so the badge only clears
+once every pending notification -- not just the one just dismissed --
+is gone.")
+
+(defun candera/dock-badge-set (label)
+  "Set Emacs's Dock badge to LABEL; an empty string clears it.
+Runs via `do-applescript' rather than shelling out to `osascript', so
+the script executes inside this Emacs process -- that makes `current
+application' in the AppleScript resolve to Emacs itself, which is
+what lets it reach its own `NSDockTile' via AppleScriptObjC."
+  (do-applescript
+   (format "use framework \"AppKit\"
+use scripting additions
+tell current application
+  (its NSApplication's sharedApplication)'s dockTile's setBadgeLabel:\"%s\"
+end tell" label)))
+
+(defun candera/dock-badge-add (group)
+  "Record GROUP as having a pending notification and show the badge dot."
+  (puthash group t candera/dock-badge-groups)
+  (candera/dock-badge-set "●"))
+
+(defun candera/dock-badge-remove (group)
+  "Clear GROUP's pending notification; clear the badge if none remain."
+  (remhash group candera/dock-badge-groups)
+  (when (zerop (hash-table-count candera/dock-badge-groups))
+    (candera/dock-badge-set "")))
+
 (use-package claude-code-ide
   :vc (:url "https://github.com/manzaltu/claude-code-ide.el"
        :rev :newest)
@@ -5755,7 +5798,8 @@ focus to its originating buffer).")
     "Remove any pending terminal-notifier notification for GROUP."
     ;; GROUP is a plain string, so this is safe to hand to a bare timer
     ;; under dynamic binding -- no closure needed.
-    (call-process "terminal-notifier" nil nil nil "-remove" group))
+    (call-process "terminal-notifier" nil nil nil "-remove" group)
+    (candera/dock-badge-remove group))
   (defun candera/agent-shell--frame-name-for-buffer (buffer)
     "Return the name of the frame currently showing BUFFER, or nil."
     (when-let* ((window (get-buffer-window buffer 'visible)))
@@ -5854,6 +5898,7 @@ socket via its normal lookup and silently does nothing."
                     "-sound" "Glass"
                     "-group" group
                     "-execute" raise-command)
+      (candera/dock-badge-add group)
       (when candera/agent-shell-notify-timeout
         (run-at-time candera/agent-shell-notify-timeout nil
                      #'candera/agent-shell--remove-notification group))))
