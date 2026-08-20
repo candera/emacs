@@ -5680,6 +5680,17 @@ end tell" label)))
   ("C-c C-'" . claude-code-ide-menu)
   :config
   (claude-code-ide-emacs-tools-setup)
+  ;; Line numbers are meaningless in Claude's terminal UI and just add
+  ;; visual noise, but `global-display-line-numbers-mode' (see
+  ;; `init.el') turns them on everywhere by default, so opt this
+  ;; buffer back out. Matched by buffer name rather than restricting
+  ;; to `claude-code-ide' buffers via some other means because
+  ;; `ghostel-mode' is a general terminal mode also used outside
+  ;; claude-code-ide.
+  (add-hook 'ghostel-mode-hook
+            (lambda ()
+              (when (string-prefix-p "*claude-code[" (buffer-name))
+                (display-line-numbers-mode -1))))
   ;; Workaround for https://github.com/manzaltu/claude-code-ide.el/pull/217:
   ;; claude-code-ide-mcp-http-server--dispatch signals 'json-rpc-error for
   ;; unrecognized MCP methods (e.g. resources/list, prompts/list, ping), but
@@ -5765,12 +5776,6 @@ end tell" label)))
 ;;   :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
 ;;   :config
 ;;   (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
-
-;; ;; Disable line numbers in the claude-code-ide terminal buffer
-;; (add-hook 'vterm-mode-hook
-;;           (lambda ()
-;;             (when (string-match-p "\\*claude-code" (buffer-name))
-;;               (display-line-numbers-mode -1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
