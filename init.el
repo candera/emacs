@@ -5599,19 +5599,53 @@ navigating a logview buffer."
   "Safety cap on how many screens `candera-ghostel-jump-to-last-input'
 pages backward before giving up.")
 
-(defun candera-ghostel--input-visible-p ()
-  "Return non-nil if the current ghostel screen shows a line starting
-with \"❯ \" -- Claude Code's echo of a message you submitted."
+(defconst candera-ghostel-jump-to-last-input-settle-timeout 2.0
+  "Max seconds `candera-ghostel--wait-for-redraw' waits for a screen to
+stop changing before giving up and proceeding with whatever is there.")
+
+(defun candera-ghostel--find-arrived-input ()
+  "Return the buffer position of the first \"❯ \"-prefixed line in the
+current ghostel screen -- Claude Code's echo of a submitted message --
+or nil if there isn't one.
+
+Two earlier versions of this function tried to filter out what looks
+like a low-contrast, single-line, boundary-clipped \"preview\" of a
+message pinned to the top of the screen, on the theory that it was a
+transient state that would resolve into something fuller/brighter
+given more paging or more waiting. Both theories were falsified by
+direct testing: paging 50 real screens deep into an active session,
+and waiting several idle seconds with no further input sent, both
+left the exact same dim, single-line rendering in place -- no
+brighter or more-complete version ever appeared. That rendering
+appears to simply be how Claude Code always displays a `❯ '-prefixed
+line once you're looking at it via scrollback rather than the live
+tail, so filtering it out made the command reject every real match
+and always fail. This version is deliberately unfiltered."
   (save-excursion
     (goto-char (point-min))
-    (re-search-forward "^❯ " nil t)))
+    (when (re-search-forward "^❯ " nil t)
+      (match-beginning 0))))
 
 (defun candera-ghostel--wait-for-redraw ()
-  "Pause long enough for ghostel's async redraw pipeline to reflect
-input just sent to the terminal process."
-  (if (process-live-p ghostel--process)
-      (accept-process-output ghostel--process 0.2)
-    (sit-for 0.2)))
+  "Wait for ghostel's async redraw pipeline to settle after sending
+input to the terminal: polls until two consecutive reads of the
+buffer come back identical, rather than assuming a single fixed delay
+is enough. A single PageUp can leave Claude Code's TUI visibly
+mid-transition -- including a transient, only-partly-there rendering
+of the very line we're searching for -- well past a naively short
+wait; this rides that out instead of accepting the first thing that
+appears."
+  (let ((deadline (+ (float-time) candera-ghostel-jump-to-last-input-settle-timeout))
+        (previous (buffer-substring-no-properties (point-min) (point-max)))
+        (settled nil))
+    (while (and (not settled) (< (float-time) deadline))
+      (if (process-live-p ghostel--process)
+          (accept-process-output ghostel--process 0.15)
+        (sit-for 0.15))
+      (let ((current (buffer-substring-no-properties (point-min) (point-max))))
+        (if (equal current previous)
+            (setq settled t)
+          (setq previous current))))))
 
 (defun candera-ghostel-jump-to-last-input ()
   "Jump to your most recent submitted message in a Claude Code ghostel
@@ -5623,20 +5657,18 @@ mode picked by `ghostel-prompt-navigation-input-mode' (same as
 if Claude is still producing output."
   (interactive)
   (ghostel-semi-char-mode)
-  (let ((pages 0))
-    (while (and (not (candera-ghostel--input-visible-p))
+  (let ((pages 0) (found nil))
+    (while (and (not (setq found (candera-ghostel--find-arrived-input)))
                 (< pages candera-ghostel-jump-to-last-input-max-pages))
       (ghostel-send-string "\e[5~")
       (candera-ghostel--wait-for-redraw)
       (setq pages (1+ pages)))
-    (unless (candera-ghostel--input-visible-p)
+    (unless found
       (user-error "No previous input found in %d screens of scrollback"
-                  candera-ghostel-jump-to-last-input-max-pages)))
-  (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode)
-  (goto-char (point-min))
-  (re-search-forward "^❯ " nil t)
-  (goto-char (match-beginning 0))
-  (recenter))
+                  candera-ghostel-jump-to-last-input-max-pages))
+    (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode)
+    (goto-char found)
+    (recenter)))
 
 (use-package ghostel
   :ensure t
