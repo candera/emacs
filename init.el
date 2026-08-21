@@ -5582,6 +5582,41 @@ navigating a logview buffer."
   "C-v" #'candera-ghostel-send-page-down
   "M-v" #'candera-ghostel-send-page-up)
 
+;; `ghostel-next-prompt'/`ghostel-previous-prompt' (OSC 133) don't apply here:
+;; `claude' is a full-screen TUI, not a shell, and never emits OSC 133 prompt
+;; markers. But ghostel materializes the terminal's full scrollback into the
+;; buffer regardless (see `ghostel-max-scrollback'), and Claude Code echoes
+;; back whatever you typed on a line starting with "❯ ", so a plain backward
+;; search across that materialized text finds it -- no need to page the live
+;; TUI back to find where you last typed.
+(defun candera-ghostel-jump-to-last-input (&optional n)
+  "Move point to your most recent submitted message in a Claude Code
+ghostel buffer. With a numeric prefix arg N, skip back N messages.
+Enters the read-only mode picked by
+`ghostel-prompt-navigation-input-mode' first, same as
+`ghostel-previous-prompt', so repeating the command (or its repeat-map
+binding) walks further back through earlier messages.
+
+Starts the search from `point-max' rather than `point', unless
+already continuing a previous call (tracked via `last-command') --
+point doesn't track the live cursor in this alt-screen TUI the way it
+does for an ordinary shell, so a fresh invocation can otherwise start
+searching from wherever point happened to be left, missing more
+recent messages below it."
+  (interactive "p")
+  (unless (memq ghostel--input-mode '(emacs copy))
+    (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode))
+  (unless (eq last-command 'candera-ghostel-jump-to-last-input)
+    (goto-char (point-max)))
+  (dotimes (_ (or n 1))
+    (unless (re-search-backward "^❯ " nil t)
+      (user-error "No earlier user input found in this buffer")))
+  (recenter))
+
+(defvar-keymap candera-ghostel-jump-to-last-input-repeat-map
+  :repeat t
+  "u" #'candera-ghostel-jump-to-last-input)
+
 (use-package ghostel
   :ensure t
   :custom
@@ -5623,7 +5658,8 @@ navigating a logview buffer."
   (:map ghostel-mode-map
         ("C-/" . candera-ghostel-send-undo)
         ("C-c C-v" . candera-ghostel-send-page-down)
-        ("C-c M-v" . candera-ghostel-send-page-up)))
+        ("C-c M-v" . candera-ghostel-send-page-up)
+        ("C-c C-u" . candera-ghostel-jump-to-last-input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
