@@ -5584,38 +5584,59 @@ navigating a logview buffer."
 
 ;; `ghostel-next-prompt'/`ghostel-previous-prompt' (OSC 133) don't apply here:
 ;; `claude' is a full-screen TUI, not a shell, and never emits OSC 133 prompt
-;; markers. But ghostel materializes the terminal's full scrollback into the
-;; buffer regardless (see `ghostel-max-scrollback'), and Claude Code echoes
-;; back whatever you typed on a line starting with "❯ ", so a plain backward
-;; search across that materialized text finds it -- no need to page the live
-;; TUI back to find where you last typed.
-(defun candera-ghostel-jump-to-last-input (&optional n)
-  "Move point to your most recent submitted message in a Claude Code
-ghostel buffer. With a numeric prefix arg N, skip back N messages.
-Enters the read-only mode picked by
-`ghostel-prompt-navigation-input-mode' first, same as
-`ghostel-previous-prompt', so repeating the command (or its repeat-map
-binding) walks further back through earlier messages.
+;; markers. Worse: unlike an ordinary shell, Claude Code's TUI runs on the
+;; terminal's alternate screen (see the PageUp/PageDown comment above), and
+;; ghostel mirrors only the CURRENT screen of an alt-screen program into the
+;; buffer, not accumulated scrollback -- confirmed by sending a real PageUp
+;; to a live session and watching the buffer's contents get overwritten with
+;; older, previously-absent text rather than growing. So searching the
+;; buffer alone -- what an earlier version of this command did -- only ever
+;; finds a match if it happens to already be on screen. Finding an
+;; arbitrarily-old message instead requires paging the live TUI backward,
+;; screen by screen, until Claude Code's echo of it (a line starting with
+;; "❯ ") actually gets painted into the buffer.
+(defconst candera-ghostel-jump-to-last-input-max-pages 50
+  "Safety cap on how many screens `candera-ghostel-jump-to-last-input'
+pages backward before giving up.")
 
-Starts the search from `point-max' rather than `point', unless
-already continuing a previous call (tracked via `last-command') --
-point doesn't track the live cursor in this alt-screen TUI the way it
-does for an ordinary shell, so a fresh invocation can otherwise start
-searching from wherever point happened to be left, missing more
-recent messages below it."
-  (interactive "p")
-  (unless (memq ghostel--input-mode '(emacs copy))
-    (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode))
-  (unless (eq last-command 'candera-ghostel-jump-to-last-input)
-    (goto-char (point-max)))
-  (dotimes (_ (or n 1))
-    (unless (re-search-backward "^❯ " nil t)
-      (user-error "No earlier user input found in this buffer")))
+(defun candera-ghostel--input-visible-p ()
+  "Return non-nil if the current ghostel screen shows a line starting
+with \"❯ \" -- Claude Code's echo of a message you submitted."
+  (save-excursion
+    (goto-char (point-min))
+    (re-search-forward "^❯ " nil t)))
+
+(defun candera-ghostel--wait-for-redraw ()
+  "Pause long enough for ghostel's async redraw pipeline to reflect
+input just sent to the terminal process."
+  (if (process-live-p ghostel--process)
+      (accept-process-output ghostel--process 0.2)
+    (sit-for 0.2)))
+
+(defun candera-ghostel-jump-to-last-input ()
+  "Jump to your most recent submitted message in a Claude Code ghostel
+buffer, paging the live TUI backward one screen at a time (up to
+`candera-ghostel-jump-to-last-input-max-pages') until Claude Code's
+echo of it comes on screen. Freezes the view there via the read-only
+mode picked by `ghostel-prompt-navigation-input-mode' (same as
+`ghostel-previous-prompt') so it doesn't snap back to the live tail
+if Claude is still producing output."
+  (interactive)
+  (ghostel-semi-char-mode)
+  (let ((pages 0))
+    (while (and (not (candera-ghostel--input-visible-p))
+                (< pages candera-ghostel-jump-to-last-input-max-pages))
+      (ghostel-send-string "\e[5~")
+      (candera-ghostel--wait-for-redraw)
+      (setq pages (1+ pages)))
+    (unless (candera-ghostel--input-visible-p)
+      (user-error "No previous input found in %d screens of scrollback"
+                  candera-ghostel-jump-to-last-input-max-pages)))
+  (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode)
+  (goto-char (point-min))
+  (re-search-forward "^❯ " nil t)
+  (goto-char (match-beginning 0))
   (recenter))
-
-(defvar-keymap candera-ghostel-jump-to-last-input-repeat-map
-  :repeat t
-  "u" #'candera-ghostel-jump-to-last-input)
 
 (use-package ghostel
   :ensure t
