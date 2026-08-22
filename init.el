@@ -5595,7 +5595,7 @@ navigating a logview buffer."
 ;; arbitrarily-old message instead requires paging the live TUI backward,
 ;; screen by screen, until Claude Code's echo of it (a line starting with
 ;; "❯ ") actually gets painted into the buffer.
-(defconst candera-ghostel-jump-to-last-input-max-pages 50
+(defconst candera-ghostel-jump-to-last-input-max-pages 100
   "Safety cap on how many screens `candera-ghostel-jump-to-last-input'
 pages backward before giving up.")
 
@@ -5604,26 +5604,29 @@ pages backward before giving up.")
 stop changing before giving up and proceeding with whatever is there.")
 
 (defun candera-ghostel--find-arrived-input ()
-  "Return the buffer position of the first \"❯ \"-prefixed line in the
+  "Return the buffer position of the LAST \"❯ \"-prefixed line in the
 current ghostel screen -- Claude Code's echo of a submitted message --
-or nil if there isn't one.
+or nil if there isn't one. Searches backward from the bottom of the
+screen rather than forward from the top, so that when a screen
+contains more than one submitted message, this finds the one closest
+to the live tail (the most recent one reachable at this paging depth)
+rather than the oldest one on screen.
 
-Two earlier versions of this function tried to filter out what looks
-like a low-contrast, single-line, boundary-clipped \"preview\" of a
-message pinned to the top of the screen, on the theory that it was a
-transient state that would resolve into something fuller/brighter
-given more paging or more waiting. Both theories were falsified by
-direct testing: paging 50 real screens deep into an active session,
-and waiting several idle seconds with no further input sent, both
-left the exact same dim, single-line rendering in place -- no
-brighter or more-complete version ever appeared. That rendering
-appears to simply be how Claude Code always displays a `❯ '-prefixed
-line once you're looking at it via scrollback rather than the live
-tail, so filtering it out made the command reject every real match
-and always fail. This version is deliberately unfiltered."
+Every submitted message rendered via scrollback (as opposed to the
+live tail) gets a dim, low-contrast face -- (:foreground \"#505050\"
+:background \"#373737\") -- including the very first command ever sent
+in a session. This was confirmed by direct testing to be permanent,
+not a transient \"still arriving\" state: paging 500 real screens deep
+in two separate long sessions, all the way back to each one's literal
+first command, never found anything else. Two earlier versions of
+this function tried to filter that dim rendering out on the theory
+that a brighter, fuller version existed somewhere further back or
+after a longer wait; both were wrong; there is nothing to wait or
+page for beyond just finding the line. This version is deliberately
+unfiltered."
   (save-excursion
-    (goto-char (point-min))
-    (when (re-search-forward "^❯ " nil t)
+    (goto-char (point-max))
+    (when (re-search-backward "^❯ " nil t)
       (match-beginning 0))))
 
 (defun candera-ghostel--wait-for-redraw ()
@@ -5657,18 +5660,25 @@ mode picked by `ghostel-prompt-navigation-input-mode' (same as
 if Claude is still producing output."
   (interactive)
   (ghostel-semi-char-mode)
-  (let ((pages 0) (found nil))
-    (while (and (not (setq found (candera-ghostel--find-arrived-input)))
+  (let ((pages 0))
+    (while (and (not (candera-ghostel--find-arrived-input))
                 (< pages candera-ghostel-jump-to-last-input-max-pages))
       (ghostel-send-string "\e[5~")
       (candera-ghostel--wait-for-redraw)
-      (setq pages (1+ pages)))
-    (unless found
-      (user-error "No previous input found in %d screens of scrollback"
-                  candera-ghostel-jump-to-last-input-max-pages))
+      (setq pages (1+ pages))
+      (when (zerop (mod pages 25))
+        (message "candera-ghostel-jump-to-last-input: still looking (page %d)..." pages)))
     (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode)
-    (goto-char found)
-    (recenter)))
+    ;; Re-search fresh rather than reusing a position found before the mode
+    ;; switch above: entering read-only mode can itself trigger one more
+    ;; redraw, and a position computed against the screen just before that
+    ;; redraw could land somewhere else entirely once it lands.
+    (let ((found (candera-ghostel--find-arrived-input)))
+      (unless found
+        (user-error "No previous input found in %d screens of scrollback"
+                    candera-ghostel-jump-to-last-input-max-pages))
+      (goto-char found)
+      (recenter))))
 
 (use-package ghostel
   :ensure t
