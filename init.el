@@ -5632,9 +5632,17 @@ regardless of the dim styling."
   "Return non-nil if POS is on the current buffer's first line."
   (save-excursion (goto-char pos) (= (line-number-at-pos) 1)))
 
-(defun candera-ghostel--find-arrived-input-p ()
+(defun candera-ghostel--match-line-text (pos)
+  "Return the full text of the line at POS, for comparing whether two
+matches found on different screens are the same submitted message."
+  (save-excursion
+    (goto-char pos)
+    (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+
+(defun candera-ghostel--find-arrived-input-p (&optional exclude-text)
   "Return the position `candera-ghostel--find-arrived-input' finds,
-but only once it's no longer pinned to the screen's top line.
+but only once it's no longer pinned to the screen's top line, and
+(when EXCLUDE-TEXT is given) its line text doesn't match EXCLUDE-TEXT.
 
 Confirmed directly (Craig watching it happen, and describing it
 precisely): Claude Code pins whatever you most recently typed to the
@@ -5650,43 +5658,57 @@ arrival -- keep paging instead of stopping on it. (The one exception,
 the session's literal first command, can never move off line 1 since
 nothing precedes it; `candera-ghostel-jump-to-last-input' handles that
 separately by detecting when paging further stops changing the
-screen at all.)"
+screen at all.)
+
+EXCLUDE-TEXT lets a repeated invocation keep going past whichever
+message the previous invocation already landed on, to find an earlier
+one, rather than just landing on the same one again -- see
+`candera-ghostel--last-jump-text'."
   (let ((found (candera-ghostel--find-arrived-input)))
-    (and found (not (candera-ghostel--top-line-p found)) found)))
+    (and found
+         (not (candera-ghostel--top-line-p found))
+         (not (and exclude-text
+                    (equal exclude-text (candera-ghostel--match-line-text found))))
+         found)))
 
 (defun candera-ghostel--wait-for-redraw (before)
-  "Wait for ghostel's async redraw pipeline to settle after sending
-input to the terminal. BEFORE is the buffer's content just prior to
-sending, captured by the caller. Returns non-nil once the buffer has
-both changed from BEFORE and then stopped changing across two
-consecutive reads, or nil if it never changes at all within
-`candera-ghostel-jump-to-last-input-settle-timeout' -- meaning the
-input had no effect (e.g. there's no more scrollback above to reveal).
+  "Wait for ghostel's async redraw pipeline to reflect input sent to
+the terminal. BEFORE is the buffer's content just prior to sending,
+captured by the caller. Returns non-nil once the buffer has changed
+from BEFORE (plus one short additional pause in case that change is
+itself still mid-transition), or nil if it never changes at all
+within `candera-ghostel-jump-to-last-input-settle-timeout' -- meaning
+the input had no effect (e.g. there's no more scrollback above to
+reveal).
 
-Waiting for a change AND THEN stability, rather than just two
-identical reads, matters because the very first read can land before
-ghostel's redraw timer has fired at all: comparing that read only to
-the read after it would see no difference yet and wrongly conclude
-\"settled\" immediately, indistinguishable from \"this PageUp had no
-effect.\" A single PageUp can also leave Claude Code's TUI visibly
-mid-transition -- including a transient, only-partly-there rendering
-of the very line we're searching for -- well past a naively short
-wait; requiring genuine stability rides that out too."
+Only requires a single post-change confirmation, not a matching pair
+of consecutive reads -- correctness here comes from
+`candera-ghostel--find-arrived-input-p' checking screen *position*
+across repeated pages, which tolerates a little visual noise from a
+not-fully-settled frame, so there's no need to pay for the extra
+round-trip a stricter stability check would cost on every single
+page. Comparing only to BEFORE (captured by the caller prior to
+sending), rather than to whatever the first poll happens to see,
+avoids a poll that lands before ghostel's redraw timer has fired at
+all being mistaken for \"no effect\"."
   (let ((deadline (+ (float-time) candera-ghostel-jump-to-last-input-settle-timeout))
-        (previous before)
-        (changed nil)
-        (settled nil))
-    (while (and (not settled) (< (float-time) deadline))
+        (changed nil))
+    (while (and (not changed) (< (float-time) deadline))
       (if (process-live-p ghostel--process)
-          (accept-process-output ghostel--process 0.15)
-        (sit-for 0.15))
-      (let ((current (buffer-substring-no-properties (point-min) (point-max))))
-        (unless (equal current before)
-          (setq changed t))
-        (if (and changed (equal current previous))
-            (setq settled t)
-          (setq previous current))))
+          (accept-process-output ghostel--process 0.1)
+        (sit-for 0.1))
+      (unless (equal (buffer-substring-no-properties (point-min) (point-max)) before)
+        (setq changed t)))
+    (when changed
+      (if (process-live-p ghostel--process)
+          (accept-process-output ghostel--process 0.1)
+        (sit-for 0.1)))
     changed))
+
+(defvar-local candera-ghostel--last-jump-text nil
+  "Line text `candera-ghostel-jump-to-last-input' last landed on in
+this buffer, so a repeated invocation can page past it to an earlier
+message instead of landing on the same one again.")
 
 (defun candera-ghostel-jump-to-last-input ()
   "Jump to your most recent submitted message in a Claude Code ghostel
@@ -5699,38 +5721,49 @@ view there via the read-only mode picked by
 `ghostel-previous-prompt') so it doesn't snap back to the live tail if
 Claude is still producing output.
 
+Repeating the command right after itself (`last-command') keeps
+paging past whichever message it landed on last time to find an
+earlier one, rather than restarting fresh and landing on the same
+message again -- unavoidably just as slow as the first jump, since
+switching back to live mode to send more PageUps snaps the terminal's
+own scroll position back to the live tail; there's no way to resume
+mid-scrollback across separate invocations.
+
 Stops early if paging further stops changing the screen at all --
 meaning there's nothing above to reveal, i.e. the sticky reminder is
 for the session's literal first command -- and accepts whatever match
 is present at that point even though it's still on the top line."
   (interactive)
-  (ghostel-semi-char-mode)
-  (let ((pages 0) (stuck nil))
-    (while (and (not (candera-ghostel--find-arrived-input-p))
-                (not stuck)
-                (< pages candera-ghostel-jump-to-last-input-max-pages))
-      (let ((before (buffer-substring-no-properties (point-min) (point-max))))
-        (ghostel-send-string "\e[5~")
-        (unless (candera-ghostel--wait-for-redraw before)
-          (setq stuck t)))
-      (setq pages (1+ pages))
-      (when (zerop (mod pages 25))
-        (message "candera-ghostel-jump-to-last-input: still looking (page %d)..." pages)))
-    (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode)
-    ;; Re-search fresh rather than reusing a position found before the mode
-    ;; switch above: entering read-only mode can itself trigger one more
-    ;; redraw, and a position computed against the screen just before that
-    ;; redraw could land somewhere else entirely once it lands. Take
-    ;; whatever match is present here regardless of top-line status: either
-    ;; the loop above already confirmed it's not on the top line, or paging
-    ;; further stopped changing anything (nothing precedes it) and this is
-    ;; the best available answer.
-    (let ((found (candera-ghostel--find-arrived-input)))
-      (unless found
-        (user-error "No previous input found in %d screens of scrollback"
-                    candera-ghostel-jump-to-last-input-max-pages))
-      (goto-char found)
-      (recenter))))
+  (let ((exclude (when (eq last-command 'candera-ghostel-jump-to-last-input)
+                    candera-ghostel--last-jump-text)))
+    (ghostel-semi-char-mode)
+    (let ((pages 0) (stuck nil))
+      (while (and (not (candera-ghostel--find-arrived-input-p exclude))
+                  (not stuck)
+                  (< pages candera-ghostel-jump-to-last-input-max-pages))
+        (let ((before (buffer-substring-no-properties (point-min) (point-max))))
+          (ghostel-send-string "\e[5~")
+          (unless (candera-ghostel--wait-for-redraw before)
+            (setq stuck t)))
+        (setq pages (1+ pages))
+        (when (zerop (mod pages 25))
+          (message "candera-ghostel-jump-to-last-input: still looking (page %d)..." pages)))
+      (ghostel--enter-readonly-input-mode ghostel-prompt-navigation-input-mode)
+      ;; Re-search fresh rather than reusing a position found before the mode
+      ;; switch above: entering read-only mode can itself trigger one more
+      ;; redraw, and a position computed against the screen just before that
+      ;; redraw could land somewhere else entirely once it lands. Take
+      ;; whatever match is present here regardless of top-line/exclude
+      ;; status: either the loop above already confirmed it qualifies, or
+      ;; paging further stopped changing anything (nothing precedes it) and
+      ;; this is the best available answer.
+      (let ((found (candera-ghostel--find-arrived-input)))
+        (unless found
+          (user-error "No previous input found in %d screens of scrollback"
+                      candera-ghostel-jump-to-last-input-max-pages))
+        (setq candera-ghostel--last-jump-text (candera-ghostel--match-line-text found))
+        (goto-char found)
+        (recenter)))))
 
 (use-package ghostel
   :ensure t
