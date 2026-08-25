@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Enable narrowing, which is disabled by default
 (put 'narrow-to-region 'disabled nil)
 

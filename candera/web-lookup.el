@@ -1,4 +1,4 @@
-;;; web-lookup.el --- Various functions for looking things up on the
+;;; web-lookup.el --- Various functions for looking things up on the  -*- lexical-binding: t; -*-
 ;;; web. 
 
 ;; Copyright (C) 2008 Wangdera Corporation

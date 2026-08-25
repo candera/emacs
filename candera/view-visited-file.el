@@ -1,4 +1,4 @@
-;;; view-visited-file.el --- Displays the visited file in the minibuffer
+;;; view-visited-file.el --- Displays the visited file in the minibuffer  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2008 Wangdera Corporation
 
