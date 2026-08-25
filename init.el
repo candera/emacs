@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Raise the GC threshold well above the 800KB default.  agent-shell
 ;; streams MB-scale buffers, and at the default Emacs spends a large
 ;; fraction of its time in GC, which shows up as stalls in the shells.
@@ -27,27 +28,9 @@
 (setq package-archives
  (append package-archives
          '(("melpa" . "http://melpa.org/packages/")
-           ("melpa-stable" . "http://stable.melpa.org/packages/")
-           ("org" . "http://orgmode.org/elpa/"))))
+           ("melpa-stable" . "http://stable.melpa.org/packages/"))))
 (when (< emacs-major-version 27)
   (package-initialize))
-
-;; Install straight
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
 
 
 ;; Bug in 28 means that SVG is inadvertantly not included
@@ -2185,6 +2168,18 @@ back to the original string."
 ;; Ivy, Counsel, Company
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Background activity (auto-revert-mode buffers picking up changes
+;; written by another process, e.g. a claude-code-ide agent) can try
+;; to pop up a second minibuffer -- a confirmation prompt, say --
+;; while an ivy minibuffer (switch-to-buffer, candera/select-frame-by-name,
+;; etc.) is already active. With this nil (the default), that second
+;; read is refused outright: "Command attempted to use minibuffer
+;; while in minibuffer", which ivy reports via `ivy--resignal' and
+;; which appears to leave the read loop just glitchy enough that the
+;; next C-g doesn't register. Allowing recursive minibuffers lets it
+;; stack as a nested prompt instead, so C-g reliably cancels it.
+(setq enable-recursive-minibuffers t)
 
 (defun candera-ivy-sort-by-length (x y)
   "Sort strings by length"
@@ -4701,25 +4696,6 @@ so we can check to see if flyspell is just lacking a definition."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; straight
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;; elfeed
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4744,7 +4720,9 @@ so we can check to see if flyspell is just lacking a definition."
   :ensure t
   :bind (:map elfeed-search-mode-map
 	      ("/" . elfeed-search-set-filter)
-	      ("s" . my-elfeed-toggle-sort-order)))
+	      ("s" . my-elfeed-toggle-sort-order))
+  :config
+  (display-line-numbers-mode -1))
 
 (defun my-elfeed-fix-db-issue ()
     "Fix a broken or stuck elfeed setup.
@@ -4965,7 +4943,7 @@ Somtimes elfeed loses its brains and gives an error like 'wrong type argument: p
   (local-set-key (kbd "C-c H") #'gcode-mach3-describe))
 
 (use-package gcode
-  :straight (:host github :repo "jasapp/gcode-emacs")
+  :vc (:url "https://github.com/jasapp/gcode-emacs" :rev :newest)
   :config (eldoc-box-hover-at-point-mode 1)
   :mode (("\\.tap)?$" . gcode-mode)
 	 ("\\.TAP)?$" . gcode-mode))
@@ -5508,20 +5486,6 @@ navigating a logview buffer."
 ;;   ;; ;;
 ;;   ;; Optional: Set a key binding for the transient menu
 ;;   (global-set-key (kbd "C-c a") 'aider-transient-menu))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; copilot.el
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package copilot
-  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-  :ensure t
-  :bind
-  (:map copilot-mode-map
-	("C-c TAB" . copilot-complete)
-	("C-c c" . copilot-accept-completion)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
