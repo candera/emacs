@@ -4722,7 +4722,9 @@ so we can check to see if flyspell is just lacking a definition."
 	      ("/" . elfeed-search-set-filter)
 	      ("s" . my-elfeed-toggle-sort-order))
   :config
-  (display-line-numbers-mode -1))
+  (add-hook 'elfeed-show-mode-hook
+            (lambda ()
+              (display-line-numbers-mode -1))))
 
 (defun my-elfeed-fix-db-issue ()
     "Fix a broken or stuck elfeed setup.
