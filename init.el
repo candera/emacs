@@ -5929,15 +5929,20 @@ most recently fired notification."
   ;; get "needs input" signals from the CLI's own Notification/Stop
   ;; hooks in ~/.claude/settings.json instead of a subscribe-to API.
   (defun candera/claude-code-ide--find-session-buffer (cwd)
-    "Return the claude-code-ide session buffer whose working directory is CWD."
-    (let ((target (file-name-as-directory (expand-file-name cwd))))
-      (catch 'candera/found
-        (maphash (lambda (dir _proc)
-                   (when (string= (file-name-as-directory (expand-file-name dir)) target)
-                     (throw 'candera/found
-                            (get-buffer (funcall claude-code-ide-buffer-name-function dir)))))
-                 claude-code-ide--processes)
-        nil)))
+    "Return the claude-code-ide session buffer whose working directory is CWD.
+Picks the most recently used instance when CWD has more than one live
+session, since the hook payload carries only the CWD, not an instance
+id -- same ambiguity `claude-code-ide--resolve-session' falls back on.
+
+Was originally written against `claude-code-ide--processes', a flat
+dir->process hash table that the package has since replaced with a
+session-struct registry (`claude-code-ide-mcp--sessions') supporting
+multiple named instances per project; the old variable no longer
+exists, which silently broke this (see `with-demoted-errors' below)."
+    (when-let* ((session (claude-code-ide-mcp--mru-session
+                          (file-name-as-directory (expand-file-name cwd)))))
+      (let ((buffer (claude-code-ide-mcp-session-buffer session)))
+        (and (buffer-live-p buffer) buffer))))
   ;; Called from the Claude Code Notification/Stop hooks in
   ;; ~/.claude/settings.json via emacsclient. The hook's JSON payload is
   ;; passed as an extra positional arg after the --eval form, which
