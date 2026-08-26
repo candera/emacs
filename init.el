@@ -1354,6 +1354,11 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 
 (define-key dired-mode-map (kbd "O") 'dired-display-file)
 
+;; macOS ships BSD grep, which lacks the --null flag xref's default grep
+;; command template requires. Use ripgrep instead (dired-do-find-regexp,
+;; project-find-regexp, etc. all go through this).
+(setq xref-search-program 'ripgrep)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; javascript-mode
