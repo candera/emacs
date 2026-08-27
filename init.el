@@ -5887,7 +5887,7 @@ most recently fired notification."
         (candera/goto-notification-buffer buffer)
         (candera/agent-shell--remove-notification group)))))
 
-(global-set-key (kbd "C-c C-n") #'candera/list-pending-notifications)
+(global-set-key (kbd "s-i") #'candera/list-pending-notifications)
 
 (use-package claude-code-ide
   :vc (:url "https://github.com/manzaltu/claude-code-ide.el"
