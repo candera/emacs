@@ -6076,11 +6076,22 @@ focus to its originating buffer).")
   (defun candera/agent-shell--notify-group (&optional buffer)
     "Return the terminal-notifier group id for BUFFER (default current)."
     (format "agent-shell:%s" (buffer-name (or buffer (current-buffer)))))
-  (defun candera/agent-shell--remove-notification (group)
-    "Remove any pending terminal-notifier notification for GROUP."
+  (defun candera/agent-shell--dismiss-notification-banner (group)
+    "Remove any pending terminal-notifier banner for GROUP.
+Leaves the Dock badge alone -- this is what the notify timeout calls,
+so the badge (and `candera/list-pending-notifications' entry) survives
+the banner timing out and stays until focus returns to the buffer or
+it's dismissed manually. See `candera/agent-shell--remove-notification'
+for the version that clears both."
     ;; GROUP is a plain string, so this is safe to hand to a bare timer
     ;; under dynamic binding -- no closure needed.
-    (call-process "terminal-notifier" nil nil nil "-remove" group)
+    (call-process "terminal-notifier" nil nil nil "-remove" group))
+  (defun candera/agent-shell--remove-notification (group)
+    "Remove any pending terminal-notifier notification for GROUP and its
+Dock badge entry. Called on manual dismissal and on focus returning to
+the buffer -- see `candera/agent-shell--dismiss-notification-banner'
+for the timeout-only version that leaves the badge up."
+    (candera/agent-shell--dismiss-notification-banner group)
     (candera/dock-badge-remove group))
   (defun candera/agent-shell--frame-name-for-buffer (buffer)
     "Return the name of the frame currently showing BUFFER, or nil."
@@ -6183,7 +6194,7 @@ socket via its normal lookup and silently does nothing."
       (candera/dock-badge-add group buffer title message)
       (when candera/agent-shell-notify-timeout
         (run-at-time candera/agent-shell-notify-timeout nil
-                     #'candera/agent-shell--remove-notification group))))
+                     #'candera/agent-shell--dismiss-notification-banner group))))
   (defun candera/agent-shell--dismiss-on-focus (&optional _frame)
     "Dismiss the notification for the selected window's Claude buffer.
 Added to `window-selection-change-functions' so that returning focus to
