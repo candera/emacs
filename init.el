@@ -6208,6 +6208,33 @@ an agent-shell or claude-code-ide window clears its pending notification."
          (candera/agent-shell--notify-group buffer)))))
   (add-hook 'window-selection-change-functions
             #'candera/agent-shell--dismiss-on-focus)
+  (defvar candera/agent-shell--was-os-frontmost nil
+    "Whether Emacs was the OS-frontmost app as of the last focus check.
+Tracked so `candera/agent-shell--dismiss-on-os-focus' only reacts to the
+transition into becoming frontmost, not every focus event fired by
+`after-focus-change-function' (which also fires on losing focus).")
+  (defun candera/agent-shell--dismiss-on-os-focus ()
+    "Dismiss the selected buffer's pending notification on regaining OS focus.
+`candera/agent-shell--dismiss-on-focus' only fires via
+`window-selection-change-functions', which tracks Emacs's own selected
+window -- if the notification's buffer was already selected before you
+switched to another macOS application, its window never stops being
+selected, so that hook doesn't fire when you switch back to Emacs and
+the notification lingers even though you're looking right at it.
+Bringing Emacs back to the OS foreground doesn't change Emacs's
+selected window, but it does change `frame-focus-state', so react to
+that instead."
+    (let ((frontmost (candera/agent-shell--os-frontmost-p)))
+      (when (and frontmost (not candera/agent-shell--was-os-frontmost))
+        (candera/agent-shell--dismiss-on-focus))
+      (setq candera/agent-shell--was-os-frontmost frontmost)))
+  ;; `remove-function' first so re-evaluating this :config form (e.g. after
+  ;; an edit-and-reload) doesn't stack duplicate advice -- unlike
+  ;; `add-hook', `add-function' doesn't dedupe on its own.
+  (remove-function after-focus-change-function
+                    #'candera/agent-shell--dismiss-on-os-focus)
+  (add-function :after after-focus-change-function
+                #'candera/agent-shell--dismiss-on-os-focus)
   ;; NOTE: this file is loaded under dynamic binding (no lexical-binding
   ;; cookie), so a lexical-let/closure does NOT capture the shell buffer --
   ;; the handler then throws `void-variable', and because
