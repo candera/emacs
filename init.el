@@ -3558,7 +3558,6 @@ back to the original string."
       (local-set-key (kbd "C-c C-c") finish)
       (local-set-key (kbd "C-c C-f") finish))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Mac customizations
@@ -5386,7 +5385,11 @@ navigating a logview buffer."
   ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of package-vc-install
   :init
   (setq scroll-conservatively 101 ; important!
-        scroll-margin 0) 
+        scroll-margin 3 ; Scroll when we get within three lines of the top/bottom
+	scroll-preserve-screen-position t ; Scroll commands preserve cursor position
+	auto-window-vscroll t ; prevents movement and scrolling functions from automatically modifying the window's vertical scroll position when they encounter display rows taller than the window
+	scroll-error-top-bottom t ; move point to the buffer boundary before signaling a scrolling error.
+	) 
   :config
   (ultra-scroll-mode 1))
 
