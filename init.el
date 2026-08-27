@@ -5946,6 +5946,15 @@ exists, which silently broke this (see `with-demoted-errors' below)."
                           (file-name-as-directory (expand-file-name cwd)))))
       (let ((buffer (claude-code-ide-mcp-session-buffer session)))
         (and (buffer-live-p buffer) buffer))))
+  (defvar candera/claude-code-ide-notify-focus-delay 2
+    "Seconds to wait before rechecking focus for a `Stop' notification.
+Checking `candera/agent-shell--buffer-focused-p' synchronously, right when
+the hook fires, races a user who glances at the claude-code-ide window to
+check progress: caught \"focused\" in that instant, the notification gets
+suppressed even though they've looked away again a moment later. Waiting
+this long and rechecking avoids that -- see
+`candera/claude-code-ide-handle-hook'.")
+
   ;; Called from the Claude Code Notification/Stop hooks in
   ;; ~/.claude/settings.json via emacsclient. The hook's JSON payload is
   ;; passed as an extra positional arg after the --eval form, which
@@ -5967,31 +5976,46 @@ exists, which silently broke this (see `with-demoted-errors' below)."
              (data (and json-text (ignore-errors (json-parse-string json-text))))
              (cwd (and data (gethash "cwd" data)))
              (hook-message (and data (gethash "message" data)))
-             (buffer (and cwd (candera/claude-code-ide--find-session-buffer cwd))))
+             (buffer (and cwd (candera/claude-code-ide--find-session-buffer cwd)))
+             ;; `candera/agent-shell-notify' already prefixes the
+             ;; buffer/frame onto the message, so keep this to the event
+             ;; itself -- appending Claude's own hook message (e.g. "Bash
+             ;; command needs approval") as detail rather than letting it
+             ;; replace the event text, which is what made earlier
+             ;; notifications here look generic.
+             (event-message
+              (format "%s%s"
+                      (pcase hook-type
+                        ("Stop" "finished")
+                        ("permission_prompt" "needs your permission")
+                        (_ hook-type))
+                      (if hook-message (format " (%s)" hook-message) ""))))
         (setq server-eval-args-left nil)
-        ;; A permission prompt blocks the CLI right now and needs an answer
-        ;; before the turn can continue, so -- like
-        ;; `candera/agent-shell--on-permission-request' -- always notify,
-        ;; even if the session buffer's frame happens to be focused. Other
-        ;; hook types keep the "only if not focused" gate, matching
-        ;; `candera/agent-shell--on-turn-complete'.
-        (when (and buffer
-                   (or (string= hook-type "permission_prompt")
-                       (not (candera/agent-shell--buffer-focused-p buffer))))
-          ;; `candera/agent-shell-notify' already prefixes the buffer/frame
-          ;; onto the message, so keep this to the event itself -- appending
-          ;; Claude's own hook message (e.g. "Bash command needs approval")
-          ;; as detail rather than letting it replace the event text, which
-          ;; is what made earlier notifications here look generic.
-          (candera/agent-shell-notify
-           "Claude Code"
-           (format "%s%s"
-                   (pcase hook-type
-                     ("Stop" "finished")
-                     ("permission_prompt" "needs your permission")
-                     (_ hook-type))
-                   (if hook-message (format " (%s)" hook-message) ""))
-           buffer))))))
+        (when buffer
+          (if (string= hook-type "permission_prompt")
+              ;; A permission prompt blocks the CLI right now and needs an
+              ;; answer before the turn can continue, so -- like
+              ;; `candera/agent-shell--on-permission-request' -- always
+              ;; notify immediately, even if the session buffer's frame
+              ;; happens to be focused.
+              (candera/agent-shell-notify "Claude Code" event-message buffer)
+            ;; Checking focus synchronously here races a user who glances
+            ;; at the window to check progress right as the turn finishes:
+            ;; caught "focused" in that instant, the notification is
+            ;; suppressed even though they've looked away again a moment
+            ;; later. Recheck after a short delay instead. `lexical-let*'
+            ;; is needed (not plain `let*') because this file has no
+            ;; `lexical-binding: t', so a bare lambda handed to
+            ;; `run-at-time' wouldn't close over BUFFER/EVENT-MESSAGE for
+            ;; use once the timer actually fires.
+            (lexical-let* ((buffer buffer)
+                           (event-message event-message))
+              (run-at-time
+               candera/claude-code-ide-notify-focus-delay nil
+               (lambda ()
+                 (when (and (buffer-live-p buffer)
+                            (not (candera/agent-shell--buffer-focused-p buffer)))
+                   (candera/agent-shell-notify "Claude Code" event-message buffer)))))))))))
 
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
 ;; (straight-use-package
