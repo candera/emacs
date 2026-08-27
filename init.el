@@ -5932,20 +5932,47 @@ most recently fired notification."
   ;; get "needs input" signals from the CLI's own Notification/Stop
   ;; hooks in ~/.claude/settings.json instead of a subscribe-to API.
   (defun candera/claude-code-ide--find-session-buffer (cwd)
-    "Return the claude-code-ide session buffer whose working directory is CWD.
-Picks the most recently used instance when CWD has more than one live
-session, since the hook payload carries only the CWD, not an instance
-id -- same ambiguity `claude-code-ide--resolve-session' falls back on.
+    "Return the claude-code-ide session buffer covering CWD.
+Matches the session whose `project-dir' is CWD itself or an ancestor
+of it -- not only an exact match. The hook payload's CWD is the CLI
+process's actual working directory, which isn't reliably the project
+root: a claude-code-ide terminal can end up with its shell CWD at
+whatever subdirectory was current when the session was created or
+resumed, and every hook fired from that process then reports CWD as
+that subdirectory for the session's whole lifetime. An exact-match
+lookup against `project-dir' silently returns nil in that case --
+no error, just no buffer and so no notification, which is how this
+went unnoticed: see `claude-code-ide-mcp--sessions-for-project',
+which this deliberately doesn't call. When more than one session's
+`project-dir' matches (nested projects, or several live instances of
+the same project), prefers the longest (most specific) matching
+directory, then the most recently used -- same ambiguity
+`claude-code-ide--resolve-session' falls back on.
 
 Was originally written against `claude-code-ide--processes', a flat
 dir->process hash table that the package has since replaced with a
 session-struct registry (`claude-code-ide-mcp--sessions') supporting
 multiple named instances per project; the old variable no longer
 exists, which silently broke this (see `with-demoted-errors' below)."
-    (when-let* ((session (claude-code-ide-mcp--mru-session
-                          (file-name-as-directory (expand-file-name cwd)))))
-      (let ((buffer (claude-code-ide-mcp-session-buffer session)))
-        (and (buffer-live-p buffer) buffer))))
+    (let* ((target (file-name-as-directory (expand-file-name cwd)))
+           (best nil)
+           (best-dir nil))
+      (maphash
+       (lambda (_id session)
+         (let ((dir (file-name-as-directory
+                     (expand-file-name (claude-code-ide-mcp-session-project-dir session)))))
+           (when (and (string-prefix-p dir target)
+                      (or (null best-dir)
+                          (> (length dir) (length best-dir))
+                          (and (= (length dir) (length best-dir))
+                               (> (or (claude-code-ide-mcp-session-last-used session) 0)
+                                  (or (claude-code-ide-mcp-session-last-used best) 0)))))
+             (setq best session
+                   best-dir dir))))
+       claude-code-ide-mcp--sessions)
+      (when best
+        (let ((buffer (claude-code-ide-mcp-session-buffer best)))
+          (and (buffer-live-p buffer) buffer)))))
   (defvar candera/claude-code-ide-notify-focus-delay 2
     "Seconds to wait before rechecking focus for a `Stop' notification.
 Checking `candera/agent-shell--buffer-focused-p' synchronously, right when
