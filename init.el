@@ -5347,9 +5347,9 @@ navigating a logview buffer."
 
   :hook
   (pdf-tools-enabled . (lambda ()
-			 (message "I got here")
 			 (display-line-numbers-mode -1)
-			 (iedit-mode -1))))
+			 (when iedit-mode
+			   (iedit-done)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
