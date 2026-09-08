@@ -6451,6 +6451,22 @@ message."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; iTerm ssh setup - fix the way emacs works remotely
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq xterm-extra-capabilities '(modifyOtherKeys setSelection))
+
+;; Shift-Tab reaches Emacs three different ways depending on what the terminal
+;; negotiates: ESC [ Z (terminfo kcbt) decodes to [backtab], while the
+;; modifyOtherKeys and CSI u forms -- ESC [ 27;2;9 ~ and ESC [ 9;2 u -- both
+;; decode to [S-tab] in term/xterm.el. Every mode that implements shift-Tab
+;; binds [backtab], so translate the other spelling onto it.
+(define-key function-key-map [S-tab] [backtab])
+(define-key function-key-map [C-S-tab] [C-backtab])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Run deferred setup
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
