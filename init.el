@@ -833,8 +833,16 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "M-N") 'candera-next-window)
 (global-set-key (kbd "M-P") 'candera-previous-window)
 (global-set-key (kbd "M-`") 'other-frame)
-(global-set-key (kbd "M-[") 'previous-buffer)
-(global-set-key (kbd "M-]") 'next-buffer)
+;; NOTE: don't bind `M-[' (or `M-]') -- in a terminal frame ESC [ is the CSI
+;; prefix that begins every escape sequence the terminal sends. When `M-['
+;; carries a binding, Emacs runs it the moment it sees ESC [ instead of reading
+;; ahead to translate the whole sequence through `input-decode-map': shift-Tab
+;; arrives as ESC [ Z, so it ran `previous-buffer' and then self-inserted the
+;; `Z'. `M-]' does the same to OSC replies. The built-in `C-x <left>' and
+;; `C-x <right>' already run these two commands. See the "iTerm ssh setup"
+;; section below.
+;; (global-set-key (kbd "M-[") 'previous-buffer)
+;; (global-set-key (kbd "M-]") 'next-buffer)
 (global-set-key (kbd "C-c d") 'sdcv-search)
 (global-set-key (kbd "C-c D") 'define-word-at-point)
 (global-unset-key (kbd "s-q"))
