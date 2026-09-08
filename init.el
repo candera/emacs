@@ -6054,6 +6054,35 @@ this long and rechecking avoids that -- see
                             (not (candera/agent-shell--buffer-focused-p buffer)))
                    (candera/agent-shell-notify "Claude Code" event-message buffer)))))))))))
 
+  ;; Bound as "u" in `claude-code-ide-menu' below. Use this when Claude
+  ;; reports a CLI update is available: it swaps the current session onto a
+  ;; fresh CLI process without losing the conversation.
+  (defun candera/claude-code-ide-continue-and-stop ()
+    "Restart the current Claude Code session onto a fresh CLI process.
+Stops the current instance and immediately starts a new one that
+continues the same conversation (like `claude-code-ide-continue'),
+landing back in the project's default (unnamed) instance slot instead
+of being prompted for an instance name -- stopping first deregisters
+the old session, so by the time the new one is created
+`claude-code-ide--start-session' finds none left for the project and
+skips the prompt. `default-directory' is captured up front because
+`claude-code-ide-stop' kills the current (terminal) buffer, which
+would otherwise leave the following `claude-code-ide-continue' call to
+resolve whatever buffer the window falls back to, rather than this
+session's actual project."
+    (interactive)
+    (let ((default-directory (claude-code-ide--get-working-directory))
+          (current-prefix-arg nil))
+      (claude-code-ide-stop)
+      (claude-code-ide-continue)))
+
+  ;; `claude-code-ide-menu' is defined in the autoloaded
+  ;; claude-code-ide-transient.el, not loaded until first invoked, so defer
+  ;; this append until then rather than forcing it to load early here.
+  (with-eval-after-load 'claude-code-ide-transient
+    (transient-append-suffix 'claude-code-ide-menu "q"
+      '("u" "Continue + stop old (update)" candera/claude-code-ide-continue-and-stop)))
+
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
 ;; (straight-use-package
 ;;  '(transient :type git :host github :repo "magit/transient" :branch "main"))
