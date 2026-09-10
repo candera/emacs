@@ -841,8 +841,8 @@ width to 60% frame width, or 85, whichever is larger."
 ;; `Z'. `M-]' does the same to OSC replies. The built-in `C-x <left>' and
 ;; `C-x <right>' already run these two commands. See the "iTerm ssh setup"
 ;; section below.
-;; (global-set-key (kbd "M-[") 'previous-buffer)
-;; (global-set-key (kbd "M-]") 'next-buffer)
+(global-set-key (kbd "s-[") 'previous-buffer)
+(global-set-key (kbd "s-]") 'next-buffer)
 (global-set-key (kbd "C-c d") 'sdcv-search)
 (global-set-key (kbd "C-c D") 'define-word-at-point)
 (global-unset-key (kbd "s-q"))
