@@ -845,6 +845,13 @@ width to 60% frame width, or 85, whichever is larger."
 (global-set-key (kbd "s-]") 'next-buffer)
 (global-set-key (kbd "C-c d") 'sdcv-search)
 (global-set-key (kbd "C-c D") 'define-word-at-point)
+;; `font-lock-flush' only marks the buffer as needing refontification;
+;; jit-lock then does the actual work lazily on redisplay, and only for
+;; the visible region. That's why an org src block edited off-screen (or
+;; one whose containing #+begin_src/#+end_src match spans past the edit)
+;; stays stale until scrolled into view. `font-lock-ensure' forces it
+;; synchronously instead.
+(global-set-key (kbd "C-c f") 'font-lock-ensure)
 (global-unset-key (kbd "s-q"))
 (global-unset-key (kbd "s-w"))
 (global-unset-key (kbd "s-k"))
