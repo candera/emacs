@@ -102,6 +102,7 @@
 (defun setup-org-agenda-mode ()
   ;; I always type this instead of C-c C-t
   (define-key org-agenda-mode-map (kbd "C-c t") 'org-agenda-todo)
+  (define-key org-agenda-mode-map (kbd "C-c s") 'candera/org-agenda-cycle-todo-sort-strategy)
   (display-line-numbers-mode 0))
 
 (use-package org
@@ -188,6 +189,41 @@
         (todo priority-down category-keep)
         (tags priority-down category-keep)
         (search category-keep)))
+
+;; `org-agenda-sorting-strategy' is a static defcustom -- there's no
+;; built-in way to cycle through alternate sort orders from the agenda
+;; buffer itself. This adds one for the `todo' entry (the strategy used
+;; by TODO-type agenda views, e.g. `org-todo-list' and the `alltodo'
+;; custom command above), bound to `C-c s' in `setup-org-agenda-mode'
+;; below.
+(defvar candera/org-agenda-todo-sort-strategies
+  '(("Priority" . (todo priority-down category-keep))
+    ("Category, then priority, then status, then title" . (todo category-up priority-down todo-state-down alpha-up))
+    ("Title" . (todo alpha-up)))
+  "Named sorting strategies `candera/org-agenda-cycle-todo-sort-strategy' cycles through.
+Each cdr replaces the `todo' entry of `org-agenda-sorting-strategy'.")
+
+(defvar candera/org-agenda-todo-sort-index 0
+  "Index into `candera/org-agenda-todo-sort-strategies' of the strategy
+currently in effect for TODO-type agenda views.")
+
+(defun candera/org-agenda-cycle-todo-sort-strategy ()
+  "Cycle the sort order of the current TODO-type agenda view.
+`org-agenda-sorting-strategy' is a single global setting, not
+per-buffer, so this changes the `todo' entry for all TODO-type agenda
+views, not just the current buffer -- same as editing the variable by
+hand would."
+  (interactive)
+  (setq candera/org-agenda-todo-sort-index
+        (mod (1+ candera/org-agenda-todo-sort-index)
+             (length candera/org-agenda-todo-sort-strategies)))
+  (let* ((entry (nth candera/org-agenda-todo-sort-index candera/org-agenda-todo-sort-strategies))
+         (name (car entry))
+         (strategy (cdr entry)))
+    (setq org-agenda-sorting-strategy
+          (cons strategy (assq-delete-all 'todo (copy-sequence org-agenda-sorting-strategy))))
+    (org-agenda-redo)
+    (message "Todo sort: %s" name)))
 
 (setq org-agenda-custom-commands
       '(("A" "Active projects" alltodo ""
