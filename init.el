@@ -6061,9 +6061,46 @@ this long and rechecking avoids that -- see
                             (not (candera/agent-shell--buffer-focused-p buffer)))
                    (candera/agent-shell-notify "Claude Code" event-message buffer)))))))))))
 
+  ;; `claude-code-ide-stop' only tears down the Emacs-side terminal
+  ;; buffer/instance. It has no effect on a session the CLI itself tracks
+  ;; as a background session (started with `claude --bg', or promoted to
+  ;; one) -- that bookkeeping persists even after the buffer that started
+  ;; it is gone. When such a session happens to be the most recent
+  ;; conversation for a directory, `claude -c' (what
+  ;; `claude-code-ide-continue' runs under the hood) refuses to resume it
+  ;; in a new foreground terminal, printing something like:
+  ;;   Session <id> is running as a background session (<id>). Run
+  ;;   claude attach <id> to open it, or claude stop <id> first to
+  ;;   resume it here.
+  ;; so clear any such claims for DIR before continuing.
+  (defun candera/claude-code-ide--background-session-ids-for-cwd (dir)
+    "Return CLI-tracked background-session ids whose cwd is DIR."
+    (let* ((expanded (expand-file-name dir))
+           (output (with-temp-buffer
+                     (call-process claude-code-ide-cli-path nil t nil "agents" "--json")
+                     (buffer-string)))
+           (sessions (ignore-errors
+                       (let ((json-object-type 'alist)
+                             (json-array-type 'list))
+                         (json-read-from-string output)))))
+      (delq nil
+            (mapcar (lambda (s)
+                      (when (and (equal (alist-get 'kind s) "background")
+                                 (alist-get 'cwd s)
+                                 (equal (expand-file-name (alist-get 'cwd s)) expanded))
+                        (alist-get 'id s)))
+                    sessions))))
+
+  (defun candera/claude-code-ide--stop-background-sessions-for-cwd (dir)
+    "Stop any CLI-tracked background Claude sessions rooted at DIR."
+    (dolist (id (candera/claude-code-ide--background-session-ids-for-cwd dir))
+      (call-process claude-code-ide-cli-path nil nil nil "stop" id)))
+
   ;; Bound as "u" in `claude-code-ide-menu' below. Use this when Claude
   ;; reports a CLI update is available: it swaps the current session onto a
-  ;; fresh CLI process without losing the conversation.
+  ;; fresh CLI process without losing the conversation. Also fixes the
+  ;; "running as a background session" resume failure above, since it
+  ;; clears any such claim before continuing.
   (defun candera/claude-code-ide-continue-and-stop ()
     "Restart the current Claude Code session onto a fresh CLI process.
 Stops the current instance and immediately starts a new one that
@@ -6076,11 +6113,15 @@ skips the prompt. `default-directory' is captured up front because
 `claude-code-ide-stop' kills the current (terminal) buffer, which
 would otherwise leave the following `claude-code-ide-continue' call to
 resolve whatever buffer the window falls back to, rather than this
-session's actual project."
+session's actual project. Also releases any CLI-level background
+session claimed for the same directory, which would otherwise cause
+the following continue to fail (see
+`candera/claude-code-ide--stop-background-sessions-for-cwd')."
     (interactive)
     (let ((default-directory (claude-code-ide--get-working-directory))
           (current-prefix-arg nil))
       (claude-code-ide-stop)
+      (candera/claude-code-ide--stop-background-sessions-for-cwd default-directory)
       (claude-code-ide-continue)))
 
   ;; `claude-code-ide-menu' is defined in the autoloaded
