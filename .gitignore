@@ -1,5 +1,7 @@
 *.elc
 *~
+# Emacs auto-save files; leading # escaped, or the line is a comment
+\#*#
 nxhtml/etc/schema/xhtml-loader.rnc
 repl-port
 /.agent-shell/
