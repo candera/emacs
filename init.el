@@ -5951,7 +5951,6 @@ most recently fired notification."
   (claude-code-ide-terminal-backend 'ghostel)
   ;; Start conservatively: Claude otherwise may evaluate Elisp directly.
   (claude-code-ide-enable-execute-code nil)
-  (claude-code-ide--toggle-use-side-window nil)
   :bind
   ("C-c C-'" . claude-code-ide-menu)
   :config
