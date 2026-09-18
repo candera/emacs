@@ -6462,6 +6462,241 @@ message."
 
 (setq repeat-exit-timeout 3) ;; exit after 3 seconds of inactivity
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; desktop - manual save/restore of frame and window configuration
+;;
+;; desktop-save-mode is intentionally left off, so nothing happens
+;; automatically on exit or startup. Use C-c w s / C-c w r to save
+;; and restore explicitly.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun candera/claude-code-ide--session-frame-name (session)
+  "Return the name of the frame displaying SESSION's buffer, or nil."
+  (when-let* ((buffer (claude-code-ide-mcp-session-buffer session))
+              (window (get-buffer-window buffer t)))
+    (frame-parameter (window-frame window) 'name)))
+
+(defun candera/claude-code-ide--live-sessions ()
+  "Return a plist (:dir DIR :frame FRAME-NAME) per live claude-code-ide session.
+FRAME-NAME is the name of the frame whose window shows the session, or
+nil when it isn't displayed anywhere -- frame names survive a restart
+now that `frameset-filter-alist' keeps them (see the `desktop' block
+below), which makes them a usable key for putting a session back where
+it was.
+
+One entry per project directory, preferring that directory's most
+recently used session.  Nil when claude-code-ide has not been loaded --
+`use-package' defers it, so a session that never touched it has no
+sessions to report either."
+  (let (sessions entries seen)
+    (when (boundp 'claude-code-ide-mcp--sessions)
+      (maphash
+       (lambda (_id session)
+         (when (buffer-live-p (claude-code-ide-mcp-session-buffer session))
+           (push session sessions)))
+       claude-code-ide-mcp--sessions))
+    (dolist (session (sort sessions
+                           (lambda (a b)
+                             (> (or (claude-code-ide-mcp-session-last-used a) 0)
+                                (or (claude-code-ide-mcp-session-last-used b) 0)))))
+      (let ((dir (claude-code-ide-mcp-session-project-dir session)))
+        (unless (member dir seen)
+          (push dir seen)
+          (push (list :dir dir
+                      :frame (candera/claude-code-ide--session-frame-name session))
+                entries))))
+    (nreverse entries)))
+
+(defun candera/claude-code-ide-save-sessions ()
+  "Persist live claude-code-ide sessions, and their frames, to disk.
+Restored by `candera/claude-code-ide-restore-sessions', which continues
+one instance per directory -- if a project had several concurrent named
+instances open, they collapse to a single continued instance on restore."
+  (let ((file (expand-file-name "claude-code-ide-sessions.el" desktop-dirname))
+        (sessions (candera/claude-code-ide--live-sessions)))
+    (with-temp-file file
+      (prin1 sessions (current-buffer)))))
+
+(defun candera/claude-code-ide--frame-named (name)
+  "Return the live frame named NAME, or nil."
+  (when name
+    (seq-find (lambda (frame) (equal name (frame-parameter frame 'name)))
+              (frame-list))))
+
+(defun candera/claude-code-ide-restore-sessions ()
+  "Continue a claude-code-ide session in each directory that
+`candera/claude-code-ide-save-sessions' recorded.
+
+Starting each session spawns a CLI process and runs a multi-second
+stabilization delay (see `claude-code-ide--start-session'), so this is
+run from an idle timer rather than inline in the command that
+restores the desktop -- otherwise that command appears to hang with
+no feedback, inviting a `keyboard-quit' that silently aborts the
+restore before it logs anything or shows a window.
+
+`claude-code-ide--start-session' prompts in the minibuffer for an
+instance name whenever a live session already exists for the target
+directory (e.g. one restored earlier in this same loop, or one left
+over from before the restart) -- an unattended restore must never
+block on that, so `claude-code-ide--read-instance-name' is shadowed
+to always decline and accept the plain, uniquified instance name
+instead (see the buffer-name uniquification `claude-code-ide--start-session'
+already does for exactly this case).
+
+`use-package' defers claude-code-ide (it declares `:bind' and no
+`:demand'), so on a freshly started Emacs the package is not loaded
+when the desktop is restored: this must `require' it rather than test
+`featurep', which silently restores nothing at all.
+
+Each session is created with its recorded frame selected, because
+`claude-code-ide--display-buffer-in-side-window' puts the terminal in a
+side window of whichever frame is selected at the time.
+
+Returns the number of sessions actually started, which
+`candera/desktop--finish-restore' reports."
+  (interactive)
+  (let ((file (expand-file-name "claude-code-ide-sessions.el" desktop-dirname))
+        (started 0))
+    (if (not (file-exists-p file))
+        (progn (message "claude-code-ide: nothing to restore, no %s" file) 0)
+      (let ((sessions (with-temp-buffer
+                        (insert-file-contents file)
+                        (read (current-buffer)))))
+        (if (not sessions)
+            (progn (message "claude-code-ide: nothing to restore, no sessions were saved") 0)
+          (message "claude-code-ide: restoring %d session(s)..." (length sessions))
+          (require 'claude-code-ide)
+          (dolist (entry sessions)
+            (let* ((dir (and (consp entry) (plist-get entry :dir)))
+                   (frame-name (and (consp entry) (plist-get entry :frame)))
+                   (frame (candera/claude-code-ide--frame-named frame-name)))
+              (cond
+               ((null dir)
+                (message "claude-code-ide: ignoring unrecognized saved entry %S" entry))
+               ((not (file-directory-p dir))
+                (message "claude-code-ide: skipping restore, directory %s is gone" dir))
+               (t
+                (when (and frame-name (not frame))
+                  (message "claude-code-ide: frame %S is gone, restoring %s into the current frame"
+                           frame-name dir))
+                (condition-case err
+                    ;; `default-directory' is bound inside the frame
+                    ;; switch, not outside it: selecting a frame makes
+                    ;; that frame's buffer current, and a `let' on a
+                    ;; buffer-local binds it only in the buffer that was
+                    ;; current when the `let' ran.
+                    (progn
+                      (with-selected-frame (or frame (selected-frame))
+                        (let ((default-directory dir))
+                          (cl-letf (((symbol-function 'claude-code-ide--read-instance-name)
+                                     (lambda (&rest _) nil)))
+                            (claude-code-ide-continue))))
+                      (setq started (1+ started)))
+                  ((error quit)
+                   (message "claude-code-ide: failed to restore session in %s: %S" dir err)))))))
+          started)))))
+
+(defun candera/desktop--finish-restore ()
+  "Restore claude-code-ide sessions, then announce the restore is complete.
+This is the last step of `candera/desktop-restore-window-config', which
+schedules it on a timer: spawning each session takes a couple of
+seconds, so until this message appears the arrangement is still
+settling and interrupting will leave it half-restored."
+  (let ((started 'aborted))
+    (unwind-protect
+        (setq started (candera/claude-code-ide-restore-sessions))
+      (message "Desktop restore complete -- %s"
+               (cond
+                ((eq started 'aborted) "claude-code-ide sessions did not finish restoring")
+                ((or (null started) (zerop started)) "no claude-code-ide sessions to restore")
+                (t (format "%d claude-code-ide session%s restored"
+                           started (if (= started 1) "" "s"))))))))
+
+(defun candera/org-agenda-desktop-save-buffer (_desktop-dirname)
+  "Return this org agenda buffer's desktop data: the command that rebuilds it."
+  org-agenda-redo-command)
+
+(defun candera/org-agenda-desktop-restore-buffer (_file-name buffer-name misc)
+  "Rebuild org agenda buffer BUFFER-NAME by re-running MISC.
+MISC is the `org-agenda-redo-command' recorded by
+`candera/org-agenda-desktop-save-buffer'.  Agenda buffers visit no
+file, so desktop.el saves them only via this handler pair.
+
+The agenda is built with its window handling neutralized:
+`org-agenda-window-setup' is `reorganize-frame' here, which would tear
+up the very window arrangement `desktop-read' is in the middle of
+restoring.  Producing only the buffer is enough -- buffers are created
+before `desktop-restore-frameset' runs, so the restored frameset is
+what puts this one back in its window."
+  (when misc
+    (require 'org-agenda)
+    (save-window-excursion
+      (let ((org-agenda-window-setup 'current-window)
+            ;; `org-agenda--get-buffer-name' consults this first.
+            ;; Binding `org-agenda-buffer-name' instead does nothing,
+            ;; because `org-agenda-prepare' overwrites that one.
+            (org-agenda-buffer-tmp-name buffer-name)
+            ;; The saved command consults `current-prefix-arg'; a stray
+            ;; prefix arg must not change which agenda gets rebuilt.
+            (current-prefix-arg nil))
+        (eval misc t)))
+    (get-buffer buffer-name)))
+
+(add-hook 'org-agenda-mode-hook
+          (lambda ()
+            (setq-local desktop-save-buffer #'candera/org-agenda-desktop-save-buffer)))
+
+(defun candera/desktop-save-window-config ()
+  "Save frame/window configuration to desktop."
+  (interactive)
+  ;; Unconditional: with claude-code-ide unloaded there are no live
+  ;; sessions, and this then records that fact rather than leaving a
+  ;; stale list behind to resurrect sessions that are long gone.
+  (candera/claude-code-ide-save-sessions)
+  (desktop-save desktop-dirname t)
+  (message "Window and frame arrangement saved to %s" desktop-dirname))
+
+(defun candera/desktop-restore-window-config ()
+  "Restore frame/window configuration from desktop."
+  (interactive)
+  ;; `unwind-protect', not a plain sequence: `desktop-read' restores
+  ;; several frames and any TRAMP buffers synchronously, which is slow
+  ;; enough to tempt an impatient `keyboard-quit' -- a quit (or any
+  ;; other non-local exit) out of `desktop-read' must not skip
+  ;; scheduling the claude-code-ide restore below.
+  (unwind-protect
+      (desktop-read desktop-dirname)
+    ;; Deferred so this command returns (and frames are visible)
+    ;; immediately, instead of blocking on claude-code-ide session
+    ;; startup -- see `candera/claude-code-ide-restore-sessions'.
+    ;; `candera/desktop--finish-restore' emits the "complete" message
+    ;; once that finishes, which is the real end of the restore.
+    (run-at-time 0 nil #'candera/desktop--finish-restore)))
+
+(use-package desktop
+  :ensure nil
+  :init
+  (setq desktop-dirname (expand-file-name "desktop/" user-emacs-directory)
+        desktop-restore-frames t
+        desktop-load-locked-desktop t
+        ;; Default excludes TRAMP (and ange-ftp) buffers from being
+        ;; saved at all, so they can never come back on restore either.
+        ;; Craig wants remote files persisted too.
+        desktop-files-not-to-save nil)
+  :config
+  ;; `name' is filtered out of saved/restored frame parameters by
+  ;; default (see `frameset-filter-alist' in frameset.el) because frame
+  ;; names are normally auto-generated. Craig assigns them explicitly
+  ;; for navigation, so keep the parameter in both directions.
+  (push '(name . nil) frameset-filter-alist)
+  (add-to-list 'desktop-buffer-mode-handlers
+               '(org-agenda-mode . candera/org-agenda-desktop-restore-buffer))
+  :bind
+  (("C-c w s" . candera/desktop-save-window-config)
+   ("C-c w r" . candera/desktop-restore-window-config)))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
 ;; ;; Difftron
