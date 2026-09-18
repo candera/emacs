@@ -4779,6 +4779,8 @@ so we can check to see if flyspell is just lacking a definition."
 	      ("/" . elfeed-search-set-filter)
 	      ("s" . my-elfeed-toggle-sort-order))
   :config
+  (setq elfeed-search-filter "@6months +unread -washpost")
+  (setq elfeed-sort-order "descending")
   (add-hook 'elfeed-show-mode-hook
             (lambda ()
               (display-line-numbers-mode -1))))
