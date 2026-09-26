@@ -1421,6 +1421,44 @@ would otherwise be written out as one, which is why the test here is
               (image/tiff . "tiff")
               (image/gif  . "gif"))))
 
+(defun candera/clipboard-image-file-name (image &optional dir)
+  "Read a file name for IMAGE, defaulting to a timestamped name in DIR.
+DIR defaults to `default-directory'. IMAGE is the (DATA . EXTENSION) pair
+from `candera/clipboard-image'; only the extension is used here, to build
+a default that the prompt accepts with a bare RET."
+  (let* ((dir (or dir default-directory))
+         (default (format-time-string (concat "%Y%m%d-%H%M%S." (cdr image)))))
+    (read-file-name "Save clipboard image as: "
+                    dir (expand-file-name default dir) nil default)))
+
+(defun candera/write-clipboard-image (filename image)
+  "Write IMAGE to FILENAME, asking first if that file already exists.
+Returns the expanded file name. IMAGE is the (DATA . EXTENSION) pair from
+`candera/clipboard-image'."
+  (let* ((file (expand-file-name filename))
+         (dir (file-name-directory file)))
+    (when (and (file-exists-p file)
+               (not (y-or-n-p (format "%s exists.  Overwrite? "
+                                      (abbreviate-file-name file)))))
+      (user-error "Aborted"))
+    ;; Typing a path into a directory that isn't there yet is an easy
+    ;; thing to do at the prompt -- `images/foo.png' next to a document,
+    ;; say -- and `with-temp-file' answers that with a bare "Opening
+    ;; output file: No such file or directory". Ask, the way saving a new
+    ;; file in Emacs does.
+    (unless (file-directory-p dir)
+      (unless (y-or-n-p (format "Directory %s does not exist.  Create it? "
+                                (abbreviate-file-name dir)))
+        (user-error "Aborted"))
+      (make-directory dir t))
+    ;; `coding-system-for-write' plus a unibyte temp buffer: DATA is raw
+    ;; bytes, and any coding conversion here silently corrupts the image.
+    (let ((coding-system-for-write 'binary))
+      (with-temp-file file
+        (set-buffer-multibyte nil)
+        (insert (car image))))
+    file))
+
 (defun candera/dired-paste-image (filename &optional image)
   "Save the clipboard image into the current directory as FILENAME.
 Interactively, offers a timestamped name in whatever directory Dired is
@@ -1434,34 +1472,23 @@ document right afterwards. IMAGE is the (DATA . EXTENSION) pair from
 passes it along so the clipboard isn't fetched twice, which matters
 when it holds a few megabytes of screenshot.
 
-In an Org buffer use `yank-media' instead -- Org registers its own
-handler for images and will file and link the image itself, per
-`org-yank-image-save-method'."
+In an Org buffer use `candera/org-paste-image', on `C-y', which asks the
+same question and inserts the link instead of leaving it on the kill
+ring."
   (interactive
-   (let* ((image (or (candera/clipboard-image)
-                     (user-error "No image on the clipboard")))
-          (dir (if (derived-mode-p 'dired-mode)
-                   (dired-current-directory)
-                 default-directory))
-          (default (format-time-string (concat "%Y%m%d-%H%M%S." (cdr image)))))
-     (list (read-file-name "Save clipboard image as: "
-                           dir (expand-file-name default dir) nil default)
+   (let ((image (or (candera/clipboard-image)
+                    (user-error "No image on the clipboard"))))
+     (list (candera/clipboard-image-file-name
+            image
+            (if (derived-mode-p 'dired-mode)
+                (dired-current-directory)
+              default-directory))
            image)))
   (let* ((image (or image
                     (candera/clipboard-image)
                     (user-error "No image on the clipboard")))
-         (file (expand-file-name filename))
+         (file (candera/write-clipboard-image filename image))
          (link (format "[[file:%s]]" (abbreviate-file-name file))))
-    (when (and (file-exists-p file)
-               (not (y-or-n-p (format "%s exists.  Overwrite? "
-                                      (abbreviate-file-name file)))))
-      (user-error "Aborted"))
-    ;; `coding-system-for-write' plus a unibyte temp buffer: DATA is raw
-    ;; bytes, and any coding conversion here silently corrupts the image.
-    (let ((coding-system-for-write 'binary))
-      (with-temp-file file
-        (set-buffer-multibyte nil)
-        (insert (car image))))
     (when (derived-mode-p 'dired-mode)
       (revert-buffer)
       (ignore-errors (dired-goto-file file)))
@@ -1471,6 +1498,64 @@ handler for images and will file and link the image itself, per
              (file-size-human-readable
               (file-attribute-size (file-attributes file)))
              link)))
+
+(defun candera/org-paste-image (filename &optional image)
+  "Save the clipboard image as FILENAME and insert an Org link to it.
+Interactively, asks exactly what `candera/dired-paste-image' asks: a
+timestamped default in the directory holding the current file, which a
+bare RET accepts and completion can be used to change.
+
+The link is built by `org-link-make-string-for-buffer', so it follows
+`org-link-file-path-type'. At that option's `adaptive' default an image
+saved under the document's own directory gets a relative path, and so
+keeps working if the directory is moved.
+
+The link is inserted but not rendered: `org-startup-with-inline-images'
+is off here, and `C-c C-x C-v' toggles images when they're wanted.
+
+This deliberately avoids `yank-media'. Org's handler saves as
+`org-yank-image-save-method' says, and that defaults to `attach', which
+files the image in the heading's attachment directory and stamps an ID
+property onto the heading as a side effect; its prompt,
+`org-yank-image-read-filename', also asks for a bare basename with no
+default. IMAGE is the (DATA . EXTENSION) pair from
+`candera/clipboard-image', passed along so a multi-megabyte screenshot
+isn't pulled off the pasteboard twice."
+  (interactive
+   (let ((image (or (candera/clipboard-image)
+                    (user-error "No image on the clipboard"))))
+     (list (candera/clipboard-image-file-name image) image)))
+  (let* ((image (or image
+                    (candera/clipboard-image)
+                    (user-error "No image on the clipboard")))
+         (file (candera/write-clipboard-image filename image)))
+    (insert (org-link-make-string-for-buffer (concat "file:" file)))
+    (message "Wrote %s (%s)"
+             (abbreviate-file-name file)
+             (file-size-human-readable
+              (file-attribute-size (file-attributes file))))))
+
+(defun candera/org-yank (&optional arg)
+  "Paste, saving and linking the clipboard image if there is one.
+With an image on the clipboard this runs `candera/org-paste-image';
+otherwise ARG goes straight to `org-yank', so ordinary yanks and Org's
+special handling of yanked subtrees are untouched.
+
+This is cheap enough to sit on `C-y': the four `gui-get-selection' probes
+`candera/clipboard-image' makes came back in under a millisecond apiece
+whether the clipboard held text, a PNG, or nothing. It also doesn't
+hijack `C-y' for long, because `select-enable-clipboard' is on -- any
+kill inside Emacs replaces the image on the pasteboard, so the image
+branch is taken only while copying one really was the most recent thing
+that happened. `C-g' at the prompt backs out either way."
+  (interactive "P")
+  (let ((image (candera/clipboard-image)))
+    (if image
+        (candera/org-paste-image (candera/clipboard-image-file-name image) image)
+      (org-yank arg))))
+
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-y") 'candera/org-yank))
 
 (add-hook 'dired-mode-hook
           (lambda ()
