@@ -1396,10 +1396,87 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;   (interactive)
 ;;   (emms-play-file (dired-get-filename)))
 
+(defun candera/clipboard-image ()
+  "Return (DATA . EXTENSION) for an image on the clipboard, or nil.
+PNG first: it is what macOS screenshots and most applications put on
+the pasteboard, and it needs no re-encoding on the way out.
+
+`gui-get-selection' hands back a unibyte string of the raw bytes, so
+DATA can be written straight to a file. Two things it does NOT do are
+worth knowing: it answers with a zero-length string rather than nil for
+an image type the pasteboard isn't carrying, and with plain text on the
+clipboard an `image/png' request has also been seen to come back as a
+short *multibyte* string of that text. Neither is an image, and both
+would otherwise be written out as one, which is why the test here is
+`unibyte and non-empty' rather than just non-nil."
+  (seq-some (lambda (entry)
+              (let ((data (ignore-errors
+                            (gui-get-selection 'CLIPBOARD (car entry)))))
+                (and (stringp data)
+                     (not (string-empty-p data))
+                     (not (multibyte-string-p data))
+                     (cons data (cdr entry)))))
+            '((image/png  . "png")
+              (image/jpeg . "jpg")
+              (image/tiff . "tiff")
+              (image/gif  . "gif"))))
+
+(defun candera/dired-paste-image (filename &optional image)
+  "Save the clipboard image into the current directory as FILENAME.
+Interactively, offers a timestamped name in whatever directory Dired is
+showing (the one at point when inside an inserted subdir), falling back
+to `default-directory' outside Dired.
+
+Refreshes the Dired listing, leaves point on the new file, and puts an
+Org link to it on the kill ring, so a plain `yank' drops it into a
+document right afterwards. IMAGE is the (DATA . EXTENSION) pair from
+`candera/clipboard-image'; the interactive spec reads it once and
+passes it along so the clipboard isn't fetched twice, which matters
+when it holds a few megabytes of screenshot.
+
+In an Org buffer use `yank-media' instead -- Org registers its own
+handler for images and will file and link the image itself, per
+`org-yank-image-save-method'."
+  (interactive
+   (let* ((image (or (candera/clipboard-image)
+                     (user-error "No image on the clipboard")))
+          (dir (if (derived-mode-p 'dired-mode)
+                   (dired-current-directory)
+                 default-directory))
+          (default (format-time-string (concat "%Y%m%d-%H%M%S." (cdr image)))))
+     (list (read-file-name "Save clipboard image as: "
+                           dir (expand-file-name default dir) nil default)
+           image)))
+  (let* ((image (or image
+                    (candera/clipboard-image)
+                    (user-error "No image on the clipboard")))
+         (file (expand-file-name filename))
+         (link (format "[[file:%s]]" (abbreviate-file-name file))))
+    (when (and (file-exists-p file)
+               (not (y-or-n-p (format "%s exists.  Overwrite? "
+                                      (abbreviate-file-name file)))))
+      (user-error "Aborted"))
+    ;; `coding-system-for-write' plus a unibyte temp buffer: DATA is raw
+    ;; bytes, and any coding conversion here silently corrupts the image.
+    (let ((coding-system-for-write 'binary))
+      (with-temp-file file
+        (set-buffer-multibyte nil)
+        (insert (car image))))
+    (when (derived-mode-p 'dired-mode)
+      (revert-buffer)
+      (ignore-errors (dired-goto-file file)))
+    (kill-new link)
+    (message "Wrote %s (%s); %s on the kill ring"
+             (abbreviate-file-name file)
+             (file-size-human-readable
+              (file-attribute-size (file-attributes file)))
+             link)))
+
 (add-hook 'dired-mode-hook
           (lambda ()
             (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)
 	    (define-key dired-mode-map (kbd "C-c C-c") 'wdired-change-to-wdired-mode)
+	    (define-key dired-mode-map (kbd "C-c C-y") 'candera/dired-paste-image)
             ;; (define-key dired-mode-map (kbd "M-p") 'emms-dired-play-file)
 	    ))
 
