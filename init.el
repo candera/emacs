@@ -116,6 +116,9 @@
   ;; (setq org-clock-display-default-range 'untilnow)
   ;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
   (setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
+
+  ;; Display inline images 
+  (setq org-startup-with-link-previews t)
  
   :hook
   ((org-mode . setup-org-mode)
@@ -6323,12 +6326,33 @@ the following continue to fail (see
       (candera/claude-code-ide--stop-background-sessions-for-cwd default-directory)
       (claude-code-ide-continue)))
 
+  ;; Bound as "f" in `claude-code-ide-menu' below. Use this to abandon the
+  ;; current conversation and start over with a clean slate -- e.g. moving
+  ;; on to a new task within the same project. Same effect as `q' (stop)
+  ;; followed by `s' (start), but as one command, and it also clears any
+  ;; CLI-tracked background session for DIR so the fresh start can't be
+  ;; blocked the way `candera/claude-code-ide-continue-and-stop' guards
+  ;; against for `continue'.
+  (defun candera/claude-code-ide-restart-fresh ()
+    "Stop the current Claude Code session and start a brand new one.
+Unlike `candera/claude-code-ide-continue-and-stop', the new session
+does not continue the old conversation -- it starts fresh, for
+beginning a new task in the same project with a clean context."
+    (interactive)
+    (let ((default-directory (claude-code-ide--get-working-directory))
+          (current-prefix-arg nil))
+      (claude-code-ide-stop)
+      (candera/claude-code-ide--stop-background-sessions-for-cwd default-directory)
+      (claude-code-ide)))
+
   ;; `claude-code-ide-menu' is defined in the autoloaded
   ;; claude-code-ide-transient.el, not loaded until first invoked, so defer
   ;; this append until then rather than forcing it to load early here.
   (with-eval-after-load 'claude-code-ide-transient
     (transient-append-suffix 'claude-code-ide-menu "q"
-      '("u" "Continue + stop old (update)" candera/claude-code-ide-continue-and-stop)))
+      '("u" "Continue + stop old (update)" candera/claude-code-ide-continue-and-stop))
+    (transient-append-suffix 'claude-code-ide-menu "u"
+      '("f" "Restart fresh (new task)" candera/claude-code-ide-restart-fresh)))
 
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
 ;; (straight-use-package
