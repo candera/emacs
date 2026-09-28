@@ -1515,10 +1515,10 @@ Interactively, asks exactly what `candera/dired-paste-image' asks: a
 timestamped default in the directory holding the current file, which a
 bare RET accepts and completion can be used to change.
 
-The link is built by `org-link-make-string-for-buffer', so it follows
-`org-link-file-path-type'. At that option's `adaptive' default an image
-saved under the document's own directory gets a relative path, and so
-keeps working if the directory is moved.
+An image saved under the document's own directory gets an explicitly
+relative link, like file:./foo.png, and so keeps working if the directory
+is moved. Anywhere else, the link is built by
+`org-link-make-string-for-buffer' and follows `org-link-file-path-type'.
 
 The link is inserted but not rendered: `org-startup-with-inline-images'
 is off here, and `C-c C-x C-v' toggles images when they're wanted.
@@ -1539,7 +1539,12 @@ isn't pulled off the pasteboard twice."
                     (candera/clipboard-image)
                     (user-error "No image on the clipboard")))
          (file (candera/write-clipboard-image filename image)))
-    (insert (org-link-make-string-for-buffer (concat "file:" file)))
+    (insert (if (file-in-directory-p file default-directory)
+                ;; `org-link-make-string-for-buffer' would strip a
+                ;; leading "./", so build this one by hand.
+                (org-link-make-string
+                 (concat "file:./" (file-relative-name file default-directory)))
+              (org-link-make-string-for-buffer (concat "file:" file))))
     (message "Wrote %s (%s)"
              (abbreviate-file-name file)
              (file-size-human-readable
