@@ -889,8 +889,15 @@ width to 60% frame width, or 85, whichever is larger."
 ;; the visible region. That's why an org src block edited off-screen (or
 ;; one whose containing #+begin_src/#+end_src match spans past the edit)
 ;; stays stale until scrolled into view. `font-lock-ensure' forces it
-;; synchronously instead.
-(global-set-key (kbd "C-c f") 'font-lock-ensure)
+;; synchronously instead. It isn't a command, though, and under jit-lock
+;; it skips text already marked `fontified', so flush first.
+(defun candera/refontify-buffer ()
+  "Synchronously refontify the whole buffer."
+  (interactive)
+  (font-lock-flush)
+  (font-lock-ensure))
+
+(global-set-key (kbd "C-c f") 'candera/refontify-buffer)
 (global-unset-key (kbd "s-q"))
 (global-unset-key (kbd "s-w"))
 (global-unset-key (kbd "s-k"))
