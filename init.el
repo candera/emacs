@@ -117,8 +117,9 @@
   ;; This requests logging when going from TODO to INPROGRESS and from INPROGRESS to DONE
   (setq org-todo-keywords (quote ((sequence "TODO(t!)" "INPROGRESS(i!)" "PAUSED(p@)" "BLOCKED(b@)" "DONE(d!)"))))
 
-  ;; Display inline images 
-  (setq org-startup-with-link-previews t)
+  ;; Don't render inline images on open (large ones were crashing Emacs);
+  ;; C-c C-x C-v previews them on demand.
+  (setq org-startup-with-link-previews nil)
  
   :hook
   ((org-mode . setup-org-mode)
@@ -1520,8 +1521,9 @@ relative link, like file:./foo.png, and so keeps working if the directory
 is moved. Anywhere else, the link is built by
 `org-link-make-string-for-buffer' and follows `org-link-file-path-type'.
 
-The link is inserted but not rendered: `org-startup-with-inline-images'
-is off here, and `C-c C-x C-v' toggles images when they're wanted.
+The link is inserted but not rendered: `org-startup-with-link-previews'
+is off here, and `C-c C-x C-v' (`org-link-preview') previews images when
+they're wanted.
 
 This deliberately avoids `yank-media'. Org's handler saves as
 `org-yank-image-save-method' says, and that defaults to `attach', which
