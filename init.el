@@ -6670,6 +6670,11 @@ message."
 ;; automatically on exit or startup. Use C-c w s / C-c w r to save
 ;; and restore explicitly.
 ;;
+;; Separately, an idle timer autosaves to its own directory
+;; (`candera/desktop-autosave-dir') so a crash doesn't lose the
+;; arrangement; C-c w a restores from it.  It never touches the
+;; explicit save.
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun candera/claude-code-ide--session-frame-name (session)
@@ -6709,12 +6714,13 @@ sessions to report either."
                 entries))))
     (nreverse entries)))
 
-(defun candera/claude-code-ide-save-sessions ()
+(defun candera/claude-code-ide-save-sessions (&optional dir)
   "Persist live claude-code-ide sessions, and their frames, to disk.
+Written to DIR, default `desktop-dirname'.
 Restored by `candera/claude-code-ide-restore-sessions', which continues
 one instance per directory -- if a project had several concurrent named
 instances open, they collapse to a single continued instance on restore."
-  (let ((file (expand-file-name "claude-code-ide-sessions.el" desktop-dirname))
+  (let ((file (expand-file-name "claude-code-ide-sessions.el" (or dir desktop-dirname)))
         (sessions (candera/claude-code-ide--live-sessions)))
     (with-temp-file file
       (prin1 sessions (current-buffer)))))
@@ -6725,9 +6731,10 @@ instances open, they collapse to a single continued instance on restore."
     (seq-find (lambda (frame) (equal name (frame-parameter frame 'name)))
               (frame-list))))
 
-(defun candera/claude-code-ide-restore-sessions ()
+(defun candera/claude-code-ide-restore-sessions (&optional dir)
   "Continue a claude-code-ide session in each directory that
-`candera/claude-code-ide-save-sessions' recorded.
+`candera/claude-code-ide-save-sessions' recorded in DIR (default
+`desktop-dirname').
 
 Starting each session spawns a CLI process and runs a multi-second
 stabilization delay (see `claude-code-ide--start-session'), so this is
@@ -6757,7 +6764,7 @@ side window of whichever frame is selected at the time.
 Returns the number of sessions actually started, which
 `candera/desktop--finish-restore' reports."
   (interactive)
-  (let ((file (expand-file-name "claude-code-ide-sessions.el" desktop-dirname))
+  (let ((file (expand-file-name "claude-code-ide-sessions.el" (or dir desktop-dirname)))
         (started 0))
     (if (not (file-exists-p file))
         (progn (message "claude-code-ide: nothing to restore, no %s" file) 0)
@@ -6798,15 +6805,16 @@ Returns the number of sessions actually started, which
                    (message "claude-code-ide: failed to restore session in %s: %S" dir err)))))))
           started)))))
 
-(defun candera/desktop--finish-restore ()
+(defun candera/desktop--finish-restore (&optional dir)
   "Restore claude-code-ide sessions, then announce the restore is complete.
+Sessions are read from DIR, default `desktop-dirname'.
 This is the last step of `candera/desktop-restore-window-config', which
 schedules it on a timer: spawning each session takes a couple of
 seconds, so until this message appears the arrangement is still
 settling and interrupting will leave it half-restored."
   (let ((started 'aborted))
     (unwind-protect
-        (setq started (candera/claude-code-ide-restore-sessions))
+        (setq started (candera/claude-code-ide-restore-sessions dir))
       (message "Desktop restore complete -- %s"
                (cond
                 ((eq started 'aborted) "claude-code-ide sessions did not finish restoring")
@@ -6875,6 +6883,85 @@ what puts this one back in its window."
     ;; once that finishes, which is the real end of the restore.
     (run-at-time 0 nil #'candera/desktop--finish-restore)))
 
+;; Autosave.  This must not disturb the explicit save/restore state:
+;; `desktop-save' and `desktop-read' both `setq' `desktop-dirname' (and
+;; `desktop-file-modtime', `desktop-io-file-version') globally, which
+;; would silently repoint C-c w s at the autosave directory.  So both
+;; run with those rebound.
+
+(defvar candera/desktop-autosave-dir
+  (expand-file-name "desktop-autosave/" user-emacs-directory)
+  "Directory holding the idle autosave, apart from `desktop-dirname'.")
+
+(defvar candera/desktop-autosave-previous-dir
+  (expand-file-name "desktop-autosave-previous/" user-emacs-directory)
+  "The autosave that was current when this Emacs started.
+A fresh Emacs that sits idle for a minute autosaves its own (nearly
+empty) arrangement over the one a crash just left behind; the first
+autosave of a session moves that one here first.")
+
+(defvar candera/desktop-autosave-idle-seconds 60
+  "Idle time before `candera/desktop-autosave' runs.")
+
+(defvar candera/desktop-autosave--rotated nil
+  "Non-nil once this session has moved the old autosave aside.")
+
+(defvar candera/desktop-autosave--timer nil)
+
+(defun candera/desktop-autosave ()
+  "Save the frame/window arrangement to `candera/desktop-autosave-dir'.
+Silent, and never signals: this runs from an idle timer."
+  (condition-case err
+      (let* ((_ (require 'desktop))
+             (dir candera/desktop-autosave-dir)
+             (inhibit-message t)
+             (message-log-max nil)
+             ;; Rebound, not just read: see the block comment above.
+             (desktop-dirname dir)
+             ;; Must equal the file's real modtime, or `desktop-save'
+             ;; asks a `yes-or-no-p' -- fatal in an idle timer.
+             (desktop-file-modtime
+              (file-attribute-modification-time
+               (file-attributes (desktop-full-file-name dir))))
+             (desktop-io-file-version nil))
+        (unless candera/desktop-autosave--rotated
+          (setq candera/desktop-autosave--rotated t)
+          (when (file-exists-p (desktop-full-file-name dir))
+            (when (file-directory-p candera/desktop-autosave-previous-dir)
+              (delete-directory candera/desktop-autosave-previous-dir t))
+            (copy-directory dir candera/desktop-autosave-previous-dir t t t)))
+        (make-directory dir t)
+        (candera/claude-code-ide-save-sessions dir)
+        ;; RELEASE: the autosave is never a desktop this Emacs "owns",
+        ;; so leave no lock file behind to trip the next restore.
+        (desktop-save dir t t))
+    (error (message "Desktop autosave failed: %S" err))))
+
+(when (timerp candera/desktop-autosave--timer)
+  (cancel-timer candera/desktop-autosave--timer))
+(setq candera/desktop-autosave--timer
+      (run-with-idle-timer candera/desktop-autosave-idle-seconds t
+                           #'candera/desktop-autosave))
+
+(defun candera/desktop-restore-autosave (&optional previous)
+  "Restore the arrangement from the idle autosave, e.g. after a crash.
+With prefix arg PREVIOUS, restore the autosave that was current when
+this Emacs started instead -- for when the fresh session has already
+autosaved over the one from before the crash.  Does not change where
+`candera/desktop-save-window-config' saves."
+  (interactive "P")
+  (let ((dir (if previous
+                 candera/desktop-autosave-previous-dir
+               candera/desktop-autosave-dir)))
+    (require 'desktop)
+    (unless (file-exists-p (desktop-full-file-name dir))
+      (user-error "No autosaved desktop in %s" dir))
+    (unwind-protect
+        (let ((desktop-dirname dir)
+              (desktop-file-modtime desktop-file-modtime))
+          (desktop-read dir))
+      (run-at-time 0 nil #'candera/desktop--finish-restore dir))))
+
 (use-package desktop
   :ensure nil
   :init
@@ -6895,7 +6982,8 @@ what puts this one back in its window."
                '(org-agenda-mode . candera/org-agenda-desktop-restore-buffer))
   :bind
   (("C-c w s" . candera/desktop-save-window-config)
-   ("C-c w r" . candera/desktop-restore-window-config)))
+   ("C-c w r" . candera/desktop-restore-window-config)
+   ("C-c w a" . candera/desktop-restore-autosave)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
