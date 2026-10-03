@@ -5618,12 +5618,14 @@ navigating a logview buffer."
 (use-package ultra-scroll
   ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of package-vc-install
   :init
+  ;; scroll-margin must stay 0: ultra-scroll doesn't support a margin,
+  ;; and with tall images redisplay can't keep point N lines from both
+  ;; edges, so point bounces up and down. scroll-preserve-screen-position
+  ;; fights tall images the same way (the preserved screen row lands
+  ;; inside the image), so leave it at its default of nil.
   (setq scroll-conservatively 101 ; important!
-        scroll-margin 3 ; Scroll when we get within three lines of the top/bottom
-	scroll-preserve-screen-position t ; Scroll commands preserve cursor position
-	auto-window-vscroll t ; prevents movement and scrolling functions from automatically modifying the window's vertical scroll position when they encounter display rows taller than the window
-	scroll-error-top-bottom t ; move point to the buffer boundary before signaling a scrolling error.
-	) 
+        scroll-margin 0 ; important: scroll-margin>0 not supported by ultra-scroll
+        scroll-error-top-bottom t) ; move point to the buffer boundary before signaling a scrolling error.
   :config
   (ultra-scroll-mode 1))
 
