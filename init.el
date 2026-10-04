@@ -6327,20 +6327,24 @@ landing back in the project's default (unnamed) instance slot instead
 of being prompted for an instance name -- stopping first deregisters
 the old session, so by the time the new one is created
 `claude-code-ide--start-session' finds none left for the project and
-skips the prompt. `default-directory' is captured up front because
-`claude-code-ide-stop' kills the current (terminal) buffer, which
-would otherwise leave the following `claude-code-ide-continue' call to
-resolve whatever buffer the window falls back to, rather than this
-session's actual project. Also releases any CLI-level background
+skips the prompt. The project directory is captured up front and re-bound
+after the stop, because `claude-code-ide-stop' kills the current
+(terminal) buffer, which would otherwise leave the following
+`claude-code-ide-continue' call to resolve whatever buffer the window
+falls back to, rather than this session's actual project. Also releases any CLI-level background
 session claimed for the same directory, which would otherwise cause
 the following continue to fail (see
 `candera/claude-code-ide--stop-background-sessions-for-cwd')."
     (interactive)
-    (let ((default-directory (claude-code-ide--get-working-directory))
+    (let ((dir (claude-code-ide--get-working-directory))
           (current-prefix-arg nil))
       (claude-code-ide-stop)
-      (candera/claude-code-ide--stop-background-sessions-for-cwd default-directory)
-      (claude-code-ide-continue)))
+      ;; Bind after the stop: `default-directory' is buffer-local, so a
+      ;; binding made before killing the terminal buffer would be unwound
+      ;; in the dead buffer rather than the one the window falls back to.
+      (let ((default-directory dir))
+        (candera/claude-code-ide--stop-background-sessions-for-cwd dir)
+        (claude-code-ide-continue))))
 
   ;; Bound as "f" in `claude-code-ide-menu' below. Use this to abandon the
   ;; current conversation and start over with a clean slate -- e.g. moving
@@ -6355,11 +6359,15 @@ Unlike `candera/claude-code-ide-continue-and-stop', the new session
 does not continue the old conversation -- it starts fresh, for
 beginning a new task in the same project with a clean context."
     (interactive)
-    (let ((default-directory (claude-code-ide--get-working-directory))
+    (let ((dir (claude-code-ide--get-working-directory))
           (current-prefix-arg nil))
       (claude-code-ide-stop)
-      (candera/claude-code-ide--stop-background-sessions-for-cwd default-directory)
-      (claude-code-ide)))
+      ;; Bind after the stop: `default-directory' is buffer-local, so a
+      ;; binding made before killing the terminal buffer would be unwound
+      ;; in the dead buffer rather than the one the window falls back to.
+      (let ((default-directory dir))
+        (candera/claude-code-ide--stop-background-sessions-for-cwd dir)
+        (claude-code-ide))))
 
   ;; `claude-code-ide-menu' is defined in the autoloaded
   ;; claude-code-ide-transient.el, not loaded until first invoked, so defer
