@@ -1407,8 +1407,30 @@ if the major mode is one of 'delete-trailing-whitespace-modes'"
 ;;   (interactive)
 ;;   (emms-play-file (dired-get-filename)))
 
+(defun candera/image-data-extension (data)
+  "Return the file extension matching the image format of DATA, or nil.
+Goes by the magic bytes rather than by which pasteboard type the data
+was fetched under, since the two don't always agree: a JPEG can arrive
+labelled as `image/png', and then a `.png' name would be a lie that
+image viewers and Org's previews trip over."
+  (cond ((string-prefix-p "\x89PNG\r\n\x1a\n" data) "png")
+        ((string-prefix-p "\xff\xd8\xff" data) "jpg")
+        ((string-prefix-p "GIF8" data) "gif")
+        ((or (string-prefix-p "II*\0" data) (string-prefix-p "MM\0*" data)) "tiff")
+        ((and (> (length data) 12)
+              (string= (substring data 0 4) "RIFF")
+              (string= (substring data 8 12) "WEBP"))
+         "webp")
+        ((and (> (length data) 12)
+              (string= (substring data 4 8) "ftyp")
+              (member (substring data 8 12) '("heic" "heix" "mif1" "msf1")))
+         "heic")))
+
 (defun candera/clipboard-image ()
   "Return (DATA . EXTENSION) for an image on the clipboard, or nil.
+EXTENSION comes from the bytes themselves (`candera/image-data-extension'),
+falling back to the pasteboard type only for a format that isn't sniffed.
+
 PNG first: it is what macOS screenshots and most applications put on
 the pasteboard, and it needs no re-encoding on the way out.
 
@@ -1426,7 +1448,8 @@ would otherwise be written out as one, which is why the test here is
                 (and (stringp data)
                      (not (string-empty-p data))
                      (not (multibyte-string-p data))
-                     (cons data (cdr entry)))))
+                     (cons data (or (candera/image-data-extension data)
+                                    (cdr entry))))))
             '((image/png  . "png")
               (image/jpeg . "jpg")
               (image/tiff . "tiff")
@@ -1447,7 +1470,17 @@ a default that the prompt accepts with a bare RET."
 Returns the expanded file name. IMAGE is the (DATA . EXTENSION) pair from
 `candera/clipboard-image'."
   (let* ((file (expand-file-name filename))
-         (dir (file-name-directory file)))
+         (ext (cdr image))
+         (given (downcase (or (file-name-extension file) ""))))
+    ;; Make the name tell the truth about the bytes: a name typed (or
+    ;; defaulted) as `.png' over JPEG data gets `.jpg' instead. `.jpeg'
+    ;; and `.tif' are accepted as they stand.
+    (unless (or (string= given ext)
+                (and (string= ext "jpg") (string= given "jpeg"))
+                (and (string= ext "tiff") (string= given "tif")))
+      (setq file (concat (file-name-sans-extension file) "." ext))
+      (message "Saving as %s: the clipboard image is %s data"
+               (file-name-nondirectory file) (upcase ext)))
     (when (and (file-exists-p file)
                (not (y-or-n-p (format "%s exists.  Overwrite? "
                                       (abbreviate-file-name file)))))
@@ -1457,11 +1490,12 @@ Returns the expanded file name. IMAGE is the (DATA . EXTENSION) pair from
     ;; say -- and `with-temp-file' answers that with a bare "Opening
     ;; output file: No such file or directory". Ask, the way saving a new
     ;; file in Emacs does.
-    (unless (file-directory-p dir)
-      (unless (y-or-n-p (format "Directory %s does not exist.  Create it? "
-                                (abbreviate-file-name dir)))
-        (user-error "Aborted"))
-      (make-directory dir t))
+    (let ((dir (file-name-directory file)))
+      (unless (file-directory-p dir)
+        (unless (y-or-n-p (format "Directory %s does not exist.  Create it? "
+                                  (abbreviate-file-name dir)))
+          (user-error "Aborted"))
+        (make-directory dir t)))
     ;; `coding-system-for-write' plus a unibyte temp buffer: DATA is raw
     ;; bytes, and any coding conversion here silently corrupts the image.
     (let ((coding-system-for-write 'binary))
@@ -1564,9 +1598,13 @@ whether the clipboard held text, a PNG, or nothing. It also doesn't
 hijack `C-y' for long, because `select-enable-clipboard' is on -- any
 kill inside Emacs replaces the image on the pasteboard, so the image
 branch is taken only while copying one really was the most recent thing
-that happened. `C-g' at the prompt backs out either way."
+that happened. `C-g' at the prompt backs out either way.
+
+With a prefix ARG (`C-u C-y') the image check is skipped and the clipboard
+text -- e.g. the path of an image file copied as a path -- is yanked as
+text, by `org-yank' with ARG."
   (interactive "P")
-  (let ((image (candera/clipboard-image)))
+  (let ((image (and (not arg) (candera/clipboard-image))))
     (if image
         (candera/org-paste-image (candera/clipboard-image-file-name image) image)
       (org-yank arg))))
