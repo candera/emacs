@@ -6303,19 +6303,18 @@ this long and rechecking avoids that -- see
             ;; at the window to check progress right as the turn finishes:
             ;; caught "focused" in that instant, the notification is
             ;; suppressed even though they've looked away again a moment
-            ;; later. Recheck after a short delay instead. `lexical-let*'
-            ;; is needed (not plain `let*') because this file has no
-            ;; `lexical-binding: t', so a bare lambda handed to
-            ;; `run-at-time' wouldn't close over BUFFER/EVENT-MESSAGE for
-            ;; use once the timer actually fires.
-            (lexical-let* ((buffer buffer)
-                           (event-message event-message))
-              (run-at-time
-               candera/claude-code-ide-notify-focus-delay nil
-               (lambda ()
-                 (when (and (buffer-live-p buffer)
-                            (not (candera/agent-shell--buffer-focused-p buffer)))
-                   (candera/agent-shell-notify "Claude Code" event-message buffer)))))))))))
+            ;; later. Recheck after a short delay instead. The lambda
+            ;; closes over BUFFER/EVENT-MESSAGE via this file's
+            ;; `lexical-binding: t'. Don't use `lexical-let*' here: it
+            ;; lives in the obsolete `cl' library, which isn't loaded, so
+            ;; it was void-function and (swallowed by `with-demoted-errors')
+            ;; silently killed every Stop notification.
+            (run-at-time
+             candera/claude-code-ide-notify-focus-delay nil
+             (lambda ()
+               (when (and (buffer-live-p buffer)
+                          (not (candera/agent-shell--buffer-focused-p buffer)))
+                 (candera/agent-shell-notify "Claude Code" event-message buffer))))))))))
 
   ;; `claude-code-ide-stop' only tears down the Emacs-side terminal
   ;; buffer/instance. It has no effect on a session the CLI itself tracks
