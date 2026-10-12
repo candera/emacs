@@ -6269,9 +6269,43 @@ this long and rechecking avoids that -- see
   ;; happened) is deliberately NOT wired here: notifying on it turned
   ;; out to be pure noise, since a finished/blocked task is exactly
   ;; what `Stop'/`permission_prompt' already cover.
+  (defvar candera/claude-code-ide-hook-log-buffer "*claude-code-ide-hook-log*"
+    "Name of the buffer `candera/claude-code-ide--hook-log' appends to.")
+  (defvar candera/claude-code-ide-hook-log-max-lines 500
+    "Trim `candera/claude-code-ide-hook-log-buffer' to roughly this many lines.")
+  (defun candera/claude-code-ide--hook-log (format-string &rest args)
+    "Append a timestamped line to `candera/claude-code-ide-hook-log-buffer'.
+This exists so a notification that never shows up can be diagnosed after
+the fact: each hook invocation logs what it received and what it decided
+(notified / suppressed because focused / no matching session), which
+`*Messages*' alone never recorded."
+    (with-current-buffer (get-buffer-create candera/claude-code-ide-hook-log-buffer)
+      (goto-char (point-max))
+      (insert (format-time-string "%F %T ") (apply #'format format-string args) "\n")
+      (when (> (count-lines (point-min) (point-max))
+               candera/claude-code-ide-hook-log-max-lines)
+        (delete-region (point-min)
+                       (save-excursion
+                         (goto-char (point-min))
+                         (forward-line (/ candera/claude-code-ide-hook-log-max-lines 5))
+                         (point))))))
+  (defmacro candera/claude-code-ide--logged (label &rest body)
+    "Run BODY; on error, log it and raise a visible warning instead of staying silent.
+LABEL names the operation in the log and the warning. Replaces
+`with-demoted-errors' here, which only wrote one easily-missed line to
+`*Messages*' -- that's how a `void-function' error went unnoticed."
+    (declare (indent 1))
+    `(condition-case err
+         (progn ,@body)
+       (error
+        (candera/claude-code-ide--hook-log "ERROR in %s: %S" ,label err)
+        (display-warning
+         'claude-code-ide-hook
+         (format "%s failed: %S (see %s)" ,label err candera/claude-code-ide-hook-log-buffer)
+         :error))))
   (defun candera/claude-code-ide-handle-hook (hook-type)
     "Handle a Claude Code CLI hook of HOOK-TYPE for a claude-code-ide session."
-    (with-demoted-errors "claude-code-ide hook handler error: %S"
+    (candera/claude-code-ide--logged (format "%s hook handler" hook-type)
       (let* ((json-text (when server-eval-args-left (pop server-eval-args-left)))
              (data (and json-text (ignore-errors (json-parse-string json-text))))
              (cwd (and data (gethash "cwd" data)))
@@ -6291,30 +6325,43 @@ this long and rechecking avoids that -- see
                         (_ hook-type))
                       (if hook-message (format " (%s)" hook-message) ""))))
         (setq server-eval-args-left nil)
-        (when buffer
-          (if (string= hook-type "permission_prompt")
-              ;; A permission prompt blocks the CLI right now and needs an
-              ;; answer before the turn can continue, so -- like
-              ;; `candera/agent-shell--on-permission-request' -- always
-              ;; notify immediately, even if the session buffer's frame
-              ;; happens to be focused.
-              (candera/agent-shell-notify "Claude Code" event-message buffer)
-            ;; Checking focus synchronously here races a user who glances
-            ;; at the window to check progress right as the turn finishes:
-            ;; caught "focused" in that instant, the notification is
-            ;; suppressed even though they've looked away again a moment
-            ;; later. Recheck after a short delay instead. The lambda
-            ;; closes over BUFFER/EVENT-MESSAGE via this file's
-            ;; `lexical-binding: t'. Don't use `lexical-let*' here: it
-            ;; lives in the obsolete `cl' library, which isn't loaded, so
-            ;; it was void-function and (swallowed by `with-demoted-errors')
-            ;; silently killed every Stop notification.
-            (run-at-time
-             candera/claude-code-ide-notify-focus-delay nil
-             (lambda ()
-               (when (and (buffer-live-p buffer)
-                          (not (candera/agent-shell--buffer-focused-p buffer)))
-                 (candera/agent-shell-notify "Claude Code" event-message buffer))))))))))
+        (candera/claude-code-ide--hook-log "%s cwd=%s buffer=%s" hook-type cwd buffer)
+        (cond
+         ((null buffer)
+          (candera/claude-code-ide--hook-log
+           "  no session matches cwd %s; not notifying" cwd))
+         ((string= hook-type "permission_prompt")
+          ;; A permission prompt blocks the CLI right now and needs an
+          ;; answer before the turn can continue, so -- like
+          ;; `candera/agent-shell--on-permission-request' -- always
+          ;; notify immediately, even if the session buffer's frame
+          ;; happens to be focused.
+          (candera/agent-shell-notify "Claude Code" event-message buffer)
+          (candera/claude-code-ide--hook-log "  notified (permission prompt)"))
+         (t
+          ;; Checking focus synchronously here races a user who glances
+          ;; at the window to check progress right as the turn finishes:
+          ;; caught "focused" in that instant, the notification is
+          ;; suppressed even though they've looked away again a moment
+          ;; later. Recheck after a short delay instead. The lambda
+          ;; closes over BUFFER/EVENT-MESSAGE via this file's
+          ;; `lexical-binding: t'. Don't use `lexical-let*' here: it
+          ;; lives in the obsolete `cl' library, which isn't loaded, so
+          ;; it was void-function and silently killed every Stop
+          ;; notification. The timer runs outside this handler's
+          ;; `candera/claude-code-ide--logged', hence its own wrapper.
+          (run-at-time
+           candera/claude-code-ide-notify-focus-delay nil
+           (lambda ()
+             (candera/claude-code-ide--logged (format "%s focus recheck" hook-type)
+               (cond
+                ((not (buffer-live-p buffer))
+                 (candera/claude-code-ide--hook-log "  %s: buffer gone; not notifying" hook-type))
+                ((candera/agent-shell--buffer-focused-p buffer)
+                 (candera/claude-code-ide--hook-log "  %s: buffer focused; suppressed" hook-type))
+                (t
+                 (candera/agent-shell-notify "Claude Code" event-message buffer)
+                 (candera/claude-code-ide--hook-log "  %s: notified" hook-type))))))))))))
 
   ;; `claude-code-ide-stop' only tears down the Emacs-side terminal
   ;; buffer/instance. It has no effect on a session the CLI itself tracks
