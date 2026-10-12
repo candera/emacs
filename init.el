@@ -2009,7 +2009,7 @@ back to the original string."
   (interactive)
   (save-mark-and-excursion
     (paredit-backward-up)
-    (lexical-let* ((orig (current-buffer))
+    (let* ((orig (current-buffer))
                    (start (point))
                    (_ (paredit-forward))
                    (end (point))
@@ -2017,14 +2017,14 @@ back to the original string."
 		   (finish (lambda ()
                              (interactive)
                              (save-mark-and-excursion
-                               (lexical-let* ((contents (buffer-substring-no-properties
+                               (let* ((contents (buffer-substring-no-properties
                                                          (point-min)
                                                          (point-max))))
                                  (switch-to-buffer orig)
                                  (kill-region (1+ start) (1- end))
                                  (goto-char (1+ start))
                                  (insert contents))))))
-      (lexical-let* ((new-buffer (switch-to-buffer (make-temp-name "clojure-string")))))
+      (let* ((new-buffer (switch-to-buffer (make-temp-name "clojure-string")))))
       (insert contents)
       (save-mark-and-excursion
         (mark-whole-buffer)
@@ -2778,7 +2778,7 @@ back to the original string."
     (use-inf-clojure-program . \"lein repl\")
     (use-inf-clojure . t)))
 "
-  (interactive (lexical-let* ((program (or use-inf-clojure-program "clojure"))
+  (interactive (let* ((program (or use-inf-clojure-program "clojure"))
                               (buffer (or inf-clojure-buffer "*inf-clojure*"))
                               (dir (read-directory-name "Project directory: "
                                                         (locate-dominating-file
@@ -3087,7 +3087,7 @@ back to the original string."
       (let ((cur (point)))
         (while (< cur end)
           (goto-char cur)
-          (lexical-let* ((next-go (re-search-forward "^GO$" nil t))
+          (let* ((next-go (re-search-forward "^GO$" nil t))
                          (block-end (min end (if next-go
                                                  (- next-go 2)
                                                end)))
@@ -3137,7 +3137,7 @@ With a prefix arg, prompts for the buffer to send to."
                (read-buffer "Buffer: " "sql-mdev-default" t))))
     (save-excursion
       (save-match-data
-        (lexical-let* ((p (point))
+        (let* ((p (point))
                        (empty (search-backward-regexp "^\\s-*$" nil t))
                        (beg (if empty (1+ empty) (buffer-end -1)))
                        (_   (goto-char p))
@@ -3271,14 +3271,14 @@ With a prefix arg, prompts for the buffer to send to."
 (defun clsql-examine-last-result  ()
   "Clones the last results in the current buffer and highlights it assuming it is clsql output."
   (interactive)
-  (lexical-let* ((prompt (cond
+  (let* ((prompt (cond
 			  ((string= sql-product "postgres")
 			   "^[[:alpha:]-]+=>")
 			  (t "^[[:alpha:]-]+@[[:alnum:].-]+>")))
 		 (b (get-buffer-create (concat (buffer-name) "-" (format-time-string "%m%d-%H%M%S"))))
 		 (contents (save-excursion
 			     (end-of-buffer)
-			     (lexical-let* ((end (re-search-backward prompt))
+			     (let* ((end (re-search-backward prompt))
 					    (search1 (re-search-backward prompt nil t))
 					    (search2 (re-search-forward prompt nil t))
 					    (start (if search1 (point) (point-min))))
@@ -3334,7 +3334,7 @@ With a prefix arg, prompts for the buffer to send to."
          (starred-name (concat "*" temp-name "*"))
          ;; (temp-file (make-temp-file "encrypt" nil nil "throwaway"))
          (continue     (if (get-buffer name)
-			 (lexical-let ((answer (read-string (format "A buffer named %s already exists. (K)ill and recreate, (s)witch to, or (a)bort? " name))))
+			 (let ((answer (read-string (format "A buffer named %s already exists. (K)ill and recreate, (s)witch to, or (a)bort? " name))))
 			   (cond
 			    ((string= answer "k") (progn (kill-buffer name) t))
 			    ((string= answer "s") (progn (switch-to-buffer name) nil))
@@ -3387,7 +3387,7 @@ With a prefix arg, prompts for the buffer to send to."
          (starred-name (concat "*" temp-name "*"))
          ;; (temp-file (make-temp-file "encrypt" nil nil "throwaway"))
          (continue     (if (get-buffer name)
-			 (lexical-let ((answer (read-string (format "A buffer named %s already exists. (K)ill and recreate, (s)witch to, or (a)bort? " name))))
+			 (let ((answer (read-string (format "A buffer named %s already exists. (K)ill and recreate, (s)witch to, or (a)bort? " name))))
 			   (cond
 			    ((string= answer "k") (progn (kill-buffer name) t))
 			    ((string= answer "s") (progn (switch-to-buffer name) nil))
@@ -3480,9 +3480,9 @@ buffer, respectively."
   "Execute SQL. This function is called by `org-babel-execute-src-block`."
   (save-excursion
     (org-babel-mark-block)
-    (lexical-let ((sql (buffer-substring (mark) (point))))
+    (let ((sql (buffer-substring (mark) (point))))
       (with-temp-buffer
-        (lexical-let ((ns (open-network-stream "SQL" (current-buffer) "localhost" 7788)))
+        (let ((ns (open-network-stream "SQL" (current-buffer) "localhost" 7788)))
           (process-send-string ns sql)
           (process-send-string ns "\nGO\n")
           (while (not (buffer-contains "^:end$"))
@@ -3522,7 +3522,7 @@ buffer, respectively."
 
 (defun get-adzerk-var (name)
   (save-mark-and-excursion
-   (lexical-let ((temp-file (make-temp-file "adzerk")))
+   (let ((temp-file (make-temp-file "adzerk")))
      (message temp-file)
      (unwind-protect
          (progn
@@ -3531,7 +3531,7 @@ buffer, respectively."
              (insert-file-contents temp-file)
              (goto-char 0)
              (re-search-forward (format "^export %s=" (regexp-quote name)))
-             (lexical-let ((start (point)))
+             (let ((start (point)))
                (end-of-line)
                (buffer-substring start (point)))))
        (delete-file temp-file)))))
@@ -3807,21 +3807,21 @@ the string at point. Hitting C-c C-c in that buffer will save it
 back to the original string."
   (interactive)
   (save-mark-and-excursion
-    (lexical-let* ((orig (current-buffer))
+    (let* ((orig (current-buffer))
                    (start (region-beginning))
                    (end (region-end))
                    (contents (buffer-substring-no-properties start end))
 		   (finish (lambda ()
                              (interactive)
                              (save-mark-and-excursion
-                               (lexical-let* ((contents (buffer-substring-no-properties
+                               (let* ((contents (buffer-substring-no-properties
                                                          (point-min)
                                                          (point-max))))
                                  (switch-to-buffer orig)
                                  (kill-region start end)
                                  (goto-char start)
                                  (insert contents))))))
-      (lexical-let* ((new-buffer (switch-to-buffer (make-temp-name "json-string")))))
+      (let* ((new-buffer (switch-to-buffer (make-temp-name "json-string")))))
       (insert contents)
       (replace-string "\\n" "")
       (javascript-mode)
@@ -4291,7 +4291,7 @@ back to the original string."
 compatible with the Concordia web sysstem."
   (interactive)
   (unless (region-active-p)
-      (lexical-let ((prior-point (point)))
+      (let ((prior-point (point)))
 	(search-backward "-----------")
 	(next-line)
 	(beginning-of-line)
@@ -4299,15 +4299,15 @@ compatible with the Concordia web sysstem."
 	(goto-char prior-point)
 	(search-forward "----------")
 	(beginning-of-line)))
-  (lexical-let ((end-marker (region-end)))
+  (let ((end-marker (region-end)))
     (kill-ring-save (mark) (point))
-    (lexical-let ((buffer-name (format "camp-letter-%s.txt" (format-time-string "%F")))
+    (let ((buffer-name (format "camp-letter-%s.txt" (format-time-string "%F")))
                   (line-count (count-lines (mark) (point)))
                   (chunk-size 45))
       (switch-to-buffer buffer-name)
       (yank)
       (beginning-of-buffer)
-      (lexical-let ((page-number 1))
+      (let ((page-number 1))
         (while (< (point) (point-max))
           (ignore-errors
             (next-line chunk-size)
@@ -4509,10 +4509,10 @@ compatible with the Concordia web sysstem."
 
 With a prefix arg, prompts for the mode to show."
   (interactive "P")
-  (lexical-let* ((mode-name (if (null map)
+  (let* ((mode-str (if (null map)
 				(symbol-name major-mode)
 			      (read-string "Mode: " (symbol-name major-mode))))
-		 (mode-map-name  (concat mode-name "-map"))
+		 (mode-map-name  (concat mode-str "-map"))
 		 (mode-map-symbol (intern mode-map-name))
 		 (mode-map (symbol-value mode-map-symbol)))
     (if (keymapp mode-map) 
@@ -5356,7 +5356,7 @@ Somtimes elfeed loses its brains and gives an error like 'wrong type argument: p
   "Move to next log message and disply it in the popup buffer."
   (interactive)
   (logview-next-entry)
-  (lexical-let ((b (current-buffer))
+  (let ((b (current-buffer))
 		(exists (get-buffer "log-message")))
     (save-mark-and-excursion
       (set-mark (point))
@@ -5481,7 +5481,7 @@ navigating a logview buffer."
   (interactive)
   (save-mark-and-excursion
     (mark-defun)
-    (lexical-let ((expr (buffer-substring-no-properties (point) (mark)))
+    (let ((expr (buffer-substring-no-properties (point) (mark)))
 		  (ns (clojure-find-ns)))
       (inf-clojure--send-string inf-clojure-buffer (format "(in-ns '%s)" ns))
       (inf-clojure--send-string inf-clojure-buffer expr)

@@ -245,12 +245,12 @@ negative."
 	  (keymap-local-set "M-;" 'journal-langtool-correct-previous)
 	  (keymap-local-set "M-'" 'my-langtool-correct-buffer-safe)
 	  
-	  (lexical-let* ((this-buffer (current-buffer))
+	  (let* ((this-buffer (current-buffer))
 			 (timer (run-with-idle-timer
 				 2
 				 t
 				 (lambda ()
-				   (lexical-let ((h (buffer-hash (current-buffer))))
+				   (let ((h (buffer-hash (current-buffer))))
 				     (when (and (eq this-buffer (current-buffer))
 						(not (eq h journal-buffer-last-hash))
 						journal-langtool-enable-checking)
