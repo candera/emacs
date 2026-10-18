@@ -14,6 +14,7 @@ Personal Emacs config. This repo lives at `~/.emacs.d/custom` (symlinked or clon
   - `rpg.el` — Fate dice roller
   - `outline-presentation.el` — Outline-based slide navigation
   - `view-visited-file.el` — Display/copy current file path
+  - `craigandera-links.el` — `craigandera-site-mode`: `C-c C-l` completes links to craigandera.org pages by title (`C-u` for plain `org-insert-link`); enabled via the site repo's `.dir-locals.el`
 
 ## Package Management
 

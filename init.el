@@ -2124,6 +2124,17 @@ back to the original string."
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'view-visited-file)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; This section sets up Craig's craigandera-site-mode
+;;
+;; Completing insertion of links to craigandera.org pages (C-c C-l; C-u for
+;; plain `org-insert-link'). Turned on for Org buffers by .dir-locals.el in
+;; the site's repo.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'craigandera-links)
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
