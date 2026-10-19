@@ -5298,6 +5298,108 @@ Somtimes elfeed loses its brains and gives an error like 'wrong type argument: p
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; org-table-wrap
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Display-only word-wrapping of Org tables wider than the window. Not
+;; enabled automatically yet; try it with `M-x org-table-wrap-mode'.
+;; To enable everywhere: (add-hook 'org-mode-hook #'org-table-wrap-mode)
+(use-package org-table-wrap
+  :vc (:url "https://github.com/benthamite/org-table-wrap")
+  :commands (org-table-wrap-mode global-org-table-wrap-mode)
+  :config
+  ;; The package only draws a rule where the Org source has an hline.
+  ;; Insert one between every pair of data rows, so it's obvious where
+  ;; a wrapped cell ends and the next row begins.
+  (defun candera/org-table-wrap-row-separators (args)
+    (let (rows)
+      (dolist (row (car args))
+        (when (and rows
+                   (not (eq row 'hline))
+                   (not (eq (car rows) 'hline)))
+          (push 'hline rows))
+        (push row rows))
+      (cons (nreverse rows) (cdr args))))
+  (advice-add 'org-table-wrap--build-display-string
+              :filter-args #'candera/org-table-wrap-row-separators)
+
+  ;; With point inside a table the package shows the raw, unwrapped
+  ;; source, which `visual-line-mode' (and visual-fill-column's narrow
+  ;; text area) would otherwise break across lines. Truncate instead
+  ;; while point is in a table, and go back to wrapping when it leaves.
+  ;; visual-fill-column's right margin is dead space for truncation, so
+  ;; also let the text area span the whole window while in a table.
+  (defun candera/org-table-wrap-truncate-in-table ()
+    (when visual-line-mode
+      (let ((in-table (and (org-at-table-p) t)))
+        (unless (eq in-table truncate-lines)
+          (setq-local truncate-lines in-table)
+          (when (bound-and-true-p visual-fill-column-mode)
+            (if in-table
+                (setq-local visual-fill-column-width most-positive-fixnum)
+              (kill-local-variable 'visual-fill-column-width))
+            (visual-fill-column-adjust))))))
+  ;; The wrapped table is an invisible overlay, and `next-line' treats
+  ;; invisible text as one unit, so moving into a table from above
+  ;; lands at its very end (and from below, at its very start).
+  ;; Reveal the raw table just before such a move so point enters it
+  ;; normally, at the same column.
+  (defun candera/org-table-wrap-reveal-before-move ()
+    (when (memq this-command '(next-line previous-line))
+      (let ((down (eq this-command 'next-line)))
+        (when (if down
+                  (= (save-excursion (end-of-visual-line) (point))
+                     (line-end-position))
+                (= (save-excursion (beginning-of-visual-line) (point))
+                   (line-beginning-position)))
+          (let ((target (if down (line-beginning-position 2) (line-beginning-position))))
+            (dolist (entry org-table-wrap--overlays)
+              (when (= target (if down
+                                  (org-table-wrap--overlay-entry-beg entry)
+                                (org-table-wrap--overlay-entry-end entry)))
+                (org-table-wrap--remove-overlay-at
+                 (org-table-wrap--overlay-entry-beg entry)
+                 (org-table-wrap--overlay-entry-end entry)))))))))
+  ;; Re-wrapping a table temporarily moves point to it and forces a
+  ;; redisplay to measure it. If the table is above the window, that
+  ;; scrolls the window to it, and the next redisplay scrolls back with
+  ;; point at the top line. Re-wrapping happens whenever the window is
+  ;; resized, which includes our margin changes on entering a table,
+  ;; so keep the window where it was.
+  (defun candera/org-table-wrap-keep-window-start (fn &rest args)
+    (let* ((win (get-buffer-window (current-buffer)))
+           (start (and win (window-start win)))
+           (vscroll (and win (window-vscroll win t))))
+      (unwind-protect
+          (apply fn args)
+        (when (and win
+                   (window-live-p win)
+                   (eq (window-buffer win) (current-buffer)))
+          (set-window-start win start t)
+          (set-window-vscroll win vscroll t)))))
+  (advice-add 'org-table-wrap--process-table
+              :around #'candera/org-table-wrap-keep-window-start)
+  (add-hook 'org-table-wrap-mode-hook
+            (lambda ()
+              (if org-table-wrap-mode
+                  (progn
+                    (add-hook 'post-command-hook
+                              #'candera/org-table-wrap-truncate-in-table nil t)
+                    (add-hook 'pre-command-hook
+                              #'candera/org-table-wrap-reveal-before-move nil t))
+                (remove-hook 'post-command-hook
+                             #'candera/org-table-wrap-truncate-in-table t)
+                (remove-hook 'pre-command-hook
+                             #'candera/org-table-wrap-reveal-before-move t)
+                (when visual-line-mode
+                  (setq-local truncate-lines nil)
+                  (when (bound-and-true-p visual-fill-column-mode)
+                    (kill-local-variable 'visual-fill-column-width)
+                    (visual-fill-column-adjust)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; dictionary-search (built in)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
