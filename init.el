@@ -1544,11 +1544,20 @@ ring."
               (file-attribute-size (file-attributes file)))
              link)))
 
-(defun candera/org-paste-image (filename &optional image)
+(defun candera/read-image-caption ()
+  "Prompt for an image caption, returning nil if left blank."
+  (let ((caption (string-trim (read-string "Caption (RET for none): "))))
+    (unless (string-empty-p caption) caption)))
+
+(defun candera/org-paste-image (filename &optional image caption)
   "Save the clipboard image as FILENAME and insert an Org link to it.
 Interactively, asks exactly what `candera/dired-paste-image' asks: a
 timestamped default in the directory holding the current file, which a
-bare RET accepts and completion can be used to change.
+bare RET accepts and completion can be used to change. It then asks for
+a caption; a blank one inserts only the link, otherwise a \"#+caption:\"
+line is put on the line above it (CAPTION is that string, or nil).
+If point isn't at the start of a line, a newline is inserted first so
+the keyword line stands alone.
 
 An image saved under the document's own directory gets an explicitly
 relative link, like file:./foo.png, and so keeps working if the directory
@@ -1570,11 +1579,15 @@ isn't pulled off the pasteboard twice."
   (interactive
    (let ((image (or (candera/clipboard-image)
                     (user-error "No image on the clipboard"))))
-     (list (candera/clipboard-image-file-name image) image)))
+     (list (candera/clipboard-image-file-name image) image
+           (candera/read-image-caption))))
   (let* ((image (or image
                     (candera/clipboard-image)
                     (user-error "No image on the clipboard")))
          (file (candera/write-clipboard-image filename image)))
+    (when caption
+      (unless (bolp) (insert "\n"))
+      (insert "#+caption: " caption "\n"))
     (insert (if (file-in-directory-p file default-directory)
                 ;; `org-link-make-string-for-buffer' would strip a
                 ;; leading "./", so build this one by hand.
@@ -1606,7 +1619,8 @@ text, by `org-yank' with ARG."
   (interactive "P")
   (let ((image (and (not arg) (candera/clipboard-image))))
     (if image
-        (candera/org-paste-image (candera/clipboard-image-file-name image) image)
+        (candera/org-paste-image (candera/clipboard-image-file-name image) image
+                                 (candera/read-image-caption))
       (org-yank arg))))
 
 (with-eval-after-load 'org
