@@ -5410,6 +5410,51 @@ Somtimes elfeed loses its brains and gives an error like 'wrong type argument: p
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; mdwt (markdown wrapped tables)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; The Markdown counterpart of org-table-wrap: display-only
+;; word-wrapping of pipe tables wider than the window, with in-grid
+;; editing. Not enabled automatically yet; try it with `M-x mdwt-mode'.
+;; To enable everywhere: (add-hook 'markdown-mode-hook #'mdwt-mode)
+(use-package mdwt
+  :vc (:url "https://github.com/cmoxiv/md-wrap-tables" :rev :newest)
+  :commands (mdwt-mode mdwt-toggle-source mdwt-refresh)
+  :config
+  ;; Cells are edited in the rendered grid, so the raw source is only
+  ;; shown after `mdwt-toggle-source'. While it is, `visual-line-mode'
+  ;; (and visual-fill-column's narrow text area) would soft-wrap the
+  ;; raw table lines, so truncate instead and let the text area span
+  ;; the window, as for org-table-wrap. Restored when the table is
+  ;; re-rendered, which mdwt does on its own when point leaves it.
+  (defun candera/mdwt-truncate-when-revealed ()
+    (when visual-line-mode
+      (let ((revealed (and mdwt--revealed t)))
+        (unless (eq revealed truncate-lines)
+          (setq-local truncate-lines revealed)
+          (when (bound-and-true-p visual-fill-column-mode)
+            (if revealed
+                (setq-local visual-fill-column-width most-positive-fixnum)
+              (kill-local-variable 'visual-fill-column-width))
+            (visual-fill-column-adjust))))))
+  (add-hook 'mdwt-mode-hook
+            (lambda ()
+              (if mdwt-mode
+                  ;; Append, so it runs after mdwt's own post-command
+                  ;; hook has updated `mdwt--revealed'.
+                  (add-hook 'post-command-hook
+                            #'candera/mdwt-truncate-when-revealed t t)
+                (remove-hook 'post-command-hook
+                             #'candera/mdwt-truncate-when-revealed t)
+                (when visual-line-mode
+                  (setq-local truncate-lines nil)
+                  (when (bound-and-true-p visual-fill-column-mode)
+                    (kill-local-variable 'visual-fill-column-width)
+                    (visual-fill-column-adjust)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; dictionary-search (built in)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
