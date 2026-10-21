@@ -5416,11 +5416,12 @@ Somtimes elfeed loses its brains and gives an error like 'wrong type argument: p
 
 ;; The Markdown counterpart of org-table-wrap: display-only
 ;; word-wrapping of pipe tables wider than the window, with in-grid
-;; editing. Not enabled automatically yet; try it with `M-x mdwt-mode'.
-;; To enable everywhere: (add-hook 'markdown-mode-hook #'mdwt-mode)
+;; editing. Enabled in every `markdown-mode' buffer (and `gfm-mode',
+;; which derives from it); toggle per buffer with `M-x mdwt-mode'.
 (use-package mdwt
   :vc (:url "https://github.com/cmoxiv/md-wrap-tables" :rev :newest)
   :commands (mdwt-mode mdwt-toggle-source mdwt-refresh)
+  :hook (markdown-mode . mdwt-mode)
   :config
   ;; mdwt sizes tables to `window-body-width', but `display-line-numbers'
   ;; draws inside the body, so tables came out a few columns too wide and
