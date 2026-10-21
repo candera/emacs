@@ -5422,6 +5422,21 @@ Somtimes elfeed loses its brains and gives an error like 'wrong type argument: p
   :vc (:url "https://github.com/cmoxiv/md-wrap-tables" :rev :newest)
   :commands (mdwt-mode mdwt-toggle-source mdwt-refresh)
   :config
+  ;; mdwt sizes tables to `window-body-width', but `display-line-numbers'
+  ;; draws inside the body, so tables came out a few columns too wide and
+  ;; their rows got soft-wrapped. Leave room for the line numbers. Only
+  ;; applies while mdwt returns the full body width, so this is a no-op
+  ;; once the package accounts for line numbers itself (PR sent upstream).
+  (defun candera/mdwt-avail-minus-line-numbers (avail)
+    (let ((win (get-buffer-window (current-buffer) t)))
+      (if (and win
+               display-line-numbers
+               (= avail (- (window-body-width win) mdwt-margin)))
+          (- avail (ceiling (with-selected-window win
+                              (line-number-display-width 'columns))))
+        avail)))
+  (advice-add 'mdwt--avail :filter-return
+              #'candera/mdwt-avail-minus-line-numbers)
   ;; Cells are edited in the rendered grid, so the raw source is only
   ;; shown after `mdwt-toggle-source'. While it is, `visual-line-mode'
   ;; (and visual-fill-column's narrow text area) would soft-wrap the
