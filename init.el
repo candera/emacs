@@ -2282,7 +2282,56 @@ back to the original string."
   :mode "\\.md"
   :config
   (add-hook 'markdown-mode-hook (lambda () (visual-line-mode 1)))
-  (setq fill-column 130))
+  (setq fill-column 130)
+
+  ;; A pipe table is a single text block, and the bold/italic/link
+  ;; matchers call `markdown-inline-code-at-pos' for every candidate,
+  ;; which searches the whole block for code spans. Fontifying a table
+  ;; is thus quadratic in its size: a 450 KB table in a kspecs proposal
+  ;; took 70s (and froze Emacs after every auto-revert). A table row
+  ;; can't hold a code span that crosses lines, so search only the row.
+  ;; Fixed upstream in https://github.com/jrblevin/markdown-mode/pull/958;
+  ;; the probe below detects that and skips the advice.
+  (defvar candera/markdown--probe-max-last nil)
+  (defun candera/markdown--probe-spy (last)
+    (setq candera/markdown--probe-max-last
+          (max (or candera/markdown--probe-max-last 0) last)))
+  (defun candera/markdown-code-scan-unbounded-p ()
+    "Non-nil if `markdown-inline-code-at-pos' scans past its table row.
+Probes a tiny table with the unadvised function."
+    (setq candera/markdown--probe-max-last nil)
+    (advice-add 'markdown-match-code :before #'candera/markdown--probe-spy)
+    (unwind-protect
+        (with-temp-buffer
+          (insert "| a | b |\n|---|---|\n| **x** | y |\n| z | w |\n")
+          (delay-mode-hooks (markdown-mode))
+          (goto-char (point-min))
+          (forward-line 2)
+          (let ((eol (line-end-position)))
+            (markdown-inline-code-at-pos (+ (point) 3))
+            (and candera/markdown--probe-max-last
+                 (> candera/markdown--probe-max-last eol))))
+      (advice-remove 'markdown-match-code #'candera/markdown--probe-spy)))
+  (defun candera/markdown-inline-code-at-pos-in-row (fn pos &optional from)
+    (let ((row (save-excursion
+                 (goto-char pos)
+                 (beginning-of-line)
+                 (and (looking-at-p "[ \t]*|")
+                      (cons (point) (line-end-position))))))
+      (if row
+          (save-restriction
+            (narrow-to-region (car row) (cdr row))
+            (funcall fn pos from))
+        (funcall fn pos from))))
+  ;; Re-evaluating this block must not mistake our own advice for an upstream fix.
+  (if (or (advice-member-p #'candera/markdown-inline-code-at-pos-in-row
+                           'markdown-inline-code-at-pos)
+          (candera/markdown-code-scan-unbounded-p))
+      (progn
+        (advice-add 'markdown-inline-code-at-pos :around
+                    #'candera/markdown-inline-code-at-pos-in-row)
+        (message "markdown-mode: bounding inline-code scan to table rows (candera/markdown-inline-code-at-pos-in-row)"))
+    (message "markdown-mode already bounds the inline-code scan to table rows; remove candera/markdown-inline-code-at-pos-in-row from init.el")))
 
 
 
