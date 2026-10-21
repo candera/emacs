@@ -2149,6 +2149,16 @@ back to the original string."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'craigandera-links)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Org checklist roll-up
+;;
+;; Shows a "Checklist" subheading's [done/total] on its parent headline (so
+;; it appears in the agenda). Off by default; a file opts in with
+;; `candera/org-checklist-rollup: t' in its Local Variables block.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'org-checklist-rollup)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;;
