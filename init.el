@@ -187,6 +187,16 @@
 ;; Include things in the diary file
 (setq org-agenda-include-diary t)
 
+;; The heading shown by `org-agenda-goto' / follow mode / SPC is marked
+;; with the `org-hl' overlay, which uses the stock `highlight' face --
+;; very subtle on the candera theme.  Give it a face of its own.
+(defface candera/org-agenda-followed-heading
+  '((t :background "#7a3fd1" :foreground "white" :weight bold :extend t))
+  "Face for the source heading shown from the agenda.")
+
+(with-eval-after-load 'org-agenda
+  (overlay-put org-hl 'face 'candera/org-agenda-followed-heading))
+
 ;; Make events sort by newest first in the agenda view
 (setq org-agenda-sorting-strategy
       '((agenda priority-down timestamp-down habit-down time-up category-keep)
