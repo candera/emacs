@@ -1659,7 +1659,7 @@ text, by `org-yank' with ARG."
 ;; Emacs on macOS always decodes JPEG through ImageIO (image.c prefers
 ;; the native image type), so there is no Lisp switch to use libjpeg
 ;; instead. The fix here is to hand org a gain-map-free copy: when an
-;; inline-image file is a JPEG containing "hdrgm", convert it once with
+;; inline-image file is a JPEG with gain-map metadata, convert it once with
 ;; ImageMagick (`FILE[0]' keeps only the primary image; `-auto-orient'
 ;; bakes in the EXIF rotation so nothing is lost) into a cache keyed on
 ;; path, size and mtime, and preview that instead. Conversion takes about
@@ -1671,14 +1671,16 @@ text, by `org-yank' with ARG."
 
 (defun candera/jpeg-has-gain-map-p (file)
   "Non-nil if FILE is a JPEG carrying an Ultra HDR gain map.
-Looks for the `hdrgm' XMP namespace in the first 512KB, which is where
-the metadata segments live."
+Looks in the first 512KB, where the metadata segments live, for either
+the `hdrgm' XMP namespace (Pixel and other Android files) or the ISO
+21496-1 URN (newer encoders, including libultrahdr and iPhones). Files
+can carry one or both."
   (and (string-match-p "\\.jpe?g\\'" file)
        (with-temp-buffer
          (set-buffer-multibyte nil)
          (insert-file-contents-literally file nil 0 (* 512 1024))
          (goto-char (point-min))
-         (search-forward "hdrgm" nil t))))
+         (re-search-forward "hdrgm\\|iso:ts:21496" nil t))))
 
 (defun candera/sdr-jpeg-copy (file)
   "Return a gain-map-free, auto-oriented copy of FILE, converting if needed.
