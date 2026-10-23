@@ -1636,6 +1636,88 @@ text, by `org-yank' with ARG."
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-y") 'candera/org-yank))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Ultra HDR JPEG crash workaround
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Phone photos (Pixel, and iPhones set to HDR) are "Ultra HDR" JPEGs: an
+;; ordinary JPEG plus an embedded gain map (XMP `hdrgm' metadata and an
+;; MPF trailer holding a second image). On macOS 26 (seen on 26.6.2 with
+;; Emacs 31.1), drawing a *partial* slice of such an image -- which is
+;; what happens whenever the window is pixel-scrolled into it, by
+;; ultra-scroll, pixel-scroll-precision-mode, or Emacs's own vscroll on a
+;; line taller than the window -- goes through AppKit's HDR tone-mapping
+;; path and faults in CoreGraphics (EXC_BAD_ACCESS in
+;; CGDataProviderFromImageProvider_BlockIsNotBigEnough, under
+;; -[NSImage drawInRect:fromRect:...] from ns_dumpglyphs_image). Emacs
+;; dies with SIGABRT. It reproduces in `emacs -Q' with one `insert-image'
+;; plus `set-window-vscroll', about four runs in five. The same pixels
+;; with the gain map stripped never crash.
+;;
+;; Emacs on macOS always decodes JPEG through ImageIO (image.c prefers
+;; the native image type), so there is no Lisp switch to use libjpeg
+;; instead. The fix here is to hand org a gain-map-free copy: when an
+;; inline-image file is a JPEG containing "hdrgm", convert it once with
+;; ImageMagick (`FILE[0]' keeps only the primary image; `-auto-orient'
+;; bakes in the EXIF rotation so nothing is lost) into a cache keyed on
+;; path, size and mtime, and preview that instead. Conversion takes about
+;; 0.2s per 12-megapixel photo on first view. Diagnosed 2026-10-23.
+
+(defvar candera/sdr-jpeg-cache-directory
+  (locate-user-emacs-file "sdr-jpeg-cache/")
+  "Where `candera/sdr-jpeg-copy' keeps gain-map-free copies of JPEGs.")
+
+(defun candera/jpeg-has-gain-map-p (file)
+  "Non-nil if FILE is a JPEG carrying an Ultra HDR gain map.
+Looks for the `hdrgm' XMP namespace in the first 512KB, which is where
+the metadata segments live."
+  (and (string-match-p "\\.jpe?g\\'" file)
+       (with-temp-buffer
+         (set-buffer-multibyte nil)
+         (insert-file-contents-literally file nil 0 (* 512 1024))
+         (goto-char (point-min))
+         (search-forward "hdrgm" nil t))))
+
+(defun candera/sdr-jpeg-copy (file)
+  "Return a gain-map-free, auto-oriented copy of FILE, converting if needed.
+The copy lives in `candera/sdr-jpeg-cache-directory' under a name derived
+from FILE's path, size and modification time, so an edited photo gets a
+fresh copy and an unchanged one is converted only once. Returns FILE
+itself if the conversion fails, so the worst case is the old crash, not
+a missing image."
+  (let* ((file (expand-file-name file))
+         (attrs (file-attributes file))
+         (key (secure-hash 'sha1
+                           (format "%s|%s|%s" file
+                                   (file-attribute-size attrs)
+                                   (float-time
+                                    (file-attribute-modification-time attrs)))))
+         (out (expand-file-name (concat key ".jpg")
+                                candera/sdr-jpeg-cache-directory)))
+    (unless (file-exists-p out)
+      (make-directory candera/sdr-jpeg-cache-directory t)
+      (unless (eq 0 (call-process "magick" nil nil nil
+                                  (concat file "[0]") "-auto-orient"
+                                  "-quality" "92" out))
+        (message "candera/sdr-jpeg-copy: magick failed on %s" file)))
+    (if (file-exists-p out) out file)))
+
+(defun candera/org-inline-image-sdr (args)
+  "`:filter-args' advice for `org--create-inline-image'.
+Swaps a gain-map JPEG for its cached SDR copy; see `candera/sdr-jpeg-copy'."
+  (let ((file (car args)))
+    (if (and (stringp file)
+             (file-readable-p file)
+             (candera/jpeg-has-gain-map-p file))
+        (cons (candera/sdr-jpeg-copy file) (cdr args))
+      args)))
+
+(when (and (eq window-system 'ns) (executable-find "magick"))
+  (advice-add 'org--create-inline-image :filter-args
+              #'candera/org-inline-image-sdr))
+
 (add-hook 'dired-mode-hook
           (lambda ()
             (define-key dired-mode-map (kbd "I") 'dired-insert-this-directory-recursively)
