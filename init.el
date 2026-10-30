@@ -7343,34 +7343,46 @@ autosave of a session moves that one here first.")
 
 (defvar candera/desktop-autosave--timer nil)
 
+(defun candera/desktop-autosave--trivial-p ()
+  "Non-nil when this session has nothing worth autosaving.
+That is: a single top-level frame and no buffer visiting a file, which
+is what a freshly started Emacs looks like.  Saving that would replace
+the arrangement a crash or reboot just left behind."
+  (and (null (cdr (seq-remove #'frame-parent (frame-list))))
+       (not (seq-some #'buffer-file-name (buffer-list)))))
+
 (defun candera/desktop-autosave ()
   "Save the frame/window arrangement to `candera/desktop-autosave-dir'.
-Silent, and never signals: this runs from an idle timer."
-  (condition-case err
-      (let* ((_ (require 'desktop))
-             (dir candera/desktop-autosave-dir)
-             (inhibit-message t)
-             (message-log-max nil)
-             ;; Rebound, not just read: see the block comment above.
-             (desktop-dirname dir)
-             ;; Must equal the file's real modtime, or `desktop-save'
-             ;; asks a `yes-or-no-p' -- fatal in an idle timer.
-             (desktop-file-modtime
-              (file-attribute-modification-time
-               (file-attributes (desktop-full-file-name dir))))
-             (desktop-io-file-version nil))
-        (unless candera/desktop-autosave--rotated
-          (setq candera/desktop-autosave--rotated t)
-          (when (file-exists-p (desktop-full-file-name dir))
-            (when (file-directory-p candera/desktop-autosave-previous-dir)
-              (delete-directory candera/desktop-autosave-previous-dir t))
-            (copy-directory dir candera/desktop-autosave-previous-dir t t t)))
-        (make-directory dir t)
-        (candera/claude-code-ide-save-sessions dir)
-        ;; RELEASE: the autosave is never a desktop this Emacs "owns",
-        ;; so leave no lock file behind to trip the next restore.
-        (desktop-save dir t t))
-    (error (message "Desktop autosave failed: %S" err))))
+Silent, and never signals: this runs from an idle timer.  Does nothing
+while `candera/desktop-autosave--trivial-p', so a fresh Emacs leaves the
+previous session's autosave alone until there is something to replace it
+with."
+  (unless (candera/desktop-autosave--trivial-p)
+    (condition-case err
+        (let* ((_ (require 'desktop))
+               (dir candera/desktop-autosave-dir)
+               (inhibit-message t)
+               (message-log-max nil)
+               ;; Rebound, not just read: see the block comment above.
+               (desktop-dirname dir)
+               ;; Must equal the file's real modtime, or `desktop-save'
+               ;; asks a `yes-or-no-p' -- fatal in an idle timer.
+               (desktop-file-modtime
+                (file-attribute-modification-time
+                 (file-attributes (desktop-full-file-name dir))))
+               (desktop-io-file-version nil))
+          (unless candera/desktop-autosave--rotated
+            (setq candera/desktop-autosave--rotated t)
+            (when (file-exists-p (desktop-full-file-name dir))
+              (when (file-directory-p candera/desktop-autosave-previous-dir)
+                (delete-directory candera/desktop-autosave-previous-dir t))
+              (copy-directory dir candera/desktop-autosave-previous-dir t t t)))
+          (make-directory dir t)
+          (candera/claude-code-ide-save-sessions dir)
+          ;; RELEASE: the autosave is never a desktop this Emacs "owns",
+          ;; so leave no lock file behind to trip the next restore.
+          (desktop-save dir t t))
+      (error (message "Desktop autosave failed: %S" err)))))
 
 (when (timerp candera/desktop-autosave--timer)
   (cancel-timer candera/desktop-autosave--timer))
