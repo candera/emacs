@@ -1732,6 +1732,18 @@ Swaps a gain-map JPEG for its cached SDR copy; see `candera/sdr-jpeg-copy'."
 
 (define-key dired-mode-map (kbd "O") 'dired-display-file)
 
+;; dired-preview: show the file under point (images, text, PDFs...) in a side
+;; window that follows point, so you can arrow through a directory marking
+;; files as you go. Toggled per-buffer rather than enabled globally, so it
+;; doesn't try to preview everything (e.g. over TRAMP) in every Dired buffer.
+(use-package dired-preview
+  :ensure t
+  :bind (:map dired-mode-map
+         ("C-c C-p" . dired-preview-mode))
+  :config
+  (setq dired-preview-delay 0.1
+        dired-preview-max-size (* 50 1024 1024)))
+
 ;; macOS ships BSD grep, which lacks the --null flag xref's default grep
 ;; command template requires. Use ripgrep instead (dired-do-find-regexp,
 ;; project-find-regexp, etc. all go through this).
