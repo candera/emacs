@@ -6806,6 +6806,39 @@ beginning a new task in the same project with a clean context."
         (candera/claude-code-ide--stop-background-sessions-for-cwd dir)
         (claude-code-ide))))
 
+  ;; Bound as "o" (only) in `claude-code-ide-menu' below. The package has
+  ;; no "make this the one visible session" command: `claude-code-ide-toggle'
+  ;; hides or restores the whole panel, and `claude-code-ide-switch-to-buffer'
+  ;; shows one without hiding the rest.
+  (defun candera/claude-code-ide-solo ()
+    "Show one of this project's Claude Code sessions and hide the others.
+Prompts for the session (skipped when the project has only one).
+Windows are deleted directly rather than through
+`claude-code-ide--toggle-existing-window', which marks each hidden
+session as most recently used and would leave a hidden session, not the
+one chosen here, as the one `claude-code-ide-toggle' restores."
+    (interactive)
+    (let* ((project-dir (claude-code-ide--get-working-directory))
+           (session (claude-code-ide--read-project-session
+                     "Show only Claude instance: " project-dir)))
+      (unless session
+        (user-error "No Claude Code session for this project"))
+      (dolist (other (claude-code-ide--visible-project-sessions project-dir))
+        (unless (eq other session)
+          (when-let* ((window (get-buffer-window
+                               (claude-code-ide-mcp-session-buffer other))))
+            (delete-window window))))
+      ;; Any remembered hidden set is now stale: the panel is this one session.
+      (claude-code-ide--hidden-panel-set project-dir nil)
+      (let* ((buffer (claude-code-ide-mcp-session-buffer session))
+             (window (get-buffer-window buffer)))
+        (if window
+            (progn (claude-code-ide--touch-session session)
+                   (select-window window))
+          ;; Marks the session most recently used itself.
+          (when-let* ((window (claude-code-ide--display-buffer-in-side-window buffer)))
+            (select-window window))))))
+
   ;; `claude-code-ide-menu' is defined in the autoloaded
   ;; claude-code-ide-transient.el, not loaded until first invoked, so defer
   ;; this append until then rather than forcing it to load early here.
@@ -6813,7 +6846,11 @@ beginning a new task in the same project with a clean context."
     (transient-append-suffix 'claude-code-ide-menu "q"
       '("u" "Continue + stop old (update)" candera/claude-code-ide-continue-and-stop))
     (transient-append-suffix 'claude-code-ide-menu "u"
-      '("f" "Restart fresh (new task)" candera/claude-code-ide-restart-fresh)))
+      '("f" "Restart fresh (new task)" candera/claude-code-ide-restart-fresh))
+    ;; "o" is unused in the stock menu (checked against
+    ;; claude-code-ide-transient.el); sits in Navigation next to "a".
+    (transient-append-suffix 'claude-code-ide-menu "a"
+      '("o" "Show only one instance" candera/claude-code-ide-solo)))
 
 ;; ;; MELPA recipe specifies :branch "melpa" which no longer exists on GitHub
 ;; (straight-use-package
