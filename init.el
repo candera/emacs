@@ -6878,7 +6878,13 @@ one chosen here, as the one `claude-code-ide-toggle' restores."
   :config
   (add-hook 'agent-shell-mode-hook
             (lambda ()
-              (display-line-numbers-mode -1)))
+              (display-line-numbers-mode -1)
+              ;; ultra-scroll sets this nil globally to dodge a
+              ;; redisplay slowdown (ultra-scroll #32, Emacs bug#78766,
+              ;; fixed in Emacs 31). Without it, point can sit on a
+              ;; last line half-hidden behind the mode line.
+              (when (>= emacs-major-version 31)
+                (setq-local make-cursor-line-fully-visible t))))
   (defvar candera/agent-shell-notify-timeout 30
     "Seconds before an agent-shell notification auto-dismisses.
 Nil keeps the notification until dismissed (manually or by returning
