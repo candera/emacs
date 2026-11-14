@@ -6877,7 +6877,10 @@ one chosen here, as the one `claude-code-ide-toggle' restores."
   (setq agent-shell-header-style 'text
         agent-shell-tool-use-expand-by-default nil
         agent-shell-user-message-expand-by-default nil
-        agent-shell-thought-process-expand-by-default nil)
+        agent-shell-thought-process-expand-by-default nil
+        ;; Cumulative session cost in the header (e.g. "$0.42"), the
+        ;; agent-shell analogue of the cost in ~/.claude/statusline.sh.
+        agent-shell-show-cost-indicator t)
   :config
   (add-hook 'agent-shell-mode-hook
             (lambda ()
