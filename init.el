@@ -6812,15 +6812,18 @@ beginning a new task in the same project with a clean context."
   ;; shows one without hiding the rest.
   (defun candera/claude-code-ide-solo ()
     "Show one of this project's Claude Code sessions and hide the others.
-Prompts for the session (skipped when the project has only one).
+Keeps the session in the selected window when it is a Claude terminal,
+otherwise the most recently used one; with a prefix argument, prompts.
 Windows are deleted directly rather than through
 `claude-code-ide--toggle-existing-window', which marks each hidden
 session as most recently used and would leave a hidden session, not the
 one chosen here, as the one `claude-code-ide-toggle' restores."
     (interactive)
     (let* ((project-dir (claude-code-ide--get-working-directory))
-           (session (claude-code-ide--read-project-session
-                     "Show only Claude instance: " project-dir)))
+           ;; `auto' intent: prefix arg prompts, a Claude buffer targets
+           ;; itself, else the MRU session (which is the last one selected).
+           (session (claude-code-ide--resolve-session
+                     'auto "Show only Claude instance: ")))
       (unless session
         (user-error "No Claude Code session for this project"))
       (dolist (other (claude-code-ide--visible-project-sessions project-dir))
