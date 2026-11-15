@@ -74,10 +74,19 @@ inclusive."
         (puthash (calendar-absolute-from-gregorian date) t table)))
     table))
 
-(defun candera:workdays-between (start-date end-date)
+(defvar candera:days-off '("2026-11-23" "2026-11-24" "2026-11-25" "2026-11-27" "2026-11-30")
+  "Personal days off that `candera:workdays-between' does not count as
+workdays, in addition to weekends and US federal holidays. A list of
+ISO date strings like (\"2026-11-24\" \"2026-11-25\") or Gregorian
+(MONTH DAY YEAR) lists.")
+
+(defun candera:workdays-between (start-date end-date &optional days-off)
   "Return the number of workdays between START-DATE and END-DATE,
-excluding weekends and US federal holidays. Dates are ISO strings like
-\"2020-10-16\" (or Gregorian (MONTH DAY YEAR) lists).
+excluding weekends, US federal holidays, and DAYS-OFF. Dates are ISO
+strings like \"2020-10-16\" (or Gregorian (MONTH DAY YEAR) lists).
+
+DAYS-OFF is a list of dates in the same format; it defaults to
+`candera:days-off'.
 
 The count is the number of workdays in the half-open interval
 \[START-DATE, END-DATE): START-DATE is counted if it is a workday, and
@@ -96,6 +105,9 @@ negative."
                     (nth 2 (calendar-gregorian-from-absolute lo))
                     (nth 2 (calendar-gregorian-from-absolute hi))))
          (count 0))
+    (dolist (day (or days-off candera:days-off))
+      (puthash (calendar-absolute-from-gregorian (candera:parse-iso-date day))
+               t holidays))
     (dolist (abs (number-sequence lo (1- hi)))
       (let ((dow (calendar-day-of-week (calendar-gregorian-from-absolute abs))))
         (when (and (/= dow 0)                 ; not Sunday
